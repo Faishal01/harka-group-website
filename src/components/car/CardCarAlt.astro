@@ -11,7 +11,7 @@ const { car } = Astro.props as { car: Car };
 	data-car-id={car.id}
 	data-car-on-sale={car.data.general.salePrice ? "true" : "false"}
 	data-car-available={car.data.general.availability}
-	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-b-4 hover:lg:border-yellow-300"
+	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-b-4 hover:lg:border-red-700"
 >
 	<a href={`/view/${car.id}`} class="relative isolate flex flex-col gap-8 h-full">
 		<div class="relative aspect-[4/3] lg:shrink-0 ribbon">

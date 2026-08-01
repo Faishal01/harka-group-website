@@ -57,7 +57,7 @@ function generateUrl(pageNum: number | string) {
 					) : (
 						<a
 							href={generateUrl(pageNumber)}
-							class={`inline-flex items-center text-center justify-center size-10 leading-none transition rounded-full ${pageNumber === page ? "bg-yellow-200" : "hover:bg-gray-100"}`}
+							class={`inline-flex items-center text-center justify-center size-10 leading-none transition rounded-full ${pageNumber === page ? "bg-red-700 text-white" : "hover:bg-gray-100"}`}
 							aria-current={pageNumber === page ? "page" : undefined}
 						>
 							{pageNumber}

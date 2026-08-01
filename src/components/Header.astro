@@ -12,7 +12,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 ---
 
 <header>
-  <section class="bg-yellow-200">
+  <section class="bg-red-700 text-white">
     <div class="container py-4 lg:py-8">
       <div class="flex justify-between items-center gap-x-4">
         <a href="/">
@@ -36,7 +36,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
                 <div class="relative group">
                   <a
                     href={item.url}
-                    class={`border-b-2 transition border-transparent ${pathname === item.url ? "font-bold" : "hover:border-gray-800 font-medium"}`}
+                    class={`border-b-2 transition border-transparent ${pathname === item.url ? "font-bold" : "hover:border-white font-medium"}`}
                     aria-haspopup={item.submenu ? "true" : "false"}
                     aria-expanded={item.submenu ? "false" : undefined}
                   >
@@ -48,7 +48,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
                       role="menu"
                     >
                       <div
-                        class="bg-white rounded-lg ring-1 shadow-md ring-gray-900/5 overflow-hidden"
+                        class="bg-white rounded-lg ring-1 shadow-md ring-gray-900/5 overflow-hidden text-gray-800"
                         role="menu"
                         aria-label={`Submenu for ${item.label}`}
                       >
@@ -71,7 +71,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
                 </div>
               ))
             }
-            <a href="/contact" class="button button-black ml-8">Contact</a>
+            <a href="/contact" class="button button-white ml-8">Contact</a>
           </div>
         </nav>
       </div>

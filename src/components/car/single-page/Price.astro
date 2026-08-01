@@ -11,5 +11,5 @@ const salePrice = properties.salePrice ? getPrice(properties.salePrice) : null;
 	<span class={`price ${properties.salePrice ? "on-sale text-xl line-through" : "font-semibold text-2xl"}`}>
 		{price}
 	</span>
-	{properties.salePrice && <mark class="price-on-sale text-2xl font-bold py-1 px-4 bg-yellow-200">{salePrice}</mark>}
+	{properties.salePrice && <mark class="price-on-sale text-2xl font-bold py-1 px-4 bg-red-700 text-white">{salePrice}</mark>}
 </div>

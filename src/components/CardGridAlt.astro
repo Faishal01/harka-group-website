@@ -3,17 +3,19 @@ import type { CardGridAltProps as Props } from "~/types";
 const { title = "", description = "", color = "green", icon = "", href = false } = Astro.props;
 
 export const colorClasses = {
-	brand: "bg-yellow-200 text-gray-800",
+	brand: "bg-red-700 text-white",
+	black: "bg-gray-800 text-white",
+	white: "bg-white text-gray-800",
+	primary: "bg-red-50 text-red-700",
 	green: "bg-green-50 text-green-700",
 	blue: "bg-blue-50 text-blue-700",
-	yellow: "bg-yellow-50 text-yellow-700",
 	purple: "bg-purple-50 text-purple-700",
 	red: "bg-red-50 text-red-700",
 	orange: "bg-orange-50 text-orange-700",
 };
 ---
 
-<div class="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-yellow-200">
+<div class="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-red-700">
 	<div>
 		<span
 			class={`inline-flex size-10 relative rounded-full ${colorClasses[color]} service-icon service-icon-${icon}`}
