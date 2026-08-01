@@ -1,8 +1,6 @@
 import type { CollectionEntry } from "astro:content";
 import type { colorClasses } from "./components/CardGridAlt.astro";
 import type { pillColors } from "./components/Pill.astro";
-
-export type Blog = CollectionEntry<"blog">;
 export type Car = CollectionEntry<"cars">;
 export type Testimonial = CollectionEntry<"testimonials">;
 
@@ -21,11 +19,6 @@ export interface ButtonProps extends ClassNameProps {
 	newtab?: boolean;
 	As?: "a" | "button";
 	type?: "button" | "submit" | "reset";
-}
-
-export interface CardBlogPost {
-	post: Blog;
-	index: number;
 }
 
 export interface CardGridAltProps {

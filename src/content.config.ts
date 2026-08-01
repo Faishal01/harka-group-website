@@ -6,17 +6,6 @@ export const bodyTypes = ["SUV", "Sedan", "Hatchback", "Coupe", "Convertible", "
 export const fuelTypes = ["Petrol", "Diesel", "Hybrid", "Electric", "CNG"] as const;
 export const conditions = ["New", "Used", "Certified Pre-Owned"] as const;
 export const transmission = ["Automatic", "Manual", "CVT", "Dual-Clutch"] as const;
-export const blogCategories = {
-	news: "indigo",
-	reviews: "pink",
-	tips: "purple",
-	events: "green",
-} as const;
-
-const categoryKeys = Object.keys(blogCategories) as [
-	keyof typeof blogCategories,
-	...Array<keyof typeof blogCategories>,
-];
 
 const cars = defineCollection({
 	loader: glob({ pattern: ["*.mdx", "!example.mdx"], base: "./src/content/cars" }),
@@ -106,20 +95,6 @@ const cars = defineCollection({
 		}),
 });
 
-const blog = defineCollection({
-	loader: glob({ pattern: "**/[^_]*.mdx", base: "./src/content/blog" }),
-	schema: ({ image }) =>
-		z.object({
-			title: z.string(),
-			slug: z.string(),
-			image: image(),
-			imageAlt: z.string(),
-			excerpt: z.string().optional(),
-			publishDate: z.coerce.date().default(new Date(2025, 0, 1)),
-			category: z.enum(categoryKeys).default("news"),
-		}),
-});
-
 const team = defineCollection({
 	loader: file("src/data/team.json"),
 	schema: ({ image }) =>
@@ -146,4 +121,4 @@ const testimonials = defineCollection({
 		}),
 });
 
-export const collections = { cars, blog, team, testimonials };
+export const collections = { cars, team, testimonials };

@@ -27,11 +27,6 @@ export const menuMain: MainMenuItem[] = [
 			{ id: "car-sales", label: "Car Sales", url: "/services/car-sales" },
 		],
 	},
-	{
-		id: "blog",
-		label: "Blog",
-		url: "/blog",
-	},
 ];
 
 export const menuNavigation: MenuNavigation = {
@@ -52,10 +47,6 @@ export const menuNavigation: MenuNavigation = {
 		{
 			name: "Services",
 			url: "/services",
-		},
-		{
-			name: "Blog",
-			url: "/blog",
 		},
 	],
 };
@@ -79,10 +70,6 @@ export const menuService: MenuNavigation = {
 			name: "Services",
 			url: "/services",
 		},
-		{
-			name: "Blog",
-			url: "/blog",
-		},
 	],
 };
 
@@ -105,10 +92,6 @@ export const menuMisc: MenuNavigation = {
 			name: "Services",
 			url: "/services",
 		},
-		{
-			name: "Blog",
-			url: "/blog",
-		},
 	],
 };
 
@@ -130,10 +113,6 @@ export const menuLegal: MenuNavigation = {
 		{
 			name: "Services",
 			url: "/services",
-		},
-		{
-			name: "Blog",
-			url: "/blog",
 		},
 	],
 };
