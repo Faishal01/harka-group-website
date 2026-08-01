@@ -245,7 +245,6 @@ section.bg-white + section.bg-white > .container {
 }
 
 /* Embla */
-	@apply border-red-700;
 
 .embla__button {
 	-webkit-tap-highlight-color: transparent;
