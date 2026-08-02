@@ -9,20 +9,20 @@
     "binding": "ASSETS",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "harka-db",
-      "database_id": "local-harka-db",
-      "migrations_dir": "drizzle"
-    }
+      "database_id": "429c34f1-c65d-4fab-b6d4-74d980cb93ef",
+      "migrations_dir": "drizzle",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "IMAGES_BUCKET",
-      "bucket_name": "harka-images"
-    }
-  ]
+      "bucket_name": "harka-images",
+    },
+  ],
 }

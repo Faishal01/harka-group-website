@@ -25,3 +25,10 @@ pnpm-debug.log*
 
 # Local Netlify folder
 .netlify
+.wrangler
+.playwright-mcp/
+.dev.vars
+.vercel/
+.cloudflare/
+.agents/
+.vscode/
