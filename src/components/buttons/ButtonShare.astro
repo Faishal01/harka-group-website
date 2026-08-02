@@ -51,7 +51,7 @@ const SocialUrls = {
 	>
 		<div class="py-0" role="none">
 			{
-				Object.entries(SocialUrls).map(([key, value], index) => (
+				Object.entries(SocialUrls).map(([key, value]) => (
 					<a href={value} class="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" tabindex="-1">
 						{key === "Facebook" && <IconFacebook class="size-5 inline-block mr-1 -mt-0.5" />}
 						{key === "X/Twitter" && <IconX class="size-5 inline-block mr-1 -mt-0.5" />}

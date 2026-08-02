@@ -1,0 +1,113 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Container from "~/components/Container.astro";
+import Section from "~/components/Section.astro";
+import { getDb } from "~/db/client";
+import { env } from "cloudflare:workers";
+
+const db = getDb(env);
+const allCars = await db.query.cars.findMany({
+  orderBy: (cars, { desc }) => [desc(cars.publishDate)],
+});
+---
+
+<Layout pageTitle="Admin - Cars">
+  <Section class="bg-gray-50 min-h-[70vh]">
+    <Container>
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Manage Cars</h1>
+        <a
+          href="/admin/cars/new"
+          class="bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+        >
+          + Add New Car
+        </a>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >Car</th
+              >
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >Price</th
+              >
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >Status</th
+              >
+              <th
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >Actions</th
+              >
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {
+              allCars.map((car) => (
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded overflow-hidden">
+                        {car.image ? (
+                          <img
+                            src={car.image}
+                            alt={car.imageAlt}
+                            class="h-10 w-10 object-cover"
+                          />
+                        ) : (
+                          <div class="h-10 w-10 bg-gray-300" />
+                        )}
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          {car.title}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          {car.general.make} {car.general.model}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">
+                      ${car.general.price.toLocaleString()}
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span
+                      class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${car.misc?.hidden ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
+                    >
+                      {car.misc?.hidden ? "Hidden" : "Visible"}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a
+                      href={`/admin/cars/edit/${car.id}`}
+                      class="text-blue-600 hover:text-blue-900"
+                    >
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+              ))
+            }
+            {
+              allCars.length === 0 && (
+                <tr>
+                  <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                    No cars found. Click "Add New Car" to get started.
+                  </td>
+                </tr>
+              )
+            }
+          </tbody>
+        </table>
+      </div>
+    </Container>
+  </Section>
+</Layout>

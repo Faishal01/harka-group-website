@@ -1,7 +1,11 @@
 import type { CollectionEntry } from "astro:content";
 import type { colorClasses } from "./components/CardGridAlt.astro";
 import type { pillColors } from "./components/Pill.astro";
-export type Car = CollectionEntry<"cars">;
+import type { cars } from "./db/schema";
+export type Car = {
+	id: string;
+	data: typeof cars.$inferSelect;
+};
 export type Testimonial = CollectionEntry<"testimonials">;
 
 // Components
@@ -122,10 +126,10 @@ export interface PriceProps {
 }
 
 export interface SliderProps {
-	image: ImageMetadata;
-	alt: string;
-	gallery: { image: ImageMetadata; alt: string }[];
-	videoTour?: string;
+	image: string | null;
+	alt: string | null;
+	gallery: { image: string; alt: string }[] | null;
+	videoTour?: string | null;
 }
 
 export interface WidgetLoanProps {

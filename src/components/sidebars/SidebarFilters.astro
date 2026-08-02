@@ -1,10 +1,12 @@
 ---
 export const prerender = false;
-import { bodyTypes, fuelTypes, transmission, conditions } from "~/content.config";
+import { bodyTypes, fuelTypes, transmission, conditions } from "~/data/constants";
 import { getPrice, getMakeModelSet } from "~/utils/helpers";
 import IconReset from "~/assets/images/icons/reset.svg";
 import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
 import IconClose from "~/assets/images/icons/close.svg";
+import { getDb } from "~/db/client";
+import { env } from "cloudflare:workers";
 
 interface Props {
 	data: {
@@ -15,7 +17,8 @@ interface Props {
 	};
 }
 
-const allMakesModels = await getMakeModelSet();
+const db = getDb(env);
+const allMakesModels = await getMakeModelSet(db);
 const { data } = Astro.props;
 ---
 
@@ -188,12 +191,12 @@ const { data } = Astro.props;
 
 		if (form) {
 			const resultFound = document.getElementById("filter-result-found")!;
-			const makeSelect = form.elements.namedItem("make") as HTMLSelectElement;
-			const modelSelect = form.elements.namedItem("model") as HTMLSelectElement;
+			const makeSelect = form.querySelector('[name="make"]') as unknown as HTMLSelectElement;
+			const modelSelect = form.querySelector('[name="model"]') as unknown as HTMLSelectElement;
 			const urlParams = new URLSearchParams(window.location.search);
 
 			for (const [key, value] of urlParams.entries()) {
-				const input = form.elements.namedItem(key) as HTMLSelectElement;
+				const input = form.querySelector(`[name="${key}"]`) as unknown as HTMLSelectElement;
 				const clearButton = document.getElementById(`clear-input-${key}`)! as HTMLButtonElement;
 
 				if (input) {
@@ -214,7 +217,7 @@ const { data } = Astro.props;
 
 					modelSelect.innerHTML = '<option value="all">All</option>';
 
-					models.forEach((model: string) => {
+					(models as string[]).forEach((model: string) => {
 						const option = document.createElement("option");
 						option.value = model;
 						option.textContent = model;
@@ -250,7 +253,7 @@ const { data } = Astro.props;
 							const response = await fetch(url);
 							const models = await response.json();
 
-							models.forEach((model: string) => {
+							(models as string[]).forEach((model: string) => {
 								const option = document.createElement("option");
 								option.value = model;
 								option.textContent = model;
@@ -279,9 +282,9 @@ const { data } = Astro.props;
 					}
 
 					const response = await fetch(url);
-					const data = await response.json();
+					const data = await response.json() as any;
 
-					resultFound.textContent = `(${data?.length ?? 0})`;
+					resultFound.textContent = `(${data?.allCars?.length ?? 0})`;
 				} catch (error) {
 					console.error(error);
 				}
@@ -322,9 +325,9 @@ const { data } = Astro.props;
 
 			const clearButtons = form.querySelectorAll("button[id^='clear-input-']");
 			clearButtons.forEach((button) => {
-				button.addEventListener("click", (event) => {
+				button.addEventListener("click", () => {
 					const inputId = button.id.replace("clear-input-", "");
-					const input = form.elements.namedItem(inputId) as HTMLSelectElement;
+					const input = form.querySelector(`[name="${inputId}"]`) as unknown as HTMLSelectElement;
 
 					if (input) {
 						input.value = "all";

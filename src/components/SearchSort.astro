@@ -13,10 +13,9 @@ import SortCars from "./forms/SortCars.astro";
 <script>
 	document.addEventListener("astro:page-load", function () {
 		const searchForm = document.getElementById("form-search") as HTMLFormElement;
-		const sortForm = document.getElementById("form-sort") as HTMLFormElement;
 		const searchInput = document.getElementById("search") as HTMLInputElement;
-		const sortSelect = document.getElementById("sort") as HTMLSelectElement;
-		const sortSelectMobile = document.getElementById("sort-mobile") as HTMLSelectElement;
+		const sortSelect = document.getElementById("sort") as unknown as HTMLSelectElement;
+		const sortSelectMobile = document.getElementById("sort-mobile") as unknown as HTMLSelectElement;
 
 		const url = new URL(window.location.href);
 		const sort = url.searchParams.get("sort");
@@ -31,7 +30,7 @@ import SortCars from "./forms/SortCars.astro";
 			searchInput.value = search;
 		}
 
-		sortSelect?.addEventListener("change", (event) => {
+		sortSelect?.addEventListener("change", () => {
 			const url = new URL(window.location.href);
 			const sort = sortSelect.value;
 
@@ -50,7 +49,7 @@ import SortCars from "./forms/SortCars.astro";
 			window.location.href = url.toString();
 		});
 
-		sortSelectMobile?.addEventListener("change", (event) => {
+		sortSelectMobile?.addEventListener("change", () => {
 			const url = new URL(window.location.href);
 			const sort = sortSelectMobile.value;
 

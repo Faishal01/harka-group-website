@@ -1,17 +1,11 @@
 ---
-import type { Car as Astro } from "~/types";
+import type { Car } from "~/types";
 import { getMileage, getMileageUnit } from "~/utils/helpers";
 import { labels, categoryLabels } from "~/utils/labels";
-import { getEntry } from "astro:content";
-const { car } = Astro.props as { car: { id: string } };
+
+const { car } = Astro.props as { car: Car };
 
 if (!car) {
-	return;
-}
-
-const carData = (await getEntry("cars", car.id)) as { data: Record<string, any> };
-
-if (!carData) {
 	return;
 }
 
@@ -21,26 +15,26 @@ const excludeFields = ["price", "salePrice", "availability", "hidden", "vin", "l
 {
 	Object.entries(categoryLabels).map(
 		([key, label]) =>
-			carData.data[key] &&
-			Object.keys(carData.data[key]).some(
-				(subKey) => !excludeFields.includes(subKey) && carData.data[key][subKey]
+			(car.data as any)[key] &&
+			Object.keys((car.data as any)[key]).some(
+				(subKey) => !excludeFields.includes(subKey) && (car.data as any)[key][subKey]
 			) && (
 				<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
 					<h2 class={`h6 feature-icon feature-icon-${key}`}>{label}</h2>
 
 					{key === "options" ? (
 						<ul class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
-							{carData.data[key].sort().map((option: string) => (
+							{(car.data as any)[key].sort().map((option: string) => (
 								<li class="md:whitespace-nowrap">- {option}</li>
 							))}
 						</ul>
 					) : (
 						<dl class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
-							{Object.entries(carData.data[key]).map(
+							{Object.entries((car.data as any)[key]).map(
 								([subKey, value]) =>
 									!excludeFields.includes(subKey) && (
 										<>
-											<dt>{labels[key][subKey] || subKey}</dt>
+											<dt>{(labels as any)[key]?.[subKey] || subKey}</dt>
 											<dd class="font-bold md:whitespace-nowrap">
 												{subKey === "mileage"
 													? `${getMileage(value as number)} ${getMileageUnit()}`

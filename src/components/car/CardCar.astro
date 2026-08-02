@@ -1,6 +1,6 @@
 ---
 import type { Car } from "~/types";
-import { Image } from "astro:assets";
+
 import CarHighlights from "~/components/car/CardHighlights.astro";
 import CardPrice from "~/components/car/CardPrice.astro";
 import IconLogo from "~/assets/images/icons/logo.svg";
@@ -18,7 +18,7 @@ const { car } = Astro.props as { car: Car };
 		<div class="relative aspect-[4/3] xxl:w-72 lg:shrink-0 ribbon">
 			{
 				car.data.image ? (
-					<Image
+					<img
 						src={car.data.image}
 						alt={car.data.imageAlt}
 						class="absolute inset-0 size-full bg-gray-50 object-cover"

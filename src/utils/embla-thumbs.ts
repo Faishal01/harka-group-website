@@ -1,4 +1,6 @@
-export const addThumbBtnsClickHandlers = (emblaApiMain, emblaApiThumb) => {
+import type { EmblaCarouselType } from "embla-carousel";
+
+export const addThumbBtnsClickHandlers = (emblaApiMain: EmblaCarouselType, emblaApiThumb: EmblaCarouselType) => {
 	const slidesThumbs = emblaApiThumb.slideNodes();
 
 	const scrollToIndex = slidesThumbs.map((_, index) => () => emblaApiMain.scrollTo(index));
@@ -14,15 +16,15 @@ export const addThumbBtnsClickHandlers = (emblaApiMain, emblaApiThumb) => {
 	};
 };
 
-export const addToggleThumbBtnsActive = (emblaApiMain, emblaApiThumb) => {
+export const addToggleThumbBtnsActive = (emblaApiMain: EmblaCarouselType, emblaApiThumb: EmblaCarouselType) => {
 	const slidesThumbs = emblaApiThumb.slideNodes();
 
 	const toggleThumbBtnsState = () => {
 		emblaApiThumb.scrollTo(emblaApiMain.selectedScrollSnap());
 		const previous = emblaApiMain.previousScrollSnap();
 		const selected = emblaApiMain.selectedScrollSnap();
-		slidesThumbs[previous].classList.remove("embla-thumbs__slide--selected");
-		slidesThumbs[selected].classList.add("embla-thumbs__slide--selected");
+		slidesThumbs[previous]?.classList.remove("embla-thumbs__slide--selected");
+		slidesThumbs[selected]?.classList.add("embla-thumbs__slide--selected");
 	};
 
 	emblaApiMain.on("select", toggleThumbBtnsState);
@@ -30,11 +32,11 @@ export const addToggleThumbBtnsActive = (emblaApiMain, emblaApiThumb) => {
 
 	return () => {
 		const selected = emblaApiMain.selectedScrollSnap();
-		slidesThumbs[selected].classList.remove("embla-thumbs__slide--selected");
+		slidesThumbs[selected]?.classList.remove("embla-thumbs__slide--selected");
 	};
 };
 
-const addTogglePrevNextBtnsActive = (emblaApi, prevBtn, nextBtn) => {
+const addTogglePrevNextBtnsActive = (emblaApi: EmblaCarouselType, prevBtn: HTMLElement, nextBtn: HTMLElement) => {
 	const togglePrevNextBtnsState = () => {
 		if (emblaApi.canScrollPrev()) prevBtn.removeAttribute("disabled");
 		else prevBtn.setAttribute("disabled", "disabled");
@@ -54,7 +56,7 @@ const addTogglePrevNextBtnsActive = (emblaApi, prevBtn, nextBtn) => {
 	};
 };
 
-export const addPrevNextBtnsClickHandlers = (emblaApi, prevBtn, nextBtn) => {
+export const addPrevNextBtnsClickHandlers = (emblaApi: EmblaCarouselType, prevBtn: HTMLElement, nextBtn: HTMLElement) => {
 	const scrollPrev = () => {
 		emblaApi.scrollPrev();
 	};

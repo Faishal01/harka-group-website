@@ -1,4 +1,4 @@
-import type { CollectionEntry } from "astro:content";
+import type { Car } from "~/types";
 import { unitSystem } from "~/data/config";
 
 type UnitSystem = "imperial" | "metric";
@@ -8,7 +8,8 @@ type ShapeToLabels<T extends Record<string, any>> = {
 	[K in keyof T]: T[K] extends Record<string, any> ? ShapeToLabels<T[K]> : string | Record<string, string>;
 };
 
-export const labels: ShapeToLabels<CollectionEntry<"cars">["data"]> = {
+export const labels: ShapeToLabels<Car["data"]> = {
+	id: "ID",
 	title: "Title",
 	image: "Image",
 	imageAlt: "Image Alt",

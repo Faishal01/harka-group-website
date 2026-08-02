@@ -1,5 +1,7 @@
-export const addDotBtnsAndClickHandlers = (emblaApi, dotsNode, onButtonClick) => {
-	let dotNodes = [];
+import type { EmblaCarouselType } from "embla-carousel";
+
+export const addDotBtnsAndClickHandlers = (emblaApi: EmblaCarouselType, dotsNode: HTMLElement, onButtonClick?: (emblaApi: EmblaCarouselType) => void) => {
+	let dotNodes: HTMLElement[] = [];
 
 	const addDotBtnsWithClickHandlers = () => {
 		dotsNode.innerHTML = emblaApi
@@ -7,7 +9,7 @@ export const addDotBtnsAndClickHandlers = (emblaApi, dotsNode, onButtonClick) =>
 			.map(() => '<button class="embla__dot" type="button"></button>')
 			.join("");
 
-		const scrollTo = (index) => {
+		const scrollTo = (index: number) => {
 			emblaApi.scrollTo(index);
 			if (onButtonClick) onButtonClick(emblaApi);
 		};
@@ -21,8 +23,8 @@ export const addDotBtnsAndClickHandlers = (emblaApi, dotsNode, onButtonClick) =>
 	const toggleDotBtnsActive = () => {
 		const previous = emblaApi.previousScrollSnap();
 		const selected = emblaApi.selectedScrollSnap();
-		dotNodes[previous].classList.remove("embla__dot--selected");
-		dotNodes[selected].classList.add("embla__dot--selected");
+		dotNodes[previous]?.classList.remove("embla__dot--selected");
+		dotNodes[selected]?.classList.add("embla__dot--selected");
 	};
 
 	emblaApi

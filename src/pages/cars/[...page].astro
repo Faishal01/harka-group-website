@@ -5,7 +5,7 @@ export const prerender = false;
 // 	Astro.response.headers.set("CDN-Cache-Control", "public, max-age=86400, s-maxage=2592000");
 // }
 
-import { type CollectionEntry } from "astro:content";
+
 import { siteName, priceSteps, defaultPaginationSize } from "~/data/config";
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
@@ -17,7 +17,7 @@ import SearchSort from "~/components/SearchSort.astro";
 import PresetBar from "~/components/PresetBar.astro";
 import FilterBarMobile from "~/components/FilterBarMobile.astro";
 
-type Car = CollectionEntry<"cars">;
+import type { Car } from "~/types";
 
 let APIURL = new URL("/api/getFilteredCars.json", Astro.url);
 
@@ -30,7 +30,7 @@ const searchParamsArray = Array.from(searchParamsValue);
 APIURL.search = searchParamsValue.toString();
 
 const response = await fetch(APIURL);
-const responseData = response.status === 404 ? { allCars: [] } : await response.json();
+const responseData = response.status === 404 ? { allCars: [] } : await response.json() as any;
 const allCars: Car[] = responseData.allCars;
 
 const makes = [...new Set(allCars.map((car: Car) => car.data.general.make))].sort();

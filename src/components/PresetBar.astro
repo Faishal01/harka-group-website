@@ -43,7 +43,7 @@ const filteredParams = params.filter(([key]) => allowedParams.includes(key));
 	document.addEventListener("astro:page-load", function () {
 		const searchParams = new URLSearchParams(window.location.search);
 
-		for (const [key, value] of searchParams.entries()) {
+		for (const [key] of searchParams.entries()) {
 			const removeButtons = document.querySelectorAll(`.preset-remove-${key}`);
 
 			removeButtons.forEach((removeButton) => {
