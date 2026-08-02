@@ -10,7 +10,8 @@ import Heading from "~/components/Heading.astro";
 import { env } from "cloudflare:workers";
 
 const db = getDb(env);
-const allCars = await db.select().from(carsTable);
+const dbCars = await db.select().from(carsTable);
+const allCars = dbCars.filter(c => !c.misc?.hidden);
 const uniqueMakes = [
   ...new Set(
     allCars.filter((c) => !c.misc?.hidden).map((car) => car.general.make),

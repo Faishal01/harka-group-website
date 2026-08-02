@@ -70,7 +70,8 @@ export function getCurrencySymbol(): string {
  */
 export async function getMakeModelSet(db: any) {
 	const { cars } = await import("~/db/schema");
-	const allCars = await db.select().from(cars);
+	const allCarsDb = await db.select().from(cars);
+	const allCars = allCarsDb.filter(c => !c.misc?.hidden);
 
 	const makesWithModels = allCars.reduce((acc: { [key: string]: Set<string> }, car: any) => {
 		if (car.misc?.hidden) return acc;

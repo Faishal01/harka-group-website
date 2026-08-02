@@ -52,45 +52,45 @@ export const menuNavigation: MenuNavigation = {
 };
 
 export const menuService: MenuNavigation = {
-	prettyName: "Service",
+	prettyName: "Services",
 	items: [
 		{
-			name: "Home",
-			url: "/",
+			name: "Auto Repairs",
+			url: "/services/repairs",
 		},
 		{
-			name: "Cars",
-			url: "/cars",
+			name: "Maintenance",
+			url: "/services/maintenance",
 		},
 		{
-			name: "About Us",
-			url: "/about-us",
+			name: "Car Sales",
+			url: "/services/car-sales",
 		},
 		{
-			name: "Services",
-			url: "/services",
+			name: "Parts & Accessories",
+			url: "/services/parts",
 		},
 	],
 };
 
 export const menuMisc: MenuNavigation = {
-	prettyName: "Miscellaneous",
+	prettyName: "Explore",
 	items: [
 		{
-			name: "Home",
-			url: "/",
+			name: "Testimonials",
+			url: "/about-us/testimonials",
 		},
 		{
-			name: "Cars",
-			url: "/cars",
+			name: "FAQ",
+			url: "/faq",
 		},
 		{
-			name: "About Us",
-			url: "/about-us",
+			name: "Contact Us",
+			url: "/contact",
 		},
 		{
-			name: "Services",
-			url: "/services",
+			name: "Staff Login",
+			url: "/admin/login",
 		},
 	],
 };
@@ -99,20 +99,16 @@ export const menuLegal: MenuNavigation = {
 	prettyName: "Legal",
 	items: [
 		{
-			name: "Home",
-			url: "/",
+			name: "Privacy Policy",
+			url: "/privacy",
 		},
 		{
-			name: "Cars",
-			url: "/cars",
+			name: "Terms of Service",
+			url: "/terms",
 		},
 		{
-			name: "About Us",
-			url: "/about-us",
-		},
-		{
-			name: "Services",
-			url: "/services",
+			name: "Cookie Policy",
+			url: "/cookies",
 		},
 	],
 };
