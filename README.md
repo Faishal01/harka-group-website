@@ -1,10 +1,10 @@
-# HyperDrive
+# Harka Group
 
-HyperDrive is a free theme for the Astro framework, designed to provide a beautiful and functional starting point for your next car dealer website. Whether you're selling Cars, Bikes or Boats, or any other similar product, HyperDrive has you covered with its clean design and easy-to-use components.
+Harka Group is a free theme for the Astro framework, designed to provide a beautiful and functional starting point for your next car dealer website. Whether you're selling Cars, Bikes or Boats, or any other similar product, Harka Group has you covered with its clean design and easy-to-use components.
 
-## 🌟 About HyperDrive
+## 🌟 About Harka Group
 
-HyperDrive is perfect for car dealers looking to create a modern, responsive website. It features a range of premade pages and components that can be easily customized to fit your brand. The theme is built with Astro, ensuring fast load times and excellent performance.
+Harka Group is perfect for car dealers looking to create a modern, responsive website. It features a range of premade pages and components that can be easily customized to fit your brand. The theme is built with Astro, ensuring fast load times and excellent performance.
 
 ## 🛠️ Technologies Used
 
@@ -14,12 +14,12 @@ HyperDrive is perfect for car dealers looking to create a modern, responsive web
 
 ## 🚀 Installation and Deployment
 
-To get started with HyperDrive, follow these steps:
+To get started with Harka Group, follow these steps:
 
-1. **Clone HyperDrive**:
+1. **Clone Harka Group**:
 
     ```sh
-    git clone https://github.com/wpinfusion/astro-hyperdrive.git
+    git clone https://github.com/wpinfusion/harka-group-website.git
     ```
 
 2. **Install Dependencies**:
@@ -42,7 +42,7 @@ To get started with HyperDrive, follow these steps:
 
 ## 📂 Project Structure
 
-Inside of your HyperDrive project, you'll see the following folders and files:
+Inside of your Harka Group project, you'll see the following folders and files:
 
 ```text
 /
@@ -75,4 +75,4 @@ To start adding your cars, go to /content/cars and add your car data in a markdo
 
 ## 👀 Stuck?
 
-If you have any questions or need help with HyperDrive, feel free to reach out to me at info@wpinfusion.com, or open an issue on the [HyperDrive GitHub repository](https://github.com/wpinfusion/astro-hyperdrive)
+If you have any questions or need help with Harka Group, feel free to reach out to me at info@wpinfusion.com, or open an issue on the [Harka Group GitHub repository](https://github.com/wpinfusion/harka-group-website)

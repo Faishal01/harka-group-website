@@ -5,7 +5,7 @@
 		"role": "CEO",
 		"image": "/src/assets/images/team/pexels-kaleef-lawal-1481864847-27897903.jpg",
 		"alt": "image of John Doe",
-        "email": "john@hyperdrive.netlify.app",
+        "email": "john@harkagroup.id",
         "phone": "+1 234 567 890"
 	},
 	{
@@ -14,7 +14,7 @@
 		"role": "CTO",
 		"image": "/src/assets/images/team/pexels-apunto-group-agencia-de-publicidad-53086916-7752788.jpg",
 		"alt": "image of Jane Doe",
-        "email": "jane@hyperdrive.netlify.app",
+        "email": "jane@harkagroup.id",
         "phone": "+1 234 567 891"
 	},
 	{
@@ -23,7 +23,7 @@
 		"role": "CFO",
 		"image": "/src/assets/images/team/pexels-vazhnik-7562139.jpg",
 		"alt": "image of John Smith",
-        "email": "john.smith@hyperdrive.netlify.app",
+        "email": "john.smith@harkagroup.id",
         "phone": "+1 234 567 892"
 	}
 ]

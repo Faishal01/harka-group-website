@@ -86,7 +86,7 @@ export const GET: APIRoute = async ({ request }) => {
   } = result.data;
 
   const filters: CarFilter[] = [
-    (data) => !data.misc?.hidden
+    (data) => !data.misc?.hidden && !(data as any).deletedAt
   ];
 
   const afterParsing = performance.now();

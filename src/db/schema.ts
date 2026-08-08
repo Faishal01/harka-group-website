@@ -9,6 +9,8 @@ export const cars = sqliteTable('cars', {
 	videoTourUrl: text('video_tour_url'),
 	excerpt: text('excerpt'),
 	publishDate: integer('publish_date', { mode: 'timestamp' }).notNull(),
+	deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+	archiveReason: text('archive_reason', { enum: ['sold', 'removed'] }),
 
 	general: text('general', { mode: 'json' }).$type<{
 		make: string;

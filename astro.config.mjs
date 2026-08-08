@@ -8,7 +8,7 @@ import svelte from "@astrojs/svelte";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://astro-hyperdrive.netlify.app",
+  site: "https://harkagroup.id",
   base: "/",
   integrations: [mdx(), svelte()],
   output: "server",

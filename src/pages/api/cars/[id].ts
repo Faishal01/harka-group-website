@@ -66,26 +66,17 @@ export const PUT: APIRoute = async ({ request, params }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ request, params }) => {
   try {
     const id = params.id as string;
+    const url = new URL(request.url);
+    const reason = url.searchParams.get("reason") as "sold" | "removed" || "removed";
     const db = getDb(env as any);
     
-    // Soft delete: update misc.hidden = true, general.availability = 'sold'
-    const car = await db.query.cars.findFirst({
-      where: eq(carsTable.id, id),
-    });
-    
-    if (!car) {
-      return new Response(JSON.stringify({ error: "Car not found" }), { status: 404 });
-    }
-    
-    const newMisc = car.misc ? { ...car.misc, hidden: true } : { hidden: true };
-    const newGeneral = car.general ? { ...car.general, availability: "sold" } : { availability: "sold" };
-    
+    // Soft delete: update deletedAt timestamp and reason
     await db.update(carsTable).set({
-      misc: newMisc,
-      general: newGeneral as any
+      deletedAt: new Date(),
+      archiveReason: reason
     }).where(eq(carsTable.id, id));
 
     return new Response(JSON.stringify({ success: true, redirect: "/admin/cars" }), {

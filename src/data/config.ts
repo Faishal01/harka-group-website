@@ -1,8 +1,8 @@
 // Global variables
 export const siteLang = "en-US";
 export const siteCurrency = "USD";
-export const siteDomain = "hyperdrive.com";
-export const siteName = "HyperDrive";
+export const siteDomain = "harkagroup.id";
+export const siteName = "Harka Group";
 export const siteSlogan = "The best car dealership in the galaxy!";
 export const themeColor = "#fef08a";
 export const unitSystem = "imperial";
@@ -16,8 +16,8 @@ export const phone = {
 };
 
 export const email = {
-	href: "mailto:info@hyperdrive.com",
-	label: "info@hyperdrive.com",
+	href: "mailto:info@harkagroup.id",
+	label: "info@harkagroup.id",
 };
 
 export const address = {
