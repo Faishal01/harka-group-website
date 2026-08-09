@@ -1,6 +1,10 @@
 import type { EmblaCarouselType } from "embla-carousel";
 
-export const addDotBtnsAndClickHandlers = (emblaApi: EmblaCarouselType, dotsNode: HTMLElement, onButtonClick?: (emblaApi: EmblaCarouselType) => void) => {
+export const addDotBtnsAndClickHandlers = (
+	emblaApi: EmblaCarouselType,
+	dotsNode: HTMLElement,
+	onButtonClick?: (emblaApi: EmblaCarouselType) => void,
+) => {
 	let dotNodes: HTMLElement[] = [];
 
 	const addDotBtnsWithClickHandlers = () => {

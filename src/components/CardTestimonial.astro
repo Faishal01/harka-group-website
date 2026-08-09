@@ -13,7 +13,11 @@ if (!testimonial) {
 			<p>“{testimonial.data.description}”</p>
 		</blockquote>
 		<figcaption class="mt-auto flex items-center gap-x-4">
-			<Image src={testimonial.data.img} alt={testimonial.data.author} class="size-10 rounded-full bg-gray-50" />
+			<Image
+				src={testimonial.data.img}
+				alt={testimonial.data.author}
+				class="size-10 rounded-full bg-gray-50"
+			/>
 			<div>
 				<div class="font-semibold">{testimonial.data.author}</div>
 				<div class="text-gray-600">{testimonial.data.location}</div>

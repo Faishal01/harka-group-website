@@ -7,50 +7,35 @@ import { inArray, desc } from "drizzle-orm";
 import { cars as carsTable } from "~/db/schema";
 import { env } from "cloudflare:workers";
 
-const {
-  recent = false,
-  featured = false,
-  slugs = [],
-  ui = "list",
-} = Astro.props;
+const { recent = false, featured = false, slugs = [], ui = "list" } = Astro.props;
 const db = getDb(env);
 
 let dbCars = [];
 
 if (recent) {
-  const all = await db
-    .select()
-    .from(carsTable)
-    .orderBy(desc(carsTable.publishDate));
-  dbCars = all.filter((c) => !c.misc?.hidden).slice(0, 3);
+	const all = await db.select().from(carsTable).orderBy(desc(carsTable.publishDate));
+	dbCars = all.filter((c) => !c.misc?.hidden).slice(0, 3);
 } else if (featured) {
-  const all = await db.select().from(carsTable);
-  dbCars = all
-    .filter((c) => c.misc?.featured && !c.misc?.hidden)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 3);
+	const all = await db.select().from(carsTable);
+	dbCars = all
+		.filter((c) => c.misc?.featured && !c.misc?.hidden)
+		.sort(() => 0.5 - Math.random())
+		.slice(0, 3);
 } else if (slugs.length > 0) {
-  dbCars = await db
-    .select()
-    .from(carsTable)
-    .where(inArray(carsTable.id, slugs));
-  dbCars = dbCars.filter((c) => !c.misc?.hidden);
+	dbCars = await db.select().from(carsTable).where(inArray(carsTable.id, slugs));
+	dbCars = dbCars.filter((c) => !c.misc?.hidden);
 } else {
-  return;
+	return;
 }
 
 const cars = dbCars.map((car) => ({ id: car.id, data: car }));
 
 const wrapperClasses = {
-  list: "grid grid-cols-1 gap-8",
-  grid: "grid grid-cols-1 gap-8 lg:grid-cols-3",
+	list: "grid grid-cols-1 gap-8",
+	grid: "grid grid-cols-1 gap-8 lg:grid-cols-3",
 };
 ---
 
 <ul class={wrapperClasses[ui]}>
-  {
-    cars.map((car) =>
-      ui === "grid" ? <CardCarAlt car={car} /> : <CardCar car={car} />,
-    )
-  }
+	{cars.map((car) => (ui === "grid" ? <CardCarAlt car={car} /> : <CardCar car={car} />))}
 </ul>

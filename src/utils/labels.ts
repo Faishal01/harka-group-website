@@ -5,7 +5,9 @@ type UnitSystem = "imperial" | "metric";
 const unitSystemTyped: UnitSystem = unitSystem as UnitSystem;
 
 type ShapeToLabels<T extends Record<string, any>> = {
-	[K in keyof T]: T[K] extends Record<string, any> ? ShapeToLabels<T[K]> : string | Record<string, string>;
+	[K in keyof T]: T[K] extends Record<string, any>
+		? ShapeToLabels<T[K]>
+		: string | Record<string, string>;
 };
 
 export const labels: ShapeToLabels<Car["data"]> = {
@@ -20,6 +22,8 @@ export const labels: ShapeToLabels<Car["data"]> = {
 	videoTourUrl: "Video Tour URL",
 	excerpt: "Excerpt",
 	publishDate: "Publish Date" as unknown as ShapeToLabels<Date>,
+	deletedAt: "Deleted At" as any,
+	archiveReason: "Archive Reason",
 	general: {
 		make: "Make",
 		model: "Model",

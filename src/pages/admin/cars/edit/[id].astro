@@ -12,30 +12,30 @@ import { env } from "cloudflare:workers";
 const { id } = Astro.params;
 const db = getDb(env);
 const car = await db.query.cars.findFirst({
-  where: eq(carsTable.id, id as string),
+	where: eq(carsTable.id, id as string),
 });
 
 if (!car) {
-  return Astro.redirect("/admin/cars");
+	return Astro.redirect("/admin/cars");
 }
 ---
 
 <Layout pageTitle={`Edit ${car.title}`}>
-  <Section class="bg-gray-50 min-h-[70vh] py-12">
-    <Container>
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-          Edit {car.title}
-        </h1>
-        <a
-          href="/admin/cars"
-          class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium"
-        >
-          &larr; Back to Cars
-        </a>
-      </div>
+	<Section class="bg-gray-50 min-h-[70vh] py-12">
+		<Container>
+			<div class="flex justify-between items-center mb-6">
+				<h1 class="text-3xl font-bold text-gray-900">
+					Edit {car.title}
+				</h1>
+				<a
+					href="/admin/cars"
+					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium"
+				>
+					&larr; Back to Cars
+				</a>
+			</div>
 
-      <CarEditForm client:load {car} />
-    </Container>
-  </Section>
+			<CarEditForm client:load {car} />
+		</Container>
+	</Section>
 </Layout>

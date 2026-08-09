@@ -3,78 +3,70 @@ import { menuMain } from "~/data/menus";
 import icon from "~/assets/images/icons/logo.png";
 import { Image } from "astro:assets";
 const rmTrailingSlash = (path: string): string => {
-  return path.endsWith("/") && path.length > 1
-    ? path.slice(0, path.length - 1)
-    : path;
+	return path.endsWith("/") && path.length > 1 ? path.slice(0, path.length - 1) : path;
 };
 
 const pathname = rmTrailingSlash(Astro.url.pathname);
 ---
 
 <header>
-  <section class="bg-red-700 text-white">
-    <div class="container py-4 lg:py-8">
-      <div class="flex justify-between items-center gap-x-4">
-        <a href="/">
-          <div class="flex items-center gap-x-2">
-            <!-- <icon class="h-5 lg:h-8 inline-block"></icon> -->
-            <Image src={icon} class="h-16 w-28 inline-block" alt={""} />
-            <span class="font-bold text-2xl lg:text-4xl"
-              >Harka <span class="font-normal">Group</span></span
-            >
-          </div>
-        </a>
+	<section class="bg-red-700 text-white">
+		<div class="container py-4 lg:py-8">
+			<div class="flex justify-between items-center gap-x-4">
+				<a href="/">
+					<div class="flex items-center gap-x-2">
+						<!-- <icon class="h-5 lg:h-8 inline-block"></icon> -->
+						<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
+						<span class="font-bold text-2xl lg:text-4xl"
+							>Harka <span class="font-normal">Group</span></span
+						>
+					</div>
+				</a>
 
-        <nav
-          class="max-lg:hidden"
-          role="navigation"
-          aria-label="Main Navigation"
-        >
-          <div class="flex lg:gap-x-12 items-center">
-            {
-              menuMain.map((item) => (
-                <div class="relative group">
-                  <a
-                    href={item.url}
-                    class={`border-b-2 transition border-transparent ${pathname === item.url ? "font-bold" : "hover:border-white font-medium"}`}
-                    aria-haspopup={item.submenu ? "true" : "false"}
-                    aria-expanded={item.submenu ? "false" : undefined}
-                  >
-                    {item.label}
-                  </a>
-                  {item.submenu && (
-                    <div
-                      class="absolute top-full -mt-4 pt-4 -left-4 z-50 translate-y-4 w-screen max-w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-300"
-                      role="menu"
-                    >
-                      <div
-                        class="bg-white rounded-lg ring-1 shadow-md ring-gray-900/5 overflow-hidden text-gray-800"
-                        role="menu"
-                        aria-label={`Submenu for ${item.label}`}
-                      >
-                        {item.submenu.map((subItem) => (
-                          <a
-                            href={subItem.url}
-                            class={`block px-4 py-3 text-base hover:bg-gray-100 ${
-                              pathname === subItem.url
-                                ? "font-bold"
-                                : "font-medium"
-                            }`}
-                            role="menuitem"
-                          >
-                            {subItem.label}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            }
-            <a href="/contact" class="button button-white ml-8">Contact</a>
-          </div>
-        </nav>
-      </div>
-    </div>
-  </section>
+				<nav class="max-lg:hidden" role="navigation" aria-label="Main Navigation">
+					<div class="flex lg:gap-x-12 items-center">
+						{
+							menuMain.map((item) => (
+								<div class="relative group">
+									<a
+										href={item.url}
+										class={`border-b-2 transition border-transparent ${pathname === item.url ? "font-bold" : "hover:border-white font-medium"}`}
+										aria-haspopup={item.submenu ? "true" : "false"}
+										aria-expanded={item.submenu ? "false" : undefined}
+									>
+										{item.label}
+									</a>
+									{item.submenu && (
+										<div
+											class="absolute top-full -mt-4 pt-4 -left-4 z-50 translate-y-4 w-screen max-w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-300"
+											role="menu"
+										>
+											<div
+												class="bg-white rounded-lg ring-1 shadow-md ring-gray-900/5 overflow-hidden text-gray-800"
+												role="menu"
+												aria-label={`Submenu for ${item.label}`}
+											>
+												{item.submenu.map((subItem) => (
+													<a
+														href={subItem.url}
+														class={`block px-4 py-3 text-base hover:bg-gray-100 ${
+															pathname === subItem.url ? "font-bold" : "font-medium"
+														}`}
+														role="menuitem"
+													>
+														{subItem.label}
+													</a>
+												))}
+											</div>
+										</div>
+									)}
+								</div>
+							))
+						}
+						<a href="/contact" class="button button-white ml-8">Contact</a>
+					</div>
+				</nav>
+			</div>
+		</div>
+	</section>
 </header>

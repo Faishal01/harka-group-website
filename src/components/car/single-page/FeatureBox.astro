@@ -20,7 +20,9 @@ const mileageUnit = getMileageUnit();
 		<div class="flex items-start gap-x-2">
 			<IconFuel class="size-5 mt-0.5" />
 			<div>
-				<dt class="flex items-center text-gray-500">{labels.efficiency.fuelType}</dt>
+				<dt class="flex items-center text-gray-500">
+					{labels.efficiency.fuelType}
+				</dt>
 				<dd class="font-semibold">{car.data.efficiency.fuelType}</dd>
 			</div>
 		</div>
@@ -28,7 +30,9 @@ const mileageUnit = getMileageUnit();
 		<div class="flex items-start gap-x-2">
 			<IconTransmission class="size-5 mt-0.5" />
 			<div>
-				<dt class="flex items-center text-gray-500">{labels.technical.transmission}</dt>
+				<dt class="flex items-center text-gray-500">
+					{labels.technical.transmission}
+				</dt>
 				<dd class="font-semibold">{car.data.technical.transmission}</dd>
 			</div>
 		</div>
@@ -36,7 +40,9 @@ const mileageUnit = getMileageUnit();
 		<div class="flex items-start gap-x-2">
 			<IconMilage class="size-5 mt-0.5" />
 			<div>
-				<dt class="flex items-center text-gray-500">{labels.history.mileage}</dt>
+				<dt class="flex items-center text-gray-500">
+					{labels.history.mileage}
+				</dt>
 				<dd class="font-semibold">
 					{`${mileage} ${mileageUnit}`}
 				</dd>
@@ -56,7 +62,9 @@ const mileageUnit = getMileageUnit();
 		<div class="flex items-start gap-x-2">
 			<IconOdometer class="size-5 mt-0.5" />
 			<div>
-				<dt class="flex items-center text-gray-500">{labels.technical.horsePower}</dt>
+				<dt class="flex items-center text-gray-500">
+					{labels.technical.horsePower}
+				</dt>
 				<dd class="font-semibold">
 					{car.data.technical.horsePower} BHP ({(car.data.technical.horsePower / 1.362).toFixed()} kW)
 				</dd>

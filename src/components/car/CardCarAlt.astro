@@ -37,16 +37,16 @@ const { car } = Astro.props as { car: Car };
 						{car.data.title}
 						{
 							car.data.general.type && (
-								<span class="text-base block font-normal align-middle">{car.data.general.type}</span>
+								<span class="text-base block font-normal align-middle">
+									{car.data.general.type}
+								</span>
 							)
 						}
 					</h2>
 					<p class="text-base mt-2 line-clamp-3">{car.data.excerpt}</p>
 					{
 						car.data.options && car.data.options.length > 0 && (
-							<p class="text-base text-gray-400 mt-3 line-clamp-1">
-								{car.data.options.join(", ")}
-							</p>
+							<p class="text-base text-gray-400 mt-3 line-clamp-1">{car.data.options.join(", ")}</p>
 						)
 					}
 				</div>

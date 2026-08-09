@@ -9,7 +9,15 @@ if (!car) {
 	return;
 }
 
-const excludeFields = ["price", "salePrice", "availability", "hidden", "vin", "loanWidget", "featured"];
+const excludeFields = [
+	"price",
+	"salePrice",
+	"availability",
+	"hidden",
+	"vin",
+	"loanWidget",
+	"featured",
+];
 ---
 
 {
@@ -17,7 +25,7 @@ const excludeFields = ["price", "salePrice", "availability", "hidden", "vin", "l
 		([key, label]) =>
 			(car.data as any)[key] &&
 			Object.keys((car.data as any)[key]).some(
-				(subKey) => !excludeFields.includes(subKey) && (car.data as any)[key][subKey]
+				(subKey) => !excludeFields.includes(subKey) && (car.data as any)[key][subKey],
 			) && (
 				<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
 					<h2 class={`h6 feature-icon feature-icon-${key}`}>{label}</h2>
@@ -45,11 +53,11 @@ const excludeFields = ["price", "salePrice", "availability", "hidden", "vin", "l
 															: "N/A"}
 											</dd>
 										</>
-									)
+									),
 							)}
 						</dl>
 					)}
 				</div>
-			)
+			),
 	)
 }

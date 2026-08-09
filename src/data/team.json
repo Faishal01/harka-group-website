@@ -1,29 +1,29 @@
 [
 	{
 		"name": "John Doe",
-        "slug": "john-doe",
+		"slug": "john-doe",
 		"role": "CEO",
 		"image": "/src/assets/images/team/pexels-kaleef-lawal-1481864847-27897903.jpg",
 		"alt": "image of John Doe",
-        "email": "john@harkagroup.id",
-        "phone": "+1 234 567 890"
+		"email": "john@harkagroup.id",
+		"phone": "+1 234 567 890"
 	},
 	{
 		"name": "Jane Doe",
-        "slug": "jane-doe",
+		"slug": "jane-doe",
 		"role": "CTO",
 		"image": "/src/assets/images/team/pexels-apunto-group-agencia-de-publicidad-53086916-7752788.jpg",
 		"alt": "image of Jane Doe",
-        "email": "jane@harkagroup.id",
-        "phone": "+1 234 567 891"
+		"email": "jane@harkagroup.id",
+		"phone": "+1 234 567 891"
 	},
 	{
 		"name": "John Smith",
-        "slug": "john-smith",
+		"slug": "john-smith",
 		"role": "CFO",
 		"image": "/src/assets/images/team/pexels-vazhnik-7562139.jpg",
 		"alt": "image of John Smith",
-        "email": "john.smith@harkagroup.id",
-        "phone": "+1 234 567 892"
+		"email": "john.smith@harkagroup.id",
+		"phone": "+1 234 567 892"
 	}
 ]

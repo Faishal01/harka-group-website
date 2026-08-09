@@ -48,11 +48,16 @@ if (!selectedTestimonials) {
 			const onNavButtonClick = (emblaApi: EmblaCarouselType): void => {
 				const autoplay = emblaApi?.plugins()?.autoplay;
 				if (!autoplay) return;
-				const resetOrStop = autoplay.options.stopOnInteraction === false ? autoplay.reset : autoplay.stop;
+				const resetOrStop =
+					autoplay.options.stopOnInteraction === false ? autoplay.reset : autoplay.stop;
 				resetOrStop();
 			};
 
-			const removeDotBtnsAndClickHandlers = addDotBtnsAndClickHandlers(emblaApi, dotsNode, onNavButtonClick);
+			const removeDotBtnsAndClickHandlers = addDotBtnsAndClickHandlers(
+				emblaApi,
+				dotsNode,
+				onNavButtonClick,
+			);
 			emblaApi.on("destroy", removeDotBtnsAndClickHandlers);
 		}
 	});

@@ -15,7 +15,13 @@ export const menuMain: MainMenuItem[] = [
 		id: "about",
 		label: "About",
 		url: "/about-us",
-		submenu: [{ id: "testimonials", label: "Testimonials", url: "/about-us/testimonials" }],
+		submenu: [
+			{
+				id: "testimonials",
+				label: "Testimonials",
+				url: "/about-us/testimonials",
+			},
+		],
 	},
 	{
 		id: "services",

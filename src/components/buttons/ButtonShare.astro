@@ -52,7 +52,12 @@ const SocialUrls = {
 		<div class="py-0" role="none">
 			{
 				Object.entries(SocialUrls).map(([key, value]) => (
-					<a href={value} class="block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" tabindex="-1">
+					<a
+						href={value}
+						class="block px-4 py-2 text-sm hover:bg-gray-100"
+						role="menuitem"
+						tabindex="-1"
+					>
 						{key === "Facebook" && <IconFacebook class="size-5 inline-block mr-1 -mt-0.5" />}
 						{key === "X/Twitter" && <IconX class="size-5 inline-block mr-1 -mt-0.5" />}
 						{key === "WhatsApp" && <IconWhatsApp class="size-5 inline-block mr-1 -mt-0.5" />}
@@ -88,12 +93,30 @@ const SocialUrls = {
 
 		// Create a function to open and close the menu
 		function openMenu() {
-			menuSocialShare.classList.remove("ease-in", "duration-75", "transform", "opacity-0", "scale-95");
-			menuSocialShare.classList.add("ease-out", "duration-100", "transform", "opacity-100", "scale-100");
+			menuSocialShare.classList.remove(
+				"ease-in",
+				"duration-75",
+				"transform",
+				"opacity-0",
+				"scale-95",
+			);
+			menuSocialShare.classList.add(
+				"ease-out",
+				"duration-100",
+				"transform",
+				"opacity-100",
+				"scale-100",
+			);
 		}
 
 		function closeMenu() {
-			menuSocialShare.classList.remove("ease-out", "duration-100", "transform", "opacity-100", "scale-100");
+			menuSocialShare.classList.remove(
+				"ease-out",
+				"duration-100",
+				"transform",
+				"opacity-100",
+				"scale-100",
+			);
 			menuSocialShare.classList.add("ease-in", "duration-75", "transform", "opacity-0", "scale-95");
 		}
 
@@ -112,7 +135,10 @@ const SocialUrls = {
 
 		// Close the menu when clicking outside
 		document.addEventListener("click", (event) => {
-			if (!menuSocialShare.contains(event.target as Node) && !buttonSocialShare.contains(event.target as Node)) {
+			if (
+				!menuSocialShare.contains(event.target as Node) &&
+				!buttonSocialShare.contains(event.target as Node)
+			) {
 				closeMenu();
 			}
 		});

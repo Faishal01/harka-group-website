@@ -1,6 +1,5 @@
 import { siteLang, unitSystem, siteCurrency } from "~/data/config";
 
-
 /**
  * Formats a given mileage number into a localized string representation.
  *

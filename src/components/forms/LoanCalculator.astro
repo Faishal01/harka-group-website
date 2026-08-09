@@ -30,7 +30,9 @@ const { price } = Astro.props;
 					value={price}
 				/>
 			</div>
-			<p class="mt-2 text-xs text-gray-500" id="loan-amount-description">The amount you want to borrow</p>
+			<p class="mt-2 text-xs text-gray-500" id="loan-amount-description">
+				The amount you want to borrow
+			</p>
 		</div>
 
 		<div class="lg:col-span-1">
@@ -51,7 +53,9 @@ const { price } = Astro.props;
 				</select>
 				<IconChevronDown class="icon-chevron-down" />
 			</div>
-			<p class="mt-2 text-xs text-gray-500" id="loan-duration-description">The duration of the loan in months</p>
+			<p class="mt-2 text-xs text-gray-500" id="loan-duration-description">
+				The duration of the loan in months
+			</p>
 		</div>
 
 		<div class="lg:col-span-1">
@@ -108,8 +112,8 @@ const { price } = Astro.props;
 
 			<div class="lg:absolute bottom-0 lg:translate-y-full">
 				<p class="text-xs mt-3 text-gray-500">
-					Using this calculator does not constitute an application for a loan or create any obligations
-					between you and {siteName}.
+					Using this calculator does not constitute an application for a loan or create any
+					obligations between you and {siteName}.
 				</p>
 			</div>
 		</div>
@@ -123,7 +127,9 @@ const { price } = Astro.props;
 		const form = document.getElementById("form-loan-calculator") as HTMLFormElement;
 		const monthlyPaymentField = document.getElementById("loan-monthly-payment") as HTMLSpanElement;
 		const totalPaymentField = document.getElementById("loan-total-payment") as HTMLSpanElement;
-		const LoanCalculatorResult = document.getElementById("loan-calculator-result") as HTMLDivElement;
+		const LoanCalculatorResult = document.getElementById(
+			"loan-calculator-result",
+		) as HTMLDivElement;
 		const wrapper = document.getElementById("form-loan-calculator-wrapper") as HTMLDivElement;
 
 		form?.addEventListener("submit", async (event) => {

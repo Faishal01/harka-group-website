@@ -1,6 +1,9 @@
 import type { EmblaCarouselType } from "embla-carousel";
 
-export const addThumbBtnsClickHandlers = (emblaApiMain: EmblaCarouselType, emblaApiThumb: EmblaCarouselType) => {
+export const addThumbBtnsClickHandlers = (
+	emblaApiMain: EmblaCarouselType,
+	emblaApiThumb: EmblaCarouselType,
+) => {
 	const slidesThumbs = emblaApiThumb.slideNodes();
 
 	const scrollToIndex = slidesThumbs.map((_, index) => () => emblaApiMain.scrollTo(index));
@@ -16,7 +19,10 @@ export const addThumbBtnsClickHandlers = (emblaApiMain: EmblaCarouselType, embla
 	};
 };
 
-export const addToggleThumbBtnsActive = (emblaApiMain: EmblaCarouselType, emblaApiThumb: EmblaCarouselType) => {
+export const addToggleThumbBtnsActive = (
+	emblaApiMain: EmblaCarouselType,
+	emblaApiThumb: EmblaCarouselType,
+) => {
 	const slidesThumbs = emblaApiThumb.slideNodes();
 
 	const toggleThumbBtnsState = () => {
@@ -36,7 +42,11 @@ export const addToggleThumbBtnsActive = (emblaApiMain: EmblaCarouselType, emblaA
 	};
 };
 
-const addTogglePrevNextBtnsActive = (emblaApi: EmblaCarouselType, prevBtn: HTMLElement, nextBtn: HTMLElement) => {
+const addTogglePrevNextBtnsActive = (
+	emblaApi: EmblaCarouselType,
+	prevBtn: HTMLElement,
+	nextBtn: HTMLElement,
+) => {
 	const togglePrevNextBtnsState = () => {
 		if (emblaApi.canScrollPrev()) prevBtn.removeAttribute("disabled");
 		else prevBtn.setAttribute("disabled", "disabled");
@@ -56,7 +66,11 @@ const addTogglePrevNextBtnsActive = (emblaApi: EmblaCarouselType, prevBtn: HTMLE
 	};
 };
 
-export const addPrevNextBtnsClickHandlers = (emblaApi: EmblaCarouselType, prevBtn: HTMLElement, nextBtn: HTMLElement) => {
+export const addPrevNextBtnsClickHandlers = (
+	emblaApi: EmblaCarouselType,
+	prevBtn: HTMLElement,
+	nextBtn: HTMLElement,
+) => {
 	const scrollPrev = () => {
 		emblaApi.scrollPrev();
 	};

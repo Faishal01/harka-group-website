@@ -31,7 +31,11 @@ const gallery = Astro.props.gallery || [];
 						aria-label={image.alt}
 						class="embla__slide select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
 					>
-						<img src={image.image} alt={image.alt} class="w-full h-full object-cover aspect-[4/3]" />
+						<img
+							src={image.image}
+							alt={image.alt}
+							class="w-full h-full object-cover aspect-[4/3]"
+						/>
 					</a>
 				))
 			}
@@ -80,11 +84,17 @@ const gallery = Astro.props.gallery || [];
 			<div class="embla-thumbs__viewport overflow-hidden">
 				<div class="embla-thumbs__container flex">
 					<div class="embla-thumbs__slide select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
-						{image && <img src={image} alt={alt || ""} class="w-full h-full object-cover aspect-[4/3]" />}
+						{image && (
+							<img src={image} alt={alt || ""} class="w-full h-full object-cover aspect-[4/3]" />
+						)}
 					</div>
 					{gallery.map((image: any) => (
 						<div class="embla-thumbs__slide select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
-							<img src={image.image} alt={image.alt} class="w-full h-full object-cover aspect-[4/3]" />
+							<img
+								src={image.image}
+								alt={image.alt}
+								class="w-full h-full object-cover aspect-[4/3]"
+							/>
 						</div>
 					))}
 				</div>
@@ -102,9 +112,11 @@ const gallery = Astro.props.gallery || [];
 	} from "~/utils/embla-thumbs";
 
 	document.addEventListener("astro:page-load", function () {
-		const viewportNodesMainCarousel = document.querySelectorAll(".embla__viewport") as NodeListOf<HTMLElement>;
+		const viewportNodesMainCarousel = document.querySelectorAll(
+			".embla__viewport",
+		) as NodeListOf<HTMLElement>;
 		const viewportNodesThumbCarousel = document.querySelectorAll(
-			".embla-thumbs__viewport"
+			".embla-thumbs__viewport",
 		) as NodeListOf<HTMLElement>;
 
 		if (!viewportNodesMainCarousel.length || !viewportNodesThumbCarousel.length) return;
@@ -121,8 +133,12 @@ const gallery = Astro.props.gallery || [];
 			const viewportNodeThumbCarousel = viewportNodesThumbCarousel[index];
 			if (!viewportNodeThumbCarousel) return;
 
-			const prevBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(".embla-button-prev") as HTMLElement;
-			const nextBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(".embla-button-next") as HTMLElement;
+			const prevBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(
+				".embla-button-prev",
+			) as HTMLElement;
+			const nextBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(
+				".embla-button-next",
+			) as HTMLElement;
 
 			const emblaApiMain = EmblaCarousel(viewportNodeMainCarousel, OPTIONS);
 			const emblaApiThumb = EmblaCarousel(viewportNodeThumbCarousel, OPTIONS_THUMBS);
@@ -131,7 +147,7 @@ const gallery = Astro.props.gallery || [];
 				const removePrevNextBtnsClickHandlers = addPrevNextBtnsClickHandlers(
 					emblaApiMain,
 					prevBtnNode,
-					nextBtnNode
+					nextBtnNode,
 				);
 				emblaApiMain.on("destroy", removePrevNextBtnsClickHandlers);
 			}
@@ -142,7 +158,9 @@ const gallery = Astro.props.gallery || [];
 				.on("destroy", removeThumbBtnsClickHandlers)
 				.on("destroy", removeToggleThumbBtnsActive);
 
-			emblaApiThumb.on("destroy", removeThumbBtnsClickHandlers).on("destroy", removeToggleThumbBtnsActive);
+			emblaApiThumb
+				.on("destroy", removeThumbBtnsClickHandlers)
+				.on("destroy", removeToggleThumbBtnsActive);
 		});
 	});
 </script>

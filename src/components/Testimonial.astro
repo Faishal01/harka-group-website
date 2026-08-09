@@ -8,7 +8,9 @@ const { id } = Astro.props;
 
 const testimonial = id
 	? ((await getEntry("testimonials", id)) as Testimonial)
-	: (await getCollection("testimonials"))[Math.floor(Math.random() * (await getCollection("testimonials")).length)];
+	: (await getCollection("testimonials"))[
+			Math.floor(Math.random() * (await getCollection("testimonials")).length)
+		];
 
 if (!testimonial) {
 	throw new Error("No testimonials found");
@@ -23,7 +25,11 @@ if (!testimonial) {
 			<p>“{testimonial.data.description}”</p>
 		</blockquote>
 		<figcaption class="mt-8 flex items-center gap-x-6">
-			<Image src={testimonial.data.img} alt={testimonial.data.author} class="size-12 rounded-full bg-gray-50" />
+			<Image
+				src={testimonial.data.img}
+				alt={testimonial.data.author}
+				class="size-12 rounded-full bg-gray-50"
+			/>
 			<div class="text-base">
 				<div class="font-semibold">{testimonial.data.author}</div>
 				<div class="text-sm text-gray-600">{testimonial.data.location}</div>

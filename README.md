@@ -8,9 +8,9 @@ Harka Group is perfect for car dealers looking to create a modern, responsive we
 
 ## 🛠️ Technologies Used
 
--   **Astro**: The core framework for building fast, content-focused websites.
--   **TailwindCSS**: A utility-first CSS framework for rapid UI development.
--   **Embla Carousel**: A modern slider library for creating responsive sliders.
+- **Astro**: The core framework for building fast, content-focused websites.
+- **TailwindCSS**: A utility-first CSS framework for rapid UI development.
+- **Embla Carousel**: A modern slider library for creating responsive sliders.
 
 ## 🚀 Installation and Deployment
 
@@ -18,27 +18,27 @@ To get started with Harka Group, follow these steps:
 
 1. **Clone Harka Group**:
 
-    ```sh
-    git clone https://github.com/wpinfusion/harka-group-website.git
-    ```
+   ```sh
+   git clone https://github.com/wpinfusion/harka-group-website.git
+   ```
 
 2. **Install Dependencies**:
 
-    ```sh
-    npm install
-    ```
+   ```sh
+   npm install
+   ```
 
 3. **Run Development Server**:
 
-    ```sh
-    npm run dev
-    ```
+   ```sh
+   npm run dev
+   ```
 
 4. **Build for Production**:
 
-    ```sh
-    npm run build
-    ```
+   ```sh
+   npm run build
+   ```
 
 ## 📂 Project Structure
 
@@ -61,13 +61,13 @@ Inside of your Harka Group project, you'll see the following folders and files:
 
 ## 📄 Premade Pages
 
--   Home
--   Cars
--   Blog
--   Contact
--   About Us
--   Services
--   404
+- Home
+- Cars
+- Blog
+- Contact
+- About Us
+- Services
+- 404
 
 ## 🛠️ Quick start
 

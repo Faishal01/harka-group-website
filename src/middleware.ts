@@ -10,9 +10,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		const adminPassword = (env as any).AUTH_PASSWORD || "secret"; // default for local dev if not set
 
 		if (authCookie !== adminPassword) {
-            if (url.pathname === "/admin/login") {
-                return next();
-            }
+			if (url.pathname === "/admin/login") {
+				return next();
+			}
 			return context.redirect("/admin/login");
 		}
 	}

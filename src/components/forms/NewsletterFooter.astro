@@ -13,12 +13,19 @@
 		placeholder="Enter your email"
 	/>
 	<div class="mt-4 sm:ml-4 sm:mt-0 sm:shrink-0">
-		<button type="submit" id="button-newsletter-footer-subscribe" class="button button-primary">Subscribe</button>
+		<button type="submit" id="button-newsletter-footer-subscribe" class="button button-primary"
+			>Subscribe</button
+		>
 	</div>
 </form>
-<div id="success-message" class="max-w-md max-lg:mt-4 w-full flex items-center justify-center text-center" style="display: none;">
+<div
+	id="success-message"
+	class="max-w-md max-lg:mt-4 w-full flex items-center justify-center text-center"
+	style="display: none;"
+>
 	<p class="text-base lg:text-sm lg:text-balance text-left lg:text-center">
-		Thanks for subscribing to our newsletter! We'll send you an email every week with the latest news.
+		Thanks for subscribing to our newsletter! We'll send you an email every week with the latest
+		news.
 	</p>
 </div>
 
@@ -27,13 +34,12 @@
 		const form = document.getElementById("form-newsletter-footer") as HTMLFormElement;
 
 		if (form) {
-
 			const message = document.getElementById("success-message")!;
 
 			form.addEventListener("submit", function (e) {
 				e.preventDefault();
 				form.style.display = "none";
-                message.removeAttribute("style");
+				message.removeAttribute("style");
 			});
 		}
 	});

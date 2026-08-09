@@ -6,11 +6,12 @@ import IconTransmission from "~/assets/images/icons/transmission.svg";
 import IconCalendar from "~/assets/images/icons/calendar.svg";
 import IconFuel from "~/assets/images/icons/fuel.svg";
 import IconOdometer from "~/assets/images/icons/odometer.svg";
-const { data } = Astro.props as { data: Car['data'] };
+const { data } = Astro.props as { data: Car["data"] };
 
 const mileage = getMileage(data.history.mileage);
 const mileageUnit = getMileageUnit();
-const pillClasses = "flex items-center gap-x-1 rounded-full bg-gray-100 px-3 py-1 ring-1 ring-gray-200";
+const pillClasses =
+	"flex items-center gap-x-1 rounded-full bg-gray-100 px-3 py-1 ring-1 ring-gray-200";
 ---
 
 <ul class="flex gap-x-2 sm:gap-x-4 items-center gap-y-2 mt-auto flex-wrap text-sm lg:text-base">

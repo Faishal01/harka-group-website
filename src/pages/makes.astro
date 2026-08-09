@@ -11,67 +11,63 @@ import { env } from "cloudflare:workers";
 
 const db = getDb(env);
 const dbCars = await db.select().from(carsTable);
-const allCars = dbCars.filter(c => !c.misc?.hidden);
+const allCars = dbCars.filter((c) => !c.misc?.hidden);
 const uniqueMakes = [
-  ...new Set(
-    allCars.filter((c) => !c.misc?.hidden).map((car) => car.general.make),
-  ),
+	...new Set(allCars.filter((c) => !c.misc?.hidden).map((car) => car.general.make)),
 ];
 uniqueMakes.sort((a, b) => a.localeCompare(b));
 
 const groupedMakes: Record<string, string[]> = uniqueMakes.reduce(
-  (acc, make) => {
-    const firstLetter = make[0].toUpperCase();
-    if (!acc[firstLetter]) {
-      acc[firstLetter] = [];
-    }
-    acc[firstLetter].push(make);
-    return acc;
-  },
-  {} as Record<string, string[]>,
+	(acc, make) => {
+		const firstLetter = make[0].toUpperCase();
+		if (!acc[firstLetter]) {
+			acc[firstLetter] = [];
+		}
+		acc[firstLetter].push(make);
+		return acc;
+	},
+	{} as Record<string, string[]>,
 );
 ---
 
 <Layout pageTitle="Makes">
-  <Section class:list={"bg-white"}>
-    <Container class:list={"max-w-3xl"}>
-      <Heading>
-        <h1 slot="heading-title">Makes</h1>
+	<Section class:list={"bg-white"}>
+		<Container class:list={"max-w-3xl"}>
+			<Heading>
+				<h1 slot="heading-title">Makes</h1>
 
-        <p class="-mb-16" slot="heading-content">
-          Explore our range of makes for sale. We have a wide range of makes
-          available to suit all budgets and lifestyles.
-        </p>
-      </Heading>
-    </Container>
-  </Section>
+				<p class="-mb-16" slot="heading-content">
+					Explore our range of makes for sale. We have a wide range of makes available to suit all
+					budgets and lifestyles.
+				</p>
+			</Heading>
+		</Container>
+	</Section>
 
-  <Section class:list={"bg-gray-50"}>
-    <Container class:list={"max-w-3xl"}>
-      {
-        Object.keys(groupedMakes).length > 0 ? (
-          <ul class="grid grid-cols-1 p-4 lg:p-8 rounded-lg shadow-md border border-gray-100 gap-4 lg:grid-cols-3 bg-white">
-            {Object.keys(groupedMakes)
-              .sort()
-              .map((letter) => (
-                <li>
-                  <h2 class="text-xl font-bold mt-4">{letter}</h2>
-                  <ul>
-                    {groupedMakes[letter].map((make) => (
-                      <li>
-                        <a href={`/cars/?make=${encodeURIComponent(make)}`}>
-                          {make}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-          </ul>
-        ) : (
-          <p>No makes available at the moment. Please check back later.</p>
-        )
-      }
-    </Container>
-  </Section>
+	<Section class:list={"bg-gray-50"}>
+		<Container class:list={"max-w-3xl"}>
+			{
+				Object.keys(groupedMakes).length > 0 ? (
+					<ul class="grid grid-cols-1 p-4 lg:p-8 rounded-lg shadow-md border border-gray-100 gap-4 lg:grid-cols-3 bg-white">
+						{Object.keys(groupedMakes)
+							.sort()
+							.map((letter) => (
+								<li>
+									<h2 class="text-xl font-bold mt-4">{letter}</h2>
+									<ul>
+										{groupedMakes[letter].map((make) => (
+											<li>
+												<a href={`/cars/?make=${encodeURIComponent(make)}`}>{make}</a>
+											</li>
+										))}
+									</ul>
+								</li>
+							))}
+					</ul>
+				) : (
+					<p>No makes available at the moment. Please check back later.</p>
+				)
+			}
+		</Container>
+	</Section>
 </Layout>

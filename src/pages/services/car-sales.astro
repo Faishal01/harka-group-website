@@ -6,18 +6,20 @@ import Heading from "~/components/Heading.astro";
 import FAQ from "~/components/Faq.astro";
 
 const faqItems = [
-    {
-        question: "What types of cars do you sell?",
-        answer: "We offer a variety of luxury cars including sedans, SUVs, and sports cars from top brands.",
-    },
-    {
-        question: "Can I trade in my old car?",
-        answer: "Yes, we offer trade-in options. Our team will evaluate your car and provide a fair trade-in value.",
-    },
-    {
-        question: "Do you offer financing options?",
-        answer: "Yes, we provide flexible financing options to make your car purchase more affordable.",
-    },
+	{
+		question: "What types of cars do you sell?",
+		answer:
+			"We offer a variety of luxury cars including sedans, SUVs, and sports cars from top brands.",
+	},
+	{
+		question: "Can I trade in my old car?",
+		answer:
+			"Yes, we offer trade-in options. Our team will evaluate your car and provide a fair trade-in value.",
+	},
+	{
+		question: "Do you offer financing options?",
+		answer: "Yes, we provide flexible financing options to make your car purchase more affordable.",
+	},
 ];
 ---
 
@@ -27,17 +29,17 @@ const faqItems = [
 			<Heading>
 				<h1 slot="heading-title">Car Sales</h1>
 				<p slot="heading-content">
-					At Harka Group, we offer top-notch repair services to keep your luxury car in perfect condition. Our
-					team of skilled technicians is equipped with the latest tools and technology to handle any repair
-					job, big or small.
+					At Harka Group, we offer top-notch repair services to keep your luxury car in perfect
+					condition. Our team of skilled technicians is equipped with the latest tools and
+					technology to handle any repair job, big or small.
 				</p>
 			</Heading>
 		</Container>
 	</Section>
 
-    <Section class:list={"bg-white"}>
-        <Container>
-            <FAQ items={faqItems} />
-        </Container>
-    </Section>
+	<Section class:list={"bg-white"}>
+		<Container>
+			<FAQ items={faqItems} />
+		</Container>
+	</Section>
 </Layout>

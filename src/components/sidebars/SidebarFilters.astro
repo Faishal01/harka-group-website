@@ -27,7 +27,12 @@ const { data } = Astro.props;
 	class="fixed lg:relative max-lg:overflow-y-auto shrink-0 inset-y-0 z-50 lg:flex w-full lg:w-80 lg:flex-col max-lg:bg-white transition duration-300 max-lg:opacity-0 max-lg:pointer-events-none"
 >
 	<div class="flex lg:sticky lg:top-8 flex-col gap-y-5 bg-white lg:shadow-md px-6 py-4 relative">
-		<button id="button-modal-filter-close" class="lg:hidden" type="button" aria-label="Close filter modal">
+		<button
+			id="button-modal-filter-close"
+			class="lg:hidden"
+			type="button"
+			aria-label="Close filter modal"
+		>
 			<div class="flex justify-end">
 				<IconClose class="size-8 bg-gray-800 rounded-full p-1 text-white" />
 			</div>
@@ -152,9 +157,17 @@ const { data } = Astro.props;
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
-					<select name="transmission" id="transmission" class="appearance-none col-start-1 row-start-1">
+					<select
+						name="transmission"
+						id="transmission"
+						class="appearance-none col-start-1 row-start-1"
+					>
 						<option value="all">All</option>
-						{transmission.map((transmission) => <option value={transmission}>{transmission}</option>)}
+						{
+							transmission.map((transmission) => (
+								<option value={transmission}>{transmission}</option>
+							))
+						}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
 				</div>
@@ -234,7 +247,9 @@ const { data } = Astro.props;
 
 			form.addEventListener("change", async (event) => {
 				const target = event.target! as HTMLSelectElement;
-				const clearButton = document.getElementById(`clear-input-${target.name}`)! as HTMLButtonElement;
+				const clearButton = document.getElementById(
+					`clear-input-${target.name}`,
+				)! as HTMLButtonElement;
 
 				if (target.value !== "all") {
 					clearButton.classList.remove("hidden");
@@ -282,7 +297,7 @@ const { data } = Astro.props;
 					}
 
 					const response = await fetch(url);
-					const data = await response.json() as any;
+					const data = (await response.json()) as any;
 
 					resultFound.textContent = `(${data?.allCars?.length ?? 0})`;
 				} catch (error) {
@@ -290,7 +305,11 @@ const { data } = Astro.props;
 				}
 			});
 
-			if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(navigator.userAgent)) {
+			if (
+				!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(
+					navigator.userAgent,
+				)
+			) {
 				const filters = form.querySelectorAll("select");
 				filters.forEach((filter) => {
 					filter.addEventListener("change", () => {

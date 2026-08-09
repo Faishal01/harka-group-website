@@ -5,7 +5,6 @@ export const prerender = false;
 // 	Astro.response.headers.set("CDN-Cache-Control", "public, max-age=86400, s-maxage=2592000");
 // }
 
-
 import { siteName, priceSteps, defaultPaginationSize } from "~/data/config";
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
@@ -30,7 +29,7 @@ const searchParamsArray = Array.from(searchParamsValue);
 APIURL.search = searchParamsValue.toString();
 
 const response = await fetch(APIURL);
-const responseData = response.status === 404 ? { allCars: [] } : await response.json() as any;
+const responseData = response.status === 404 ? { allCars: [] } : ((await response.json()) as any);
 const allCars: Car[] = responseData.allCars;
 
 const makes = [...new Set(allCars.map((car: Car) => car.data.general.make))].sort();
@@ -47,7 +46,9 @@ const sideBarData = {
 const page = parseInt(searchParamsValue.get("page") || "1");
 const pageSize = defaultPaginationSize;
 const totalPages = Math.ceil(Array.isArray(allCars) ? allCars.length / pageSize : 0);
-const paginatedCars = Array.isArray(allCars) ? allCars.slice((page - 1) * pageSize, page * pageSize) : [];
+const paginatedCars = Array.isArray(allCars)
+	? allCars.slice((page - 1) * pageSize, page * pageSize)
+	: [];
 ---
 
 <Layout pageTitle={`Cars | ${siteName}`} description="Explore our range of cars for sale.">

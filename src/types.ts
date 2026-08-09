@@ -140,7 +140,6 @@ export interface TestimonialProps {
 	id?: string;
 }
 
-
 // Menus
 export interface MainMenuItem {
 	id: string;

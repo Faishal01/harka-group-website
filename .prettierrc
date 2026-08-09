@@ -1,11 +1,13 @@
 {
-  "plugins": ["prettier-plugin-astro"],
-  "overrides": [
-    {
-      "files": "*.astro",
-      "options": {
-        "parser": "astro"
-      }
-    }
-  ]
+	"plugins": ["prettier-plugin-astro"],
+	"useTabs": true,
+	"printWidth": 100,
+	"overrides": [
+		{
+			"files": "*.astro",
+			"options": {
+				"parser": "astro"
+			}
+		}
+	]
 }
