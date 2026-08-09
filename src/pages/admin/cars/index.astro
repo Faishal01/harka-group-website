@@ -55,12 +55,12 @@ const allCars = await db.query.cars.findMany({
 				</nav>
 			</div>
 
-			<div class="bg-white rounded-lg shadow overflow-hidden">
+			<div class="bg-white rounded-lg shadow">
 				<table class="min-w-full divide-y divide-gray-200">
 					<thead class="bg-gray-50">
 						<tr>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider first:rounded-tl-lg"
 								>Car</th
 							>
 							<th
@@ -79,7 +79,7 @@ const allCars = await db.query.cars.findMany({
 								)
 							}
 							<th
-								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider last:rounded-tr-lg"
 								>Actions</th
 							>
 						</tr>
@@ -112,9 +112,20 @@ const allCars = await db.query.cars.findMany({
 									{tab === "active" ? (
 										<td class="px-6 py-4 whitespace-nowrap">
 											<span
-												class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${car.misc?.hidden ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
+												class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+													car.general?.availability === "reserved"
+														? "bg-yellow-100 text-yellow-800"
+														: car.general?.availability === "coming-soon"
+															? "bg-blue-100 text-blue-800"
+															: "bg-green-100 text-green-800"
+												}`}
 											>
-												{car.misc?.hidden ? "Hidden" : "Visible"}
+												{car.general?.availability
+													? car.general.availability
+															.split("-")
+															.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+															.join(" ")
+													: "In Stock"}
 											</span>
 										</td>
 									) : (
@@ -169,8 +180,8 @@ const allCars = await db.query.cars.findMany({
 														Edit
 													</a>
 
-													<div class="relative group">
-														<button class="text-gray-500 hover:text-gray-700 flex items-center font-medium">
+													<div class="relative quick-actions-wrapper">
+														<button class="text-gray-500 hover:text-gray-700 flex items-center font-medium quick-actions-btn">
 															Quick Actions
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
@@ -188,24 +199,36 @@ const allCars = await db.query.cars.findMany({
 															</svg>
 														</button>
 														{/* Dropdown Menu */}
-														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-10 hidden group-hover:block group-focus-within:block">
-															<div class="py-1">
-																<button
-																	type="button"
-																	class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 quick-archive-btn"
-																	data-id={car.id}
-																	data-reason="sold"
-																>
-																	Mark Sold
-																</button>
-																<button
-																	type="button"
-																	class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 quick-archive-btn"
-																	data-id={car.id}
-																	data-reason="removed"
-																>
-																	Remove from List
-																</button>
+														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
+															<div class="py-1 divide-y divide-gray-100">
+																<div class="py-1">
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 quick-archive-btn"
+																		data-id={car.id}
+																		data-reason="sold"
+																	>
+																		Mark Sold
+																	</button>
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 quick-archive-btn"
+																		data-id={car.id}
+																		data-reason="removed"
+																	>
+																		Archive
+																	</button>
+																</div>
+																<div class="py-1">
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 quick-archive-btn font-medium"
+																		data-id={car.id}
+																		data-reason="delete"
+																	>
+																		Hard Delete
+																	</button>
+																</div>
 															</div>
 														</div>
 													</div>
@@ -231,10 +254,65 @@ const allCars = await db.query.cars.findMany({
 		</Container>
 	</Section>
 
+	<!-- Delete Confirmation Modal -->
+	<dialog id="delete-modal" class="p-0 rounded-lg shadow-xl backdrop:bg-gray-800/50 open:animate-in open:fade-in-0 duration-200">
+		<div class="bg-white p-6 max-w-sm w-full">
+			<h3 class="text-lg font-bold mb-4 text-gray-900">Confirm Hard Delete</h3>
+			<p class="text-sm text-gray-600 mb-6">Are you sure you want to permanently delete this car? This action cannot be undone, and the associated images will be deleted from Cloudflare R2 storage.</p>
+			<div class="flex justify-end gap-3">
+				<button type="button" class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 font-medium" id="btn-cancel-delete">Cancel</button>
+				<button type="button" class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700 font-medium" id="btn-confirm-delete">Delete</button>
+			</div>
+		</div>
+	</dialog>
+
 	<script>
+		let carToDelete = null;
+		const modal = document.getElementById('delete-modal');
+		
+		document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
+			carToDelete = null;
+			modal?.close();
+		});
+
+		document.getElementById('btn-confirm-delete')?.addEventListener('click', async () => {
+			if (!carToDelete) return;
+			const res = await fetch(`/api/cars/${carToDelete}?reason=delete`, {
+				method: "DELETE",
+			});
+			if (res.ok) window.location.reload();
+			else alert("Failed to delete vehicle.");
+		});
+
+		// Quick Actions Dropdown Logic
+		document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
+			btn.addEventListener("click", (e) => {
+				const menu = btn.nextElementSibling;
+				const isHidden = menu?.classList.contains("hidden");
+				
+				// Close all other menus first
+				document.querySelectorAll('.quick-actions-menu').forEach(m => m.classList.add('hidden'));
+				
+				// Toggle the clicked menu
+				if (isHidden) {
+					menu?.classList.remove("hidden");
+				}
+			});
+		});
+
+		// Close dropdowns when clicking outside
+		document.addEventListener("click", (e) => {
+			const target = e.target;
+			if (target instanceof Element && !target.closest('.quick-actions-wrapper')) {
+				document.querySelectorAll('.quick-actions-menu').forEach(menu => {
+					menu.classList.add('hidden');
+				});
+			}
+		});
+
 		document.querySelectorAll(".restore-btn").forEach((btn) => {
 			btn.addEventListener("click", async (e) => {
-				const id = (e.currentTarget as HTMLButtonElement).dataset.id;
+				const id = e.currentTarget.dataset.id;
 				if (confirm("Are you sure you want to restore this car back to active status?")) {
 					const res = await fetch(`/api/cars/${id}/restore`, {
 						method: "POST",
@@ -247,12 +325,18 @@ const allCars = await db.query.cars.findMany({
 
 		document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
 			btn.addEventListener("click", async (e) => {
-				const target = e.currentTarget as HTMLButtonElement;
+				const target = e.currentTarget;
 				const id = target.dataset.id;
 				const reason = target.dataset.reason;
 
+				if (reason === "delete") {
+					carToDelete = id;
+					modal?.showModal();
+					return;
+				}
+
 				const actionText =
-					reason === "sold" ? "Mark this car as SOLD" : "REMOVE this car from the active list";
+					reason === "sold" ? "Mark this car as SOLD" : "ARCHIVE this car from the active list";
 
 				if (confirm(`Are you sure you want to ${actionText}?`)) {
 					const res = await fetch(`/api/cars/${id}?reason=${reason}`, {

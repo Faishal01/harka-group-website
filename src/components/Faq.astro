@@ -4,8 +4,8 @@ const { items, class: className = "" } = Astro.props;
 const wrapperClasses = `mx-auto max-w-3xl ${className}`;
 ---
 
-<div class={wrapperClasses}>
-	<dl id="faq-items" class="space-y-6 divide-y divide-gray-800/10">
+<custom-faq class={wrapperClasses}>
+	<dl class="space-y-6 divide-y divide-gray-800/10">
 		{
 			items.map((item, index) => (
 				<div class="pt-6">
@@ -50,27 +50,28 @@ const wrapperClasses = `mx-auto max-w-3xl ${className}`;
 			))
 		}
 	</dl>
-</div>
+</custom-faq>
 
 <script>
-	document.addEventListener("astro:page-load", function () {
-		const faqItems = document.getElementById("faq-items");
+	class CustomFaq extends HTMLElement {
+		connectedCallback() {
+			const faqItems = this.querySelectorAll("dl > div");
 
-		if (faqItems) {
-			const faqItem = faqItems.querySelectorAll(":scope > div");
-
-			faqItem.forEach((item) => {
+			faqItems.forEach((item) => {
 				const button = item.querySelector("button")!;
 				const content = item.querySelector("dd")!;
 				const icon = button.querySelector(".rotate-90");
 
 				button.addEventListener("click", () => {
-					const expanded = button.getAttribute("aria-expanded") === "true" || false;
+					const expanded = button.getAttribute("aria-expanded") === "true";
 					button.setAttribute("aria-expanded", (!expanded).toString());
 					content.classList.toggle("hidden");
 					icon?.classList.toggle("rotate-90");
 				});
 			});
 		}
-	});
+	}
+	if (!customElements.get("custom-faq")) {
+		customElements.define("custom-faq", CustomFaq);
+	}
 </script>

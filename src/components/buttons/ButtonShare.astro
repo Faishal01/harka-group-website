@@ -27,7 +27,7 @@ const SocialUrls = {
 };
 ---
 
-<div class="relative inline-block text-left">
+<custom-share class="relative inline-block text-left">
 	<div>
 		<button
 			type="button"
@@ -78,69 +78,79 @@ const SocialUrls = {
 			</button>
 		</div>
 	</div>
-</div>
+</custom-share>
 
 <script>
-	document.addEventListener("astro:page-load", function () {
-		const buttonSocialShare = document.getElementById("button-social-share")!;
+	class CustomShare extends HTMLElement {
+		connectedCallback() {
+			const buttonSocialShare = this.querySelector("#button-social-share")!;
+			const menuSocialShare = this.querySelector("#menu-social-share")!;
+			const buttonCopyLink = this.querySelector("#button-copy-link")!;
 
-		if (!buttonSocialShare) {
-			return;
-		}
+			const openMenu = () => {
+				menuSocialShare.classList.remove(
+					"ease-in",
+					"duration-75",
+					"transform",
+					"opacity-0",
+					"scale-95",
+				);
+				menuSocialShare.classList.add(
+					"ease-out",
+					"duration-100",
+					"transform",
+					"opacity-100",
+					"scale-100",
+				);
+			};
 
-		const menuSocialShare = document.getElementById("menu-social-share")!;
-		const buttonCopyLink = document.getElementById("button-copy-link")!;
+			const closeMenu = () => {
+				menuSocialShare.classList.remove(
+					"ease-out",
+					"duration-100",
+					"transform",
+					"opacity-100",
+					"scale-100",
+				);
+				menuSocialShare.classList.add("ease-in", "duration-75", "transform", "opacity-0", "scale-95");
+			};
 
-		// Create a function to open and close the menu
-		function openMenu() {
-			menuSocialShare.classList.remove(
-				"ease-in",
-				"duration-75",
-				"transform",
-				"opacity-0",
-				"scale-95",
-			);
-			menuSocialShare.classList.add(
-				"ease-out",
-				"duration-100",
-				"transform",
-				"opacity-100",
-				"scale-100",
-			);
-		}
+			buttonSocialShare.addEventListener("click", () => {
+				if (menuSocialShare.classList.contains("opacity-100")) {
+					closeMenu();
+				} else {
+					openMenu();
+				}
+			});
 
-		function closeMenu() {
-			menuSocialShare.classList.remove(
-				"ease-out",
-				"duration-100",
-				"transform",
-				"opacity-100",
-				"scale-100",
-			);
-			menuSocialShare.classList.add("ease-in", "duration-75", "transform", "opacity-0", "scale-95");
-		}
-
-		buttonSocialShare.addEventListener("click", () => {
-			if (menuSocialShare.classList.contains("opacity-100")) {
+			buttonCopyLink.addEventListener("click", async () => {
+				try {
+					await navigator.clipboard.writeText(window.location.href);
+				} catch (e) {
+					console.error("Clipboard API failed", e);
+				}
 				closeMenu();
-			} else {
-				openMenu();
-			}
-		});
+			});
 
-		buttonCopyLink.addEventListener("click", () => {
-			navigator.clipboard.writeText(window.location.href);
-			closeMenu();
-		});
+			this.outsideClickHandler = (event: Event) => {
+				const target = event.target as Node;
+				if (target && !this.contains(target)) {
+					closeMenu();
+				}
+			};
+			
+			// Defer adding the listener so it doesn't fire on the click that opens it
+			setTimeout(() => {
+				document.addEventListener("click", this.outsideClickHandler);
+			}, 0);
+		}
 
-		// Close the menu when clicking outside
-		document.addEventListener("click", (event) => {
-			if (
-				!menuSocialShare.contains(event.target as Node) &&
-				!buttonSocialShare.contains(event.target as Node)
-			) {
-				closeMenu();
-			}
-		});
-	});
+		disconnectedCallback() {
+			document.removeEventListener("click", this.outsideClickHandler);
+		}
+	}
+	
+	if (!customElements.get("custom-share")) {
+		customElements.define("custom-share", CustomShare);
+	}
 </script>

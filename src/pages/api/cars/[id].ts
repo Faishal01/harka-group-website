@@ -70,17 +70,28 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 	try {
 		const id = params.id as string;
 		const url = new URL(request.url);
-		const reason = (url.searchParams.get("reason") as "sold" | "removed") || "removed";
+		const reason = (url.searchParams.get("reason") as "sold" | "removed" | "delete") || "removed";
 		const db = getDb(env as any);
 
-		// Soft delete: update deletedAt timestamp and reason
-		await db
-			.update(carsTable)
-			.set({
-				deletedAt: new Date(),
-				archiveReason: reason,
-			})
-			.where(eq(carsTable.id, id));
+		if (reason === "delete") {
+			const car = await db.query.cars.findFirst({ where: eq(carsTable.id, id) });
+			if (car?.image) {
+				const filename = car.image.split("/").pop();
+				if (filename) {
+					await (env as any).IMAGES_BUCKET.delete(filename);
+				}
+			}
+			await db.delete(carsTable).where(eq(carsTable.id, id));
+		} else {
+			// Soft delete: update deletedAt timestamp and reason
+			await db
+				.update(carsTable)
+				.set({
+					deletedAt: new Date(),
+					archiveReason: reason,
+				})
+				.where(eq(carsTable.id, id));
+		}
 
 		return new Response(JSON.stringify({ success: true, redirect: "/admin/cars" }), {
 			status: 200,

@@ -3,7 +3,7 @@ import type { ShowCarsProps as Props } from "~/types";
 import CardCarAlt from "~/components/car/CardCarAlt.astro";
 import CardCar from "~/components/car/CardCar.astro";
 import { getDb } from "~/db/client";
-import { inArray, desc } from "drizzle-orm";
+import { inArray, desc, isNull, and } from "drizzle-orm";
 import { cars as carsTable } from "~/db/schema";
 import { env } from "cloudflare:workers";
 
@@ -13,17 +13,24 @@ const db = getDb(env);
 let dbCars = [];
 
 if (recent) {
-	const all = await db.select().from(carsTable).orderBy(desc(carsTable.publishDate));
-	dbCars = all.filter((c) => !c.misc?.hidden).slice(0, 3);
+	const all = await db
+		.select()
+		.from(carsTable)
+		.where(isNull(carsTable.deletedAt))
+		.orderBy(desc(carsTable.publishDate));
+	dbCars = all.filter((c) => c.general?.availability !== "sold").slice(0, 3);
 } else if (featured) {
-	const all = await db.select().from(carsTable);
+	const all = await db.select().from(carsTable).where(isNull(carsTable.deletedAt));
 	dbCars = all
-		.filter((c) => c.misc?.featured && !c.misc?.hidden)
+		.filter((c) => c.misc?.featured && c.general?.availability !== "sold")
 		.sort(() => 0.5 - Math.random())
 		.slice(0, 3);
 } else if (slugs.length > 0) {
-	dbCars = await db.select().from(carsTable).where(inArray(carsTable.id, slugs));
-	dbCars = dbCars.filter((c) => !c.misc?.hidden);
+	dbCars = await db
+		.select()
+		.from(carsTable)
+		.where(and(inArray(carsTable.id, slugs), isNull(carsTable.deletedAt)));
+	dbCars = dbCars.filter((c) => c.general?.availability !== "sold");
 } else {
 	return;
 }

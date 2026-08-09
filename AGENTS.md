@@ -30,14 +30,19 @@ We have successfully migrated away from local markdown (`.mdx`) collections for 
    - Restored and kept `team` and `testimonials` data operating as standard Astro Content Collections via JSON loaders in `src/content.config.ts`.
 3. **Environment & Edge Compatibility:**
    - Uses `import { env } from "cloudflare:workers"` extensively in edge API routes and Astro middleware to retrieve database bindings (`DB`) and admin passwords (`AUTH_PASSWORD`).
+4. **R2 Image Storage Implementation:**
+   - Physical car images are handled via a Cloudflare R2 bucket (`IMAGES_BUCKET`), using a custom API relay (`/api/images/[...id]`).
+5. **Admin Dashboard (CRUD):**
+   - Implemented the main `/admin/cars` dashboard for full Create/Read/Update/Delete support, coupled with R2 multipart file uploads.
 
 ### Pending Work (Next Steps)
 
-1. **R2 Image Storage Implementation:**
-   - Physical car images need to be fully relocated to a Cloudflare R2 bucket (`IMAGES_BUCKET`), bypassing Astro's built-in `astro:assets` `<Image>` optimizer, using a custom API relay (`/api/images/[...id]`) or direct R2 public URLs.
-2. **Admin Dashboard (CRUD):**
-   - Currently, a baseline `/admin/login` page has been stubbed out along with session cookie handling in `src/middleware.ts`.
-   - Need to flesh out the main `/admin/cars` dashboard for full Create/Read/Update/Delete support, coupled with R2 multipart file uploads.
+1. **Frontend Landing Pages:**
+   - Create landing pages for about, contact, and services.
+2. **UI Widgets & Features:**
+   - Implement related cars widget, lightbox for slider images, and potentially widgets for insurance/trade-in valuation.
+3. **Bugs & Polish:**
+   - Fix Firefox mobile scripts (faq, share button).
 
 ## Usage Commands
 
