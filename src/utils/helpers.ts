@@ -42,8 +42,8 @@ export function getPrice(price: number): string {
 	return new Intl.NumberFormat(siteLang, {
 		style: "currency",
 		currency: siteCurrency,
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
 	}).format(price);
 }
 
@@ -56,8 +56,8 @@ export function getCurrencySymbol(): string {
 	const formatter = new Intl.NumberFormat(siteLang, {
 		style: "currency",
 		currency: siteCurrency,
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 0,
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
 	});
 	const parts = formatter.formatToParts(0);
 	const symbol = parts.find((part) => part.type === "currency")?.value;

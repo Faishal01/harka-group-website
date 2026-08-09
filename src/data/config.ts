@@ -1,6 +1,6 @@
 // Global variables
-export const siteLang = "en-US";
-export const siteCurrency = "USD";
+export const siteLang = "id-ID";
+export const siteCurrency = "IDR";
 export const siteDomain = "harkagroup.id";
 export const siteName = "Harka Group";
 export const siteSlogan = "The best car dealership in the galaxy!";
@@ -8,7 +8,7 @@ export const themeColor = "#fef08a";
 export const unitSystem = "imperial";
 export const interestRate = 5.12;
 export const defaultPaginationSize = 12;
-export const priceSteps = [50000, 100000, 150000, 200000, 250000, 300000];
+export const priceSteps = [20000000, 100000000, 300000000, 500000000, 1000000000, 2000000000];
 
 export const phone = {
 	href: "tel:+123456789",
