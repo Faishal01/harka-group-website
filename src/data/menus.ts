@@ -3,29 +3,29 @@ import type { MainMenuItem, MenuNavigation } from "~/types";
 export const menuMain: MainMenuItem[] = [
 	{
 		id: "home",
-		label: "Home",
+		label: "Beranda",
 		url: "/",
 	},
 	{
 		id: "cars",
-		label: "Cars",
+		label: "Stok",
 		url: "/cars",
 	},
 	{
 		id: "about",
-		label: "About",
+		label: "Tentang",
 		url: "/about-us",
 		submenu: [
 			{
 				id: "testimonials",
-				label: "Testimonials",
+				label: "Testimoni",
 				url: "/about-us/testimonials",
 			},
 		],
 	},
 	{
 		id: "services",
-		label: "Services",
+		label: "Layanan",
 		url: "/services",
 		submenu: [
 			{ id: "repairs", label: "Repairs", url: "/services/repairs" },
