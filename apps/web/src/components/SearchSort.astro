@@ -1,0 +1,101 @@
+---
+import SearchCars from "./forms/SearchCars.astro";
+import SortCars from "./forms/SortCars.astro";
+---
+
+<div class="mb-4 flex flex-col lg:flex-row lg:items-center justify-between gap-x-4 max-lg:gap-y-4">
+	<SearchCars />
+	<div class="max-lg:hidden">
+		<SortCars />
+	</div>
+</div>
+
+<script>
+	document.addEventListener("astro:page-load", function () {
+		const searchForm = document.getElementById("form-search") as HTMLFormElement;
+		const searchInput = document.getElementById("search") as HTMLInputElement;
+		const sortSelect = document.getElementById("sort") as unknown as HTMLSelectElement;
+		const sortSelectMobile = document.getElementById("sort-mobile") as unknown as HTMLSelectElement;
+
+		const url = new URL(window.location.href);
+		const sort = url.searchParams.get("sort");
+		const search = url.searchParams.get("search");
+
+		if (sort) {
+			sortSelect.value = sort;
+			sortSelectMobile.value = sort;
+		}
+
+		if (search) {
+			searchInput.value = search;
+		}
+
+		sortSelect?.addEventListener("change", () => {
+			const url = new URL(window.location.href);
+			const sort = sortSelect.value;
+
+			if (url.searchParams.has("page")) {
+				url.searchParams.delete("page");
+			}
+
+			if (url.searchParams.has("sort")) {
+				url.searchParams.delete("sort");
+			}
+
+			if (sort !== "all") {
+				url.searchParams.set("sort", sort);
+			}
+
+			window.location.href = url.toString();
+		});
+
+		sortSelectMobile?.addEventListener("change", () => {
+			const url = new URL(window.location.href);
+			const sort = sortSelectMobile.value;
+
+			if (url.searchParams.has("page")) {
+				url.searchParams.delete("page");
+			}
+
+			if (url.searchParams.has("sort")) {
+				url.searchParams.delete("sort");
+			}
+
+			if (sort !== "all") {
+				url.searchParams.set("sort", sort);
+			}
+
+			window.location.href = url.toString();
+		});
+
+		searchForm?.addEventListener("submit", (event) => {
+			event.preventDefault();
+			const url = new URL(window.location.href);
+			const search = searchInput.value;
+
+			if (url.searchParams.has("page")) {
+				url.searchParams.delete("page");
+			}
+
+			if (url.searchParams.has("search")) {
+				url.searchParams.delete("search");
+			}
+
+			if (search) {
+				url.searchParams.set("search", search);
+			}
+
+			window.location.href = url.toString();
+		});
+
+		searchInput?.addEventListener("input", () => {
+			if (!searchInput.value) {
+				const url = new URL(window.location.href);
+				if (url.searchParams.has("search")) {
+					url.searchParams.delete("search");
+				}
+				window.location.href = url.toString();
+			}
+		});
+	});
+</script>

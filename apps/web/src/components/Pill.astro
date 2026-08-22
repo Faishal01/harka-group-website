@@ -1,0 +1,23 @@
+---
+import type { PillProps as Props } from "~/types";
+const { title = "", color = "indigo" } = Astro.props;
+
+export const pillColors = {
+	indigo: "bg-indigo-50 text-indigo-800 ring-1 ring-indigo-800/10",
+	blue: "bg-blue-50 text-blue-800 ring-1 ring-blue-800/10",
+	green: "bg-green-50 text-green-800 ring-1 ring-green-800/10",
+	red: "bg-red-50 text-red-800 ring-1 ring-red-800/10",
+	primary: "bg-red-50 text-red-800 ring-1 ring-red-800/10",
+	purple: "bg-purple-50 text-purple-800 ring-1 ring-purple-800/10",
+	pink: "bg-pink-50 text-pink-800 ring-1 ring-pink-800/10",
+	gray: "bg-gray-50 text-gray-800 ring-1 ring-gray-800/10",
+	black: "bg-black text-white ring-1 ring-white",
+	white: "bg-white text-black ring-1 ring-black",
+};
+
+const pillClasses = `text-xs px-3 py-1 font-medium rounded-full inline-block ${pillColors[color]}`;
+---
+
+<span class={pillClasses}>
+	{title}
+</span>

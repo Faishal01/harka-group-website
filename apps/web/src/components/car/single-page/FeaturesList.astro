@@ -1,0 +1,63 @@
+---
+import type { Car } from "~/types";
+import { getMileage, getMileageUnit } from "~/utils/helpers";
+import { labels, categoryLabels } from "~/utils/labels";
+
+const { car } = Astro.props as { car: Car };
+
+if (!car) {
+	return;
+}
+
+const excludeFields = [
+	"price",
+	"salePrice",
+	"availability",
+	"hidden",
+	"vin",
+	"loanWidget",
+	"featured",
+];
+---
+
+{
+	Object.entries(categoryLabels).map(
+		([key, label]) =>
+			(car.data as any)[key] &&
+			Object.keys((car.data as any)[key]).some(
+				(subKey) => !excludeFields.includes(subKey) && (car.data as any)[key][subKey],
+			) && (
+				<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
+					<h2 class={`h6 feature-icon feature-icon-${key}`}>{label}</h2>
+
+					{key === "options" ? (
+						<ul class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
+							{(car.data as any)[key].sort().map((option: string) => (
+								<li class="md:whitespace-nowrap">- {option}</li>
+							))}
+						</ul>
+					) : (
+						<dl class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
+							{Object.entries((car.data as any)[key]).map(
+								([subKey, value]) =>
+									!excludeFields.includes(subKey) && (
+										<>
+											<dt>{(labels as any)[key]?.[subKey] || subKey}</dt>
+											<dd class="font-bold md:whitespace-nowrap">
+												{subKey === "mileage"
+													? `${getMileage(value as number)} ${getMileageUnit()}`
+													: value === true
+														? "Yes"
+														: value
+															? value
+															: "N/A"}
+											</dd>
+										</>
+									),
+							)}
+						</dl>
+					)}
+				</div>
+			),
+	)
+}

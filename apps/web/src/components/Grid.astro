@@ -1,0 +1,16 @@
+---
+import type { GridProps as Props } from "~/types";
+const { columns = 2 } = Astro.props;
+---
+
+<div class="grid grid-cols-1 gap-4">
+	<slot />
+</div>
+
+<style define:vars={{ columnValue: columns }}>
+	@media (min-width: 1024px) {
+		.grid {
+			grid-template-columns: repeat(var(--columnValue), minmax(0, 1fr));
+		}
+	}
+</style>

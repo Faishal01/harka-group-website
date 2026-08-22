@@ -1,0 +1,31 @@
+---
+import IconPaperAirplane from "~/assets/images/icons/paper-airplane.svg";
+---
+
+<h2 class="h4">Ask a question</h2>
+<p>
+	Interested in this car? Fill out the form below with any questions you may have and we'll get back
+	to you as soon as possible.
+</p>
+<form>
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+		<div>
+			<label for="name">Name</label>
+			<input type="text" id="name" name="name" />
+		</div>
+		<div>
+			<label for="email">Email</label>
+			<input type="email" id="email" name="email" />
+		</div>
+		<div class="lg:col-span-2">
+			<label for="message">Message</label>
+			<textarea id="message" name="message" rows="4"></textarea>
+		</div>
+	</div>
+	<div class="mt-8">
+		<button type="submit" class="button button-primary gap-1">
+			<IconPaperAirplane class="size-5 inline-block -mt-1 -rotate-45" />
+			<span class="text-lg">Send</span>
+		</button>
+	</div>
+</form>

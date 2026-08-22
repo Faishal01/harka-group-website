@@ -1,0 +1,26 @@
+---
+
+---
+
+<dialog id="modal-slider" class="fixed overflow-y-scroll inset-0 z-50 bg-black/90 h-svh w-svw">
+	<div class="relative z-10">
+		<button
+			id="modal-slider-close"
+			type="button"
+			aria-label="close modal"
+			class="z-50 absolute top-4 right-4 p-2 bg-gray-800/50 rounded-full"
+		>
+			Close
+		</button>
+	</div>
+</dialog>
+
+<script>
+	document.addEventListener("astro:page-load", function () {
+		const modalSlider = document.getElementById("modal-slider") as HTMLDialogElement;
+		const closeBtn = document.getElementById("modal-slider-close");
+		if (modalSlider && closeBtn) {
+			closeBtn.addEventListener("click", () => modalSlider.close());
+		}
+	});
+</script>

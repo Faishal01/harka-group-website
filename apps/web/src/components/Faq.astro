@@ -1,0 +1,77 @@
+---
+import type { FaqProps as Props } from "~/types";
+const { items, class: className = "" } = Astro.props;
+const wrapperClasses = `mx-auto max-w-3xl ${className}`;
+---
+
+<custom-faq class={wrapperClasses}>
+	<dl class="space-y-6 divide-y divide-gray-800/10">
+		{
+			items.map((item, index) => (
+				<div class="pt-6">
+					<dt>
+						<button
+							type="button"
+							class="flex w-full items-start justify-between text-left"
+							aria-controls={`faq-${index}`}
+							aria-expanded="false"
+						>
+							<span class="text-lg font-semibold">{item.question}</span>
+							<span class="ml-6 shrink-0 flex size-8 items-center relative">
+								<svg
+									class="size-8 absolute"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+									aria-hidden="true"
+									data-slot="icon"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
+								</svg>
+								<svg
+									class="size-8 absolute rotate-90 transition"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+									aria-hidden="true"
+									data-slot="icon"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6" />
+								</svg>
+							</span>
+						</button>
+					</dt>
+					<dd class="mt-2 pr-12 hidden" id={`faq-${index}`}>
+						<p class="text-base">{item.answer}</p>
+					</dd>
+				</div>
+			))
+		}
+	</dl>
+</custom-faq>
+
+<script>
+	class CustomFaq extends HTMLElement {
+		connectedCallback() {
+			const faqItems = this.querySelectorAll("dl > div");
+
+			faqItems.forEach((item) => {
+				const button = item.querySelector("button")!;
+				const content = item.querySelector("dd")!;
+				const icon = button.querySelector(".rotate-90");
+
+				button.addEventListener("click", () => {
+					const expanded = button.getAttribute("aria-expanded") === "true";
+					button.setAttribute("aria-expanded", (!expanded).toString());
+					content.classList.toggle("hidden");
+					icon?.classList.toggle("rotate-90");
+				});
+			});
+		}
+	}
+	if (!customElements.get("custom-faq")) {
+		customElements.define("custom-faq", CustomFaq);
+	}
+</script>

@@ -1,0 +1,127 @@
+---
+import { siteName } from "~/data/config";
+import { menuNavigation, menuMisc, menuService, menuLegal } from "~/data/menus";
+import NewsletterFooter from "./forms/NewsletterFooter.astro";
+import IconLogo from "~/assets/images/icons/logo.svg";
+import SocialMediaIcons from "./SocialMediaIcons.astro";
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-gray-50">
+	<div class="container py-16">
+		<div class="xl:grid xl:grid-cols-3 xl:gap-8">
+			<div>
+				<a href="/">
+					<div class="flex items-center gap-x-2">
+						<IconLogo class="h-5 lg:h-8 inline-block" />
+						<span class="font-bold text-2xl lg:text-4xl"
+							>Harka <span class="font-normal">Group</span></span
+						>
+					</div>
+				</a>
+			</div>
+			<div class="mt-16 grid grid-cols-1 sm:grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+				<div class="md:grid md:grid-cols-2 md:gap-8">
+					{
+						menuNavigation.items.length > 0 && (
+							<div>
+								<span class="text-base font-semibold">{menuNavigation.prettyName}</span>
+								<ul role="list" class="mt-6 space-y-4">
+									{menuNavigation.items.map((item) => (
+										<li>
+											<a
+												href={item.url}
+												class="text-base transition text-gray-600 hover:text-gray-800"
+											>
+												{item.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+					{
+						menuService.items.length > 0 && (
+							<div class="max-md:mt-10">
+								<span class="text-base font-semibold">{menuService.prettyName}</span>
+								<ul role="list" class="mt-6 space-y-4">
+									{menuService.items.map((item) => (
+										<li>
+											<a
+												href={item.url}
+												class="text-base transition text-gray-600 hover:text-gray-800"
+											>
+												{item.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+				</div>
+				<div class="md:grid md:grid-cols-2 md:gap-8">
+					{
+						menuMisc.items.length > 0 && (
+							<div>
+								<span class="text-base font-semibold">{menuMisc.prettyName}</span>
+								<ul role="list" class="mt-6 space-y-4">
+									{menuMisc.items.map((item) => (
+										<li>
+											<a
+												href={item.url}
+												class="text-base transition text-gray-600 hover:text-gray-800"
+											>
+												{item.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+					{
+						menuLegal.items.length > 0 && (
+							<div class="max-md:mt-10">
+								<span class="text-base font-semibold">{menuLegal.prettyName}</span>
+								<ul role="list" class="mt-6 space-y-4">
+									{menuLegal.items.map((item) => (
+										<li>
+											<a
+												href={item.url}
+												class="text-base transition text-gray-600 hover:text-gray-800"
+											>
+												{item.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						)
+					}
+				</div>
+			</div>
+		</div>
+		<div
+			class="mt-16 border-t border-gray-800/10 pt-8 sm:mt-20 lg:mt-24 lg:flex lg:items-center lg:justify-between"
+		>
+			<div>
+				<span class="text-base font-semibold">Subscribe to our newsletter</span>
+				<p class="mt-2 text-sm text-gray-600">
+					The latest news, articles, and resources, sent to your inbox weekly.
+				</p>
+			</div>
+			<NewsletterFooter />
+		</div>
+		<div class="mt-8 border-t border-gray-800/10 pt-8 md:flex md:items-center md:justify-between">
+			<div class="flex gap-x-6 md:order-2">
+				<SocialMediaIcons />
+			</div>
+			<p class="mt-8 text-sm/6 text-gray-600 md:order-1 md:mt-0">
+				&copy; {year}
+				{siteName}. All rights reserved.
+			</p>
+		</div>
+	</div>
+</footer>

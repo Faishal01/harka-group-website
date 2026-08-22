@@ -1,0 +1,60 @@
+---
+import type { Car } from "~/types";
+
+import CarHighlights from "~/components/car/CardHighlights.astro";
+import CardPrice from "~/components/car/CardPrice.astro";
+import IconLogo from "~/assets/images/icons/logo.svg";
+const { car } = Astro.props as { car: Car };
+---
+
+<li
+	data-car-id={car.id}
+	data-car-on-sale={car.data.general.salePrice ? "true" : "false"}
+	data-car-available={car.data.general.availability}
+	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-b-4 hover:lg:border-red-700"
+>
+	<a href={`/view/${car.id}`} class="relative isolate flex flex-col gap-8 h-full">
+		<div class="relative aspect-[4/3] lg:shrink-0 ribbon">
+			{
+				car.data.image ? (
+					<img
+						src={car.data.image}
+						alt={car.data.imageAlt}
+						class="absolute inset-0 size-full bg-gray-50 object-cover"
+					/>
+				) : (
+					<div class="absolute inset-0 text-gray-400 size-full bg-gray-100 flex flex-col gap-4 items-center justify-center">
+						<IconLogo class="h-24" />
+						<span class="text-gray-400 font-bold italic">Coming Soon</span>
+					</div>
+				)
+			}
+		</div>
+		<div class="flex flex-col items-start grow px-4 max-lg:pb-8">
+			<div class="relative w-full flex flex-col items-start mb-8">
+				<div class="mb-4 lg:mb-6">
+					<h2 class="h5 line-clamp-2">
+						{car.data.title}
+						{
+							car.data.general.type && (
+								<span class="text-base block font-normal align-middle">
+									{car.data.general.type}
+								</span>
+							)
+						}
+					</h2>
+					<p class="text-base mt-2 line-clamp-3">{car.data.excerpt}</p>
+					{
+						car.data.options && car.data.options.length > 0 && (
+							<p class="text-base text-gray-400 mt-3 line-clamp-1">{car.data.options.join(", ")}</p>
+						)
+					}
+				</div>
+				<CardPrice data={car.data.general} />
+			</div>
+			<div class="mt-auto lg:mb-4">
+				<CarHighlights data={car.data} />
+			</div>
+		</div>
+	</a>
+</li>

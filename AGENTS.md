@@ -35,15 +35,6 @@ We have successfully migrated away from local markdown (`.mdx`) collections for 
 5. **Admin Dashboard (CRUD):**
    - Implemented the main `/admin/cars` dashboard for full Create/Read/Update/Delete support, coupled with R2 multipart file uploads.
 
-### Pending Work (Next Steps)
-
-1. **Frontend Landing Pages:**
-   - Create landing pages for about, contact, and services.
-2. **UI Widgets & Features:**
-   - Implement related cars widget, lightbox for slider images, and potentially widgets for insurance/trade-in valuation.
-3. **Bugs & Polish:**
-   - Fix Firefox mobile scripts (faq, share button).
-
 ## Usage Commands
 
 - **Install dependencies:** `bun install`
