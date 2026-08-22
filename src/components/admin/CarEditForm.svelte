@@ -204,7 +204,6 @@
             <select bind:value={general.availability} class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900">
               <option value="in-stock">In Stock</option>
               <option value="reserved">Reserved</option>
-              <option value="sold">Sold</option>
               <option value="coming-soon">Coming Soon</option>
             </select>
           </div>
