@@ -12,7 +12,7 @@ This project is structured as a Bun workspaces monorepo containing a user-facing
 
 1. **Clone project**:
    ```sh
-   git clone https://github.com/Faishal101/harka-group-website.git
+   git clone https://github.com/mralfarrakhan/harka-group-website.git
    ```
 
 2. **Install dependencies**:
@@ -20,27 +20,44 @@ This project is structured as a Bun workspaces monorepo containing a user-facing
    bun install
    ```
 
-3. **Run local development servers**:
+3. **Set up local database**:
+   ```sh
+   bun run db:migrate:dev
+   ```
+
+4. **Update wrangler type definitions** (run if `wrangler.jsonc` changes):
+   ```sh
+   bun run gen:web
+   bun run gen:admin
+   ```
+
+5. **Run local development servers**:
    ```sh
    # Run both web and admin concurrently
    bun run dev:all
+   ```
+
+6. **Preview production build locally (with shared local DB)**:
+   ```sh
+   bun run preview:build:web
+   bun run preview:build:admin
    ```
 
 ## ☁️ Cloudflare Deployment
 
 Both applications are deployed as Cloudflare Workers. 
 
-### Option 1: Native GitHub Integration (Recommended)
-Cloudflare now supports native GitHub integration directly for Workers (no GitHub Actions required!).
+### Option 1: Native Cloudflare Pages GitHub Integration (Recommended)
+You can deploy automatically on every push via Cloudflare Pages:
 
-1. Go to your [Cloudflare Dashboard](https://dash.cloudflare.com) > **Workers & Pages**.
-2. Click **Create application** > **Get started** next to "Import a repository".
-3. Connect your GitHub repository.
-4. Set up two separate integrations (one for `web`, one for `admin`):
-   - Set the **Root Directory** to `apps/web` (or `apps/admin`).
-   - Set the **Build Command** to `bun run build`.
-   - Set the **Build Output** to `dist`.
-   *(Cloudflare will automatically deploy whenever you push to `main`!)*
+1. Connect your repository to **Cloudflare Pages** via the Cloudflare Dashboard.
+2. Create two separate Pages projects (one for `web`, one for `admin`).
+3. Configure both projects:
+   - **Framework Preset**: Astro
+   - **Build Command**: `bun install && bun run build:web` (or `build:admin`)
+   - **Build Output Directory**: `apps/web/dist` (or `apps/admin/dist`)
+4. **Bindings**: Ensure you link your D1 Database (`DB`), R2 Bucket (`IMAGES_BUCKET`), and KV Namespace (`SESSION`) in the Settings -> Functions/Bindings tab for both projects.
+5. **Database Deployments**: Run `bun run db:migrate:prod` locally to push any schema changes to your live D1 database.
 
 ### Option 2: Manual CLI Deployment
 If you prefer to deploy manually from your terminal:
