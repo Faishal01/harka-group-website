@@ -1,11 +1,5 @@
 # Harka Group
 
-Harka Group is a free theme for the Astro framework, designed to provide a beautiful and functional starting point for your next car dealer website. Whether you're selling Cars, Bikes or Boats, or any other similar product, Harka Group has you covered with its clean design and easy-to-use components.
-
-## 🌟 About Harka Group
-
-Harka Group is perfect for car dealers looking to create a modern, responsive website. It features a range of premade pages and components that can be easily customized to fit your brand. The theme is built with Astro, ensuring fast load times and excellent performance.
-
 ## 🛠️ Technologies Used
 
 - **Astro**: The core framework for building fast, content-focused websites.
@@ -16,63 +10,38 @@ Harka Group is perfect for car dealers looking to create a modern, responsive we
 
 To get started with Harka Group, follow these steps:
 
-1. **Clone Harka Group**:
+1. **Clone project**:
 
    ```sh
-   git clone https://github.com/wpinfusion/harka-group-website.git
+   git clone https://github.com/Faishal101/harka-group-website.git
    ```
 
-2. **Install Dependencies**:
+2. **Install dependencies**:
 
    ```sh
-   npm install
+   bun install
    ```
 
-3. **Run Development Server**:
+3. **Update wrangler type definitions** (also run if `wrangler.jsonc` changes):
 
    ```sh
-   npm run dev
+   bun run gen
    ```
 
-4. **Build for Production**:
+4. **Run development server**:
 
    ```sh
-   npm run build
+   bun run dev
    ```
 
-## 📂 Project Structure
+5. **Build for production**:
 
-Inside of your Harka Group project, you'll see the following folders and files:
+   ```sh
+   bun run build
+   ```
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   ├── pages/
-│   │   ├── index.astro
-│   └── styles/
-└── package.json
-```
+6. **Preview production build**:
 
-## 📄 Premade Pages
-
-- Home
-- Cars
-- Blog
-- Contact
-- About Us
-- Services
-- 404
-
-## 🛠️ Quick start
-
-To start adding your cars, go to /content/cars and add your car data in a markdown (.mdx) file. Each car should have a unique slug, title, and other relevant details like price, description, and images. Refer to the `example.mdx` file or any of the existing car examples for the required structure.
-
-## 👀 Stuck?
-
-If you have any questions or need help with Harka Group, feel free to reach out to me at info@wpinfusion.com, or open an issue on the [Harka Group GitHub repository](https://github.com/wpinfusion/harka-group-website)
+   ```sh
+   bun run preview:build
+   ```
