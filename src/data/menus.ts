@@ -95,7 +95,7 @@ export const menuMisc: MenuNavigation = {
 			url: "/contact",
 		},
 		{
-			name: "Staff Login",
+			name: "Admin Page",
 			url: "/admin/login",
 		},
 	],
