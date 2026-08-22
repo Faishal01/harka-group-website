@@ -52,7 +52,7 @@ export const labels: ShapeToLabels<Car["data"]> = {
 		weight: "Weight",
 	},
 	efficiency: {
-		fuelType: "Fuel Type",
+		fuelType: "Bahan Bakar",
 		fuelEfficiencyMPG: "Fuel Efficiency MPG",
 		fuelEfficiencyLPer100KM: "Fuel Efficiency L/100KM",
 		emissionsCO2: "Emissions CO2",
