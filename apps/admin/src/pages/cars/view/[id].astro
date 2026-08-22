@@ -1,0 +1,159 @@
+---
+export const prerender = false;
+import Layout from "~/layouts/Layout.astro";
+import Container from "~/components/Container.astro";
+import Section from "~/components/Section.astro";
+import { getDb } from "@harka/db";
+import { cars as carsTable } from "@harka/db";
+import { eq } from "drizzle-orm";
+import { env } from "cloudflare:workers";
+
+const { id } = Astro.params;
+const db = getDb(env);
+const car = await db.query.cars.findFirst({
+	where: eq(carsTable.id, id as string),
+});
+
+if (!car) {
+	return Astro.redirect("/cars");
+}
+---
+
+<Layout pageTitle={`View Archived: ${car.title}`}>
+	<Section class="bg-gray-50 min-h-[70vh] py-12">
+		<Container>
+			<div class="flex justify-between items-center mb-6">
+				<h1 class="text-3xl font-bold text-gray-900">Archived Record</h1>
+				<a
+					href="/cars?tab=archived"
+					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium"
+				>
+					&larr; Back to Archive
+				</a>
+			</div>
+
+			<div
+				class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
+			>
+				<div class="md:flex">
+					<div class="md:shrink-0 bg-gray-100 md:w-1/3">
+						{
+							car.image ? (
+								<img
+									class="h-48 w-full object-cover md:h-full"
+									src={car.image}
+									alt={car.imageAlt}
+								/>
+							) : (
+								<div class="h-48 w-full flex items-center justify-center text-gray-500 md:h-full bg-gray-200">
+									No Image
+								</div>
+							)
+						}
+					</div>
+					<div class="p-8 w-full">
+						<div
+							class="uppercase tracking-wide text-sm font-semibold mb-1 flex items-center justify-between"
+						>
+							<span class="text-blue-600">
+								{car.general.make}
+								{car.general.model}
+							</span>
+
+							<span
+								class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+							>
+								ID: {car.id}
+							</span>
+						</div>
+
+						<h2 class="block mt-1 text-2xl leading-tight font-bold text-black mb-2">
+							{car.title}
+						</h2>
+
+						<p class="text-3xl font-bold text-gray-900 mb-6">
+							${
+								car.general.salePrice
+									? car.general.salePrice.toLocaleString()
+									: car.general.price.toLocaleString()
+							}
+						</p>
+
+						<!-- Status Banner -->
+						<div
+							class={`rounded-lg p-4 mb-6 border flex items-center gap-4 ${car.archiveReason === "sold" ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}
+						>
+							<div
+								class={`p-2 rounded-full ${car.archiveReason === "sold" ? "bg-green-100 text-green-600" : "bg-gray-200 text-gray-600"}`}
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="h-6 w-6"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									{
+										car.archiveReason === "sold" ? (
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+											/>
+										) : (
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+											/>
+										)
+									}
+								</svg>
+							</div>
+							<div>
+								<p class="text-sm font-medium text-gray-900">
+									{car.archiveReason === "sold" ? "Sold" : "Removed from Active List"}
+								</p>
+								<p class="text-sm text-gray-500">
+									Archived on {
+										car.deletedAt
+											? car.deletedAt.toLocaleDateString("en-US", {
+													year: "numeric",
+													month: "long",
+													day: "numeric",
+												})
+											: "Unknown date"
+									}
+								</p>
+							</div>
+						</div>
+
+						<!-- Basic Specs -->
+						<div class="grid grid-cols-2 gap-4 text-sm">
+							<div class="border-t pt-2">
+								<span class="text-gray-500 block mb-1">Model Year</span>
+								<span class="font-medium text-gray-900">{car.history.year}</span>
+							</div>
+							<div class="border-t pt-2">
+								<span class="text-gray-500 block mb-1">Mileage</span>
+								<span class="font-medium text-gray-900"
+									>{car.history.mileage.toLocaleString()} mi</span
+								>
+							</div>
+							<div class="border-t pt-2">
+								<span class="text-gray-500 block mb-1">Transmission</span>
+								<span class="font-medium text-gray-900">{car.technical.transmission}</span>
+							</div>
+							<div class="border-t pt-2">
+								<span class="text-gray-500 block mb-1">Exterior Color</span>
+								<span class="font-medium text-gray-900">{car.exterior.color}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</Container>
+	</Section>
+</Layout>

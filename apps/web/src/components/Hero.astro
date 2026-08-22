@@ -1,0 +1,18 @@
+---
+import type { HeroProps as Props } from "~/types";
+const { invert = false } = Astro.props;
+
+const classNames = {
+	left: `lg:col-span-3 ${invert ? "lg:order-2 lg:ml-auto" : ""}`,
+	right: `lg:col-span-2 ${invert ? "lg:order-1" : ""}`,
+};
+---
+
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-center">
+	<div class={classNames.left}>
+		<slot name="hero-left" />
+	</div>
+	<div class={classNames.right}>
+		<slot name="hero-right" />
+	</div>
+</div>

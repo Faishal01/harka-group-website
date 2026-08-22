@@ -1,0 +1,15 @@
+---
+import type { CardPriceProps as Props } from "~/types";
+import { getPrice } from "~/utils/helpers";
+const { data } = Astro.props;
+
+const price = getPrice(data.price);
+const salePrice = data.salePrice ? getPrice(data.salePrice) : null;
+---
+
+<div class="xxl:pr-8 shrink-0 max-xxl:flex max-xxl:gap-2 max-xxl:items-center max-xxl:mb-6">
+	<span class={`price ${data.salePrice ? "on-sale" : "font-semibold"}`}>
+		{price}
+	</span>
+	{data.salePrice && <mark class="price-on-sale block">{salePrice}</mark>}
+</div>

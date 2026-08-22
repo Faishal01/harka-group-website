@@ -1,0 +1,62 @@
+[
+	{
+		"id": 1,
+		"author": "John Doe",
+		"title": "Great service",
+		"location": "New York",
+		"description": "I had a great experience with Harka Group. They were very professional and helped me to find the perfect car.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 5,
+		"hidden": false
+	},
+	{
+		"id": 2,
+		"author": "Jane Doe",
+		"title": "Excellent service",
+		"location": "Los Angeles",
+		"description": "I had a great experience with Harka Group. They were very professional and helped me to find the perfect car.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 4.5,
+		"hidden": false
+	},
+	{
+		"id": 3,
+		"author": "John Smith",
+		"title": "Great service",
+		"location": "Chicago",
+		"description": "I had a great experience with Harka Group. They were very professional and helped me to find the perfect car.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 4,
+		"hidden": false
+	},
+	{
+		"id": 4,
+		"author": "Jane Smith",
+		"title": "Excellent service",
+		"location": "Houston",
+		"description": "I had a great experience with Harka Group. They were very professional and helped me to find the perfect car.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 4.8,
+		"hidden": false
+	},
+	{
+		"id": 5,
+		"author": "Alice Johnson",
+		"title": "Fantastic experience",
+		"location": "San Francisco",
+		"description": "Harka Group exceeded my expectations. The staff was friendly and the process was smooth.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 5,
+		"hidden": false
+	},
+	{
+		"id": 6,
+		"author": "Bob Brown",
+		"title": "Very satisfied",
+		"location": "Miami",
+		"description": "I am very satisfied with the service provided by Harka Group. They were efficient and helpful.",
+		"img": "~/assets/images/avatar-empty.webp",
+		"starRating": 4.7,
+		"hidden": false
+	}
+]

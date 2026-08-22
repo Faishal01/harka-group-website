@@ -1,0 +1,366 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Container from "~/components/Container.astro";
+import Section from "~/components/Section.astro";
+import { getDb } from "@harka/db";
+import { cars as carsTable } from "@harka/db";
+import { isNull, isNotNull } from "drizzle-orm";
+import { env } from "cloudflare:workers";
+
+const url = new URL(Astro.request.url);
+const tab = url.searchParams.get("tab") || "active";
+
+const db = getDb(env);
+const allCars = await db.query.cars.findMany({
+	where: tab === "archived" ? isNotNull(carsTable.deletedAt) : isNull(carsTable.deletedAt),
+	orderBy: (cars, { desc }) => [desc(cars.publishDate)],
+});
+---
+
+<Layout pageTitle="Admin - Cars">
+	<Section class="bg-gray-50 min-h-[70vh]">
+		<Container>
+			<div class="flex justify-between items-center mb-6">
+				<h1 class="text-3xl font-bold">Manage Cars</h1>
+				<a
+					href="/cars/new"
+					class="bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+				>
+					+ Add New Car
+				</a>
+			</div>
+
+			<div class="mb-4 border-b border-gray-200">
+				<nav class="-mb-px flex space-x-8" aria-label="Tabs">
+					<a
+						href="?tab=active"
+						class={`${
+							tab === "active"
+								? "border-blue-500 text-blue-600"
+								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+					>
+						Active Cars
+					</a>
+					<a
+						href="?tab=archived"
+						class={`${
+							tab === "archived"
+								? "border-blue-500 text-blue-600"
+								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+					>
+						Sold / Archived
+					</a>
+				</nav>
+			</div>
+
+			<div class="bg-white rounded-lg shadow">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider first:rounded-tl-lg"
+								>Car</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Price</th
+							>
+							{
+								tab === "active" ? (
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+										Status
+									</th>
+								) : (
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+										Date Archived
+									</th>
+								)
+							}
+							<th
+								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider last:rounded-tr-lg"
+								>Actions</th
+							>
+						</tr>
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						{
+							allCars.map((car) => (
+								<tr>
+									<td class="px-6 py-4 whitespace-nowrap">
+										<div class="flex items-center">
+											<div class="shrink-0 h-10 w-10 bg-gray-200 rounded overflow-hidden">
+												{car.image ? (
+													<img src={car.image} alt={car.imageAlt} class="h-10 w-10 object-cover" />
+												) : (
+													<div class="h-10 w-10 bg-gray-300" />
+												)}
+											</div>
+											<div class="ml-4">
+												<div class="text-sm font-medium text-gray-900">{car.title}</div>
+												<div class="text-sm text-gray-500">
+													{car.general.make} {car.general.model}
+												</div>
+											</div>
+										</div>
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap">
+										<div class="text-sm text-gray-900">${car.general.price.toLocaleString()}</div>
+									</td>
+
+									{tab === "active" ? (
+										<td class="px-6 py-4 whitespace-nowrap">
+											<span
+												class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+													car.general?.availability === "reserved"
+														? "bg-yellow-100 text-yellow-800"
+														: car.general?.availability === "coming-soon"
+															? "bg-blue-100 text-blue-800"
+															: "bg-green-100 text-green-800"
+												}`}
+											>
+												{car.general?.availability
+													? car.general.availability
+															.split("-")
+															.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+															.join(" ")
+													: "In Stock"}
+											</span>
+										</td>
+									) : (
+										<td class="px-6 py-4 whitespace-nowrap">
+											<div class="font-medium text-gray-900">
+												{car.archiveReason === "sold" ? (
+													<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+														Sold
+													</span>
+												) : (
+													<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+														Removed
+													</span>
+												)}
+											</div>
+											<div class="text-xs text-gray-500 mt-1">
+												{car.deletedAt
+													? car.deletedAt.toLocaleDateString("en-US", {
+															year: "numeric",
+															month: "short",
+															day: "numeric",
+														})
+													: "Unknown"}
+											</div>
+										</td>
+									)}
+
+									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+										<div class="flex justify-end gap-3 items-center">
+											{car.deletedAt ? (
+												<>
+													<button
+														type="button"
+														class="text-green-600 hover:text-green-900 restore-btn"
+														data-id={car.id}
+													>
+														Restore
+													</button>
+													<a
+														href={`/cars/view/${car.id}`}
+														class="text-blue-600 hover:text-blue-900"
+													>
+														View
+													</a>
+												</>
+											) : (
+												<div class="flex items-center gap-4">
+													<a
+														href={`/cars/edit/${car.id}`}
+														class="text-blue-600 hover:text-blue-900 font-semibold"
+													>
+														Edit
+													</a>
+
+													<div class="relative quick-actions-wrapper">
+														<button class="text-gray-500 hover:text-gray-700 flex items-center font-medium quick-actions-btn">
+															Quick Actions
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																class="h-4 w-4 ml-1"
+																fill="none"
+																viewBox="0 0 24 24"
+																stroke="currentColor"
+															>
+																<path
+																	stroke-linecap="round"
+																	stroke-linejoin="round"
+																	stroke-width="2"
+																	d="M19 9l-7 7-7-7"
+																/>
+															</svg>
+														</button>
+														{/* Dropdown Menu */}
+														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
+															<div class="py-1 divide-y divide-gray-100">
+																<div class="py-1">
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 quick-archive-btn"
+																		data-id={car.id}
+																		data-reason="sold"
+																	>
+																		Mark Sold
+																	</button>
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 quick-archive-btn"
+																		data-id={car.id}
+																		data-reason="removed"
+																	>
+																		Archive
+																	</button>
+																</div>
+																<div class="py-1">
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 quick-archive-btn font-medium"
+																		data-id={car.id}
+																		data-reason="delete"
+																	>
+																		Hard Delete
+																	</button>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											)}
+										</div>
+									</td>
+								</tr>
+							))
+						}
+						{
+							allCars.length === 0 && (
+								<tr>
+									<td colspan="4" class="px-6 py-4 text-center text-gray-500">
+										No cars found in this view.
+									</td>
+								</tr>
+							)
+						}
+					</tbody>
+				</table>
+			</div>
+		</Container>
+	</Section>
+
+	<!-- Delete Confirmation Modal -->
+	<dialog
+		id="delete-modal"
+		class="p-0 rounded-lg shadow-xl backdrop:bg-gray-800/50 open:animate-in open:fade-in-0 duration-200"
+	>
+		<div class="bg-white p-6 max-w-sm w-full">
+			<h3 class="text-lg font-bold mb-4 text-gray-900">Confirm Hard Delete</h3>
+			<p class="text-sm text-gray-600 mb-6">
+				Are you sure you want to permanently delete this car? This action cannot be undone, and the
+				associated images will be deleted from Cloudflare R2 storage.
+			</p>
+			<div class="flex justify-end gap-3">
+				<button
+					type="button"
+					class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 font-medium"
+					id="btn-cancel-delete">Cancel</button
+				>
+				<button
+					type="button"
+					class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700 font-medium"
+					id="btn-confirm-delete">Delete</button
+				>
+			</div>
+		</div>
+	</dialog>
+
+	<script>
+		let carToDelete: string | null | undefined = null;
+		const modal = document.getElementById("delete-modal") as HTMLDialogElement | null;
+
+		document.getElementById("btn-cancel-delete")?.addEventListener("click", () => {
+			carToDelete = null;
+			modal?.close();
+		});
+
+		document.getElementById("btn-confirm-delete")?.addEventListener("click", async () => {
+			if (!carToDelete) return;
+			const res = await fetch(`/api/cars/${carToDelete}?reason=delete`, {
+				method: "DELETE",
+			});
+			if (res.ok) window.location.reload();
+			else alert("Failed to delete vehicle.");
+		});
+
+		// Quick Actions Dropdown Logic
+		document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const menu = btn.nextElementSibling;
+				const isHidden = menu?.classList.contains("hidden");
+
+				// Close all other menus first
+				document.querySelectorAll(".quick-actions-menu").forEach((m) => m.classList.add("hidden"));
+
+				// Toggle the clicked menu
+				if (isHidden) {
+					menu?.classList.remove("hidden");
+				}
+			});
+		});
+
+		// Close dropdowns when clicking outside
+		document.addEventListener("click", (e) => {
+			const target = e.target;
+			if (target instanceof Element && !target.closest(".quick-actions-wrapper")) {
+				document.querySelectorAll(".quick-actions-menu").forEach((menu) => {
+					menu.classList.add("hidden");
+				});
+			}
+		});
+
+		document.querySelectorAll(".restore-btn").forEach((btn) => {
+			btn.addEventListener("click", async (e) => {
+				const target = e.currentTarget as HTMLElement;
+				const id = target.dataset.id;
+				if (confirm("Are you sure you want to restore this car back to active status?")) {
+					const res = await fetch(`/api/cars/${id}/restore`, {
+						method: "POST",
+					});
+					if (res.ok) window.location.reload();
+					else alert("Failed to restore vehicle.");
+				}
+			});
+		});
+
+		document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
+			btn.addEventListener("click", async (e) => {
+				const target = e.currentTarget as HTMLElement;
+				const id = target.dataset.id;
+				const reason = target.dataset.reason;
+
+				if (reason === "delete") {
+					carToDelete = id;
+					modal?.showModal();
+					return;
+				}
+
+				const actionText =
+					reason === "sold" ? "Mark this car as SOLD" : "ARCHIVE this car from the active list";
+
+				if (confirm(`Are you sure you want to ${actionText}?`)) {
+					const res = await fetch(`/api/cars/${id}?reason=${reason}`, {
+						method: "DELETE",
+					});
+					if (res.ok) window.location.reload();
+					else alert("Failed to archive vehicle.");
+				}
+			});
+		});
+	</script>
+</Layout>

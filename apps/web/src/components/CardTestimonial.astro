@@ -1,0 +1,27 @@
+---
+import type { Testimonial } from "~/types";
+import { Image } from "astro:assets";
+const { testimonial } = Astro.props as { testimonial: Testimonial };
+if (!testimonial) {
+	throw new Error("No testimonials found");
+}
+---
+
+<div class="sm:inline-block sm:w-full sm:px-4 h-full">
+	<figure class="rounded-lg flex flex-col bg-gray-50 p-8 text-base border border-gray-200 h-full">
+		<blockquote class="mb-6">
+			<p>“{testimonial.data.description}”</p>
+		</blockquote>
+		<figcaption class="mt-auto flex items-center gap-x-4">
+			<Image
+				src={testimonial.data.img}
+				alt={testimonial.data.author}
+				class="size-10 rounded-full bg-gray-50"
+			/>
+			<div>
+				<div class="font-semibold">{testimonial.data.author}</div>
+				<div class="text-gray-600">{testimonial.data.location}</div>
+			</div>
+		</figcaption>
+	</figure>
+</div>

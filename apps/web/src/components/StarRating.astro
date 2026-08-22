@@ -1,0 +1,19 @@
+---
+const { rating } = Astro.props;
+---
+
+<div class="flex items-center justify-between gap-x-2 mb-4">
+	<div
+		class={`rating relative inline-block after:content-['⭐⭐⭐⭐⭐'] after:absolute after:top-0 after:left-0 after:overflow-hidden after:tracking-wider`}
+		aria-hidden="true"
+		style={`--rating: ${rating};`}
+	>
+		<div class="opacity-50 tracking-wider grayscale">⭐⭐⭐⭐⭐</div>
+	</div>
+</div>
+
+<style>
+	.rating::after {
+		width: calc(100% / 5 * var(--rating));
+	}
+</style>

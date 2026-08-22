@@ -1,0 +1,99 @@
+---
+import type { PaginationProps as Props } from "~/types";
+
+const { page, totalPages, searchParams } = Astro.props;
+
+function generatePaginationRange(currentPage: number, totalPages: number, delta = 2) {
+	const range = [];
+	for (let i = 1; i <= totalPages; i++) {
+		if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+			range.push(i);
+		} else if (range[range.length - 1] !== "...") {
+			range.push("...");
+		}
+	}
+	return range;
+}
+
+const paginationRange = generatePaginationRange(page, totalPages);
+
+function generateUrl(pageNum: number | string) {
+	const newParams = new URLSearchParams(searchParams);
+	newParams.set("page", pageNum.toString());
+	return `/cars?${newParams.toString()}`;
+}
+---
+
+<div class="mt-8 bg-white ring-1 ring-gray-100 py-4">
+	<nav class="flex items-center justify-between px-8 font-medium text-base">
+		<div class="flex w-0 flex-1">
+			{
+				page > 1 && (
+					<a
+						href={generateUrl(page - 1)}
+						class="inline-flex items-center transition hover:lg:-translate-x-1 py-1 -my-1"
+					>
+						<svg
+							class="mr-3 size-6"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							aria-hidden="true"
+							data-slot="icon"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M18 10a.75.75 0 0 1-.75.75H4.66l2.1 1.95a.75.75 0 1 1-1.02 1.1l-3.5-3.25a.75.75 0 0 1 0-1.1l3.5-3.25a.75.75 0 1 1 1.02 1.1l-2.1 1.95h12.59A.75.75 0 0 1 18 10Z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						Previous
+					</a>
+				)
+			}
+		</div>
+
+		<div class="hidden md:flex text-lg gap-x-2">
+			{
+				paginationRange.map((pageNumber) =>
+					pageNumber === "..." ? (
+						<span class="inline-flex items-center px-4 py-1.5 text-gray-500">...</span>
+					) : (
+						<a
+							href={generateUrl(pageNumber)}
+							class={`inline-flex items-center text-center justify-center size-10 leading-none transition rounded-full ${pageNumber === page ? "bg-red-700 text-white" : "hover:bg-gray-100"}`}
+							aria-current={pageNumber === page ? "page" : undefined}
+						>
+							{pageNumber}
+						</a>
+					),
+				)
+			}
+		</div>
+
+		<div class="flex w-0 flex-1 justify-end">
+			{
+				page < totalPages && (
+					<a
+						href={generateUrl(page + 1)}
+						class="inline-flex items-center transition hover:lg:translate-x-1 py-1 -my-1"
+					>
+						Next
+						<svg
+							class="ml-3 size-5"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							aria-hidden="true"
+							data-slot="icon"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M2 10a.75.75 0 0 1 .75-.75h12.59l-2.1-1.95a.75.75 0 1 1 1.02-1.1l3.5 3.25a.75.75 0 0 1 0 1.1l-3.5 3.25a.75.75 0 1 1-1.02-1.1l2.1-1.95H2.75A.75.75 0 0 1 2 10Z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+					</a>
+				)
+			}
+		</div>
+	</nav>
+</div>

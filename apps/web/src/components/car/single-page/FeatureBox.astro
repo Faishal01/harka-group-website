@@ -1,0 +1,84 @@
+---
+import type { Car } from "~/types";
+import { getMileage, getMileageUnit } from "~/utils/helpers";
+import { labels } from "~/utils/labels";
+import IconFuel from "~/assets/images/icons/fuel.svg";
+import IconTransmission from "~/assets/images/icons/transmission.svg";
+import IconMilage from "~/assets/images/icons/milage.svg";
+import IconCalendar from "~/assets/images/icons/calendar.svg";
+import IconOdometer from "~/assets/images/icons/odometer.svg";
+import IconColor from "~/assets/images/icons/color.svg";
+
+const { car } = Astro.props as { car: Car };
+
+const mileage = getMileage(car.data.history.mileage);
+const mileageUnit = getMileageUnit();
+---
+
+<div class="rounded-md ring-1 ring-gray-800 w-full p-4 my-8 text-base">
+	<dl class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+		<div class="flex items-start gap-x-2">
+			<IconFuel class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">
+					{labels.efficiency.fuelType}
+				</dt>
+				<dd class="font-semibold">{car.data.efficiency.fuelType}</dd>
+			</div>
+		</div>
+
+		<div class="flex items-start gap-x-2">
+			<IconTransmission class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">
+					{labels.technical.transmission}
+				</dt>
+				<dd class="font-semibold">{car.data.technical.transmission}</dd>
+			</div>
+		</div>
+
+		<div class="flex items-start gap-x-2">
+			<IconMilage class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">
+					{labels.history.mileage}
+				</dt>
+				<dd class="font-semibold">
+					{`${mileage} ${mileageUnit}`}
+				</dd>
+			</div>
+		</div>
+
+		<div class="flex items-start gap-x-2">
+			<IconCalendar class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">{labels.history.year}</dt>
+				<dd class="font-semibold">
+					{car.data.history.year}
+				</dd>
+			</div>
+		</div>
+
+		<div class="flex items-start gap-x-2">
+			<IconOdometer class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">
+					{labels.technical.horsePower}
+				</dt>
+				<dd class="font-semibold">
+					{car.data.technical.horsePower} BHP ({(car.data.technical.horsePower / 1.362).toFixed()} kW)
+				</dd>
+			</div>
+		</div>
+
+		<div class="flex items-start gap-x-2">
+			<IconColor class="size-5 mt-0.5" />
+			<div>
+				<dt class="flex items-center text-gray-500">{labels.exterior.color}</dt>
+				<dd class="font-semibold">
+					{car.data.exterior.color}
+				</dd>
+			</div>
+		</div>
+	</dl>
+</div>

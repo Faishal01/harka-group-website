@@ -1,0 +1,55 @@
+---
+import type { CardGridAltProps as Props } from "~/types";
+const { title = "", description = "", color = "green", icon = "", href = false } = Astro.props;
+
+export const colorClasses = {
+	brand: "bg-red-700 text-white",
+	black: "bg-gray-800 text-white",
+	white: "bg-white text-gray-800",
+	primary: "bg-red-50 text-red-700",
+	green: "bg-green-50 text-green-700",
+	blue: "bg-blue-50 text-blue-700",
+	purple: "bg-purple-50 text-purple-700",
+	red: "bg-red-50 text-red-700",
+	orange: "bg-orange-50 text-orange-700",
+};
+---
+
+<div
+	class="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-red-700"
+>
+	<div>
+		<span
+			class={`inline-flex size-10 relative rounded-full ${colorClasses[color]} service-icon service-icon-${icon}`}
+		></span>
+	</div>
+	<div class="mt-8">
+		<h3 class="text-base font-semibold">
+			{
+				href ? (
+					<a href={href} class="focus:outline-none">
+						<span class="absolute inset-0" aria-hidden="true" />
+						{title}
+					</a>
+				) : (
+					<span>{title}</span>
+				)
+			}
+		</h3>
+		<p class="mt-2 text-base text-gray-600 text-balance">
+			{description}
+		</p>
+	</div>
+	{
+		href && (
+			<span
+				class="pointer-events-none absolute right-6 top-6 text-gray-300 group-hover:text-gray-400"
+				aria-hidden="true"
+			>
+				<svg class="size-6" fill="currentColor" viewBox="0 0 24 24">
+					<path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
+				</svg>
+			</span>
+		)
+	}
+</div>

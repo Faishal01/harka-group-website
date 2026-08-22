@@ -1,0 +1,40 @@
+---
+import type { GridItemProps as Props } from "~/types";
+import { Image } from "astro:assets";
+const {
+	span = 1,
+	image = false,
+	imageAlt = "",
+	As = "div",
+	link = false,
+	xl = false,
+} = Astro.props;
+---
+
+<As
+	href={link && As === "a" ? link : undefined}
+	class="grid-item relative lg:min-h-[488px] group bg-gray-800"
+	style={`--span-value: ${span};`}
+>
+	{
+		image && (
+			<>
+				<Image src={image} alt={imageAlt} class="absolute inset-0 w-full h-full object-cover" />
+				<div class="absolute inset-0 bg-gray-900/80 group-hover:bg-gray-900/60 transition duration-300" />
+			</>
+		)
+	}
+	<div
+		class={`relative z-10 px-8 py-16 lg:p-16 prose prose-invert ${xl ? "max-w-none text-balance flex justify-center h-full items-start flex-col" : ""}`}
+	>
+		<slot />
+	</div>
+</As>
+
+<style>
+	@media (min-width: 1024px) {
+		.grid-item {
+			grid-column: span var(--span-value) / span var(--span-value);
+		}
+	}
+</style>

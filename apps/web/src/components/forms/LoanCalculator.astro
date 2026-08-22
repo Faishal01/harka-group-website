@@ -1,0 +1,158 @@
+---
+import type { LoanCalculatorProps as Props } from "~/types";
+import { getCurrencySymbol } from "~/utils/helpers";
+import { interestRate, siteName } from "~/data/config";
+import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
+import IconCalculator from "~/assets/images/icons/calculator.svg";
+
+const currency = getCurrencySymbol();
+const { price } = Astro.props;
+---
+
+<form id="form-loan-calculator">
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+		<div class="lg:col-span-1">
+			<label for="amount">Loan amount</label>
+			<div class="mt-1 relative rounded-md shadow-sm">
+				<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+					<span class="text-gray-500 sm:text-sm">{currency}</span>
+				</div>
+				<input
+					type="number"
+					min="0"
+					step="1"
+					name="amount"
+					id="loan-amount"
+					class="outline-none shadow-sm pl-7"
+					placeholder="0.00"
+					aria-describedby="loan-amount-description"
+					required
+					value={price}
+				/>
+			</div>
+			<p class="mt-2 text-xs text-gray-500" id="loan-amount-description">
+				The amount you want to borrow
+			</p>
+		</div>
+
+		<div class="lg:col-span-1">
+			<label for="duration"> Loan duration </label>
+			<div class="grid grid-cols-1">
+				<select
+					name="duration"
+					id="duration"
+					required
+					class="appearance-none col-start-1 row-start-1 pr-10 outline-none shadow-sm"
+				>
+					<option value="12">12 months</option>
+					<option value="24">24 months</option>
+					<option value="36">36 months</option>
+					<option value="48">48 months</option>
+					<option value="60">60 months</option>
+					<option value="72">72 months</option>
+				</select>
+				<IconChevronDown class="icon-chevron-down" />
+			</div>
+			<p class="mt-2 text-xs text-gray-500" id="loan-duration-description">
+				The duration of the loan in months
+			</p>
+		</div>
+
+		<div class="lg:col-span-1">
+			<label for="finalinstallment">Final Installment</label>
+			<div class="mt-1 relative rounded-md shadow-sm">
+				<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+					<span class="text-gray-500 sm:text-sm">{currency}</span>
+				</div>
+				<input
+					type="number"
+					min="0"
+					step="1"
+					name="finalinstallment"
+					id="loan-final-installment"
+					class="pl-7 outline-none shadow-sm"
+					placeholder="0.00"
+					aria-describedby="loan-final-installment-description"
+				/>
+			</div>
+			<p class="mt-2 text-xs text-gray-500" id="loan-final-installment-description">
+				The final payment you wish to make at the end of the loan term
+			</p>
+		</div>
+
+		<div class="lg:col-span-1 flex items-center justify-center">
+			<button type="submit" class="button button-black w-full gap-1">
+				<IconCalculator class="size-4 -mt-0.5" />
+				<span>Calculate</span>
+			</button>
+		</div>
+	</div>
+
+	<div
+		id="loan-calculator-result"
+		class="px-0 lg:px-8 bottom-0 max-lg:mt-4 lg:translate-y-1/2 inset-x-0 w-full opacity-0 max-lg:h-0 transition duration-300 lg:absolute"
+	>
+		<div
+			class="bg-white rounded-lg lg:border-2 border-gray-200 p-4 grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 relative"
+		>
+			<div>
+				<span class="block text-sm font-semibold">Monthly payment</span>
+				<span id="loan-monthly-payment" class="block"></span>
+			</div>
+
+			<div>
+				<span class="block text-sm font-semibold">Interest rate</span>
+				<span class="block">{interestRate}%</span>
+			</div>
+
+			<div>
+				<span class="block text-sm font-semibold">Total payment</span>
+				<span id="loan-total-payment" class="block"></span>
+			</div>
+
+			<div class="lg:absolute bottom-0 lg:translate-y-full">
+				<p class="text-xs mt-3 text-gray-500">
+					Using this calculator does not constitute an application for a loan or create any
+					obligations between you and {siteName}.
+				</p>
+			</div>
+		</div>
+	</div>
+</form>
+
+<script>
+	import { actions } from "astro:actions";
+
+	document.addEventListener("astro:page-load", function () {
+		const form = document.getElementById("form-loan-calculator") as HTMLFormElement;
+		const monthlyPaymentField = document.getElementById("loan-monthly-payment") as HTMLSpanElement;
+		const totalPaymentField = document.getElementById("loan-total-payment") as HTMLSpanElement;
+		const LoanCalculatorResult = document.getElementById(
+			"loan-calculator-result",
+		) as HTMLDivElement;
+		const wrapper = document.getElementById("form-loan-calculator-wrapper") as HTMLDivElement;
+
+		form?.addEventListener("submit", async (event) => {
+			event.preventDefault();
+
+			const formData = new FormData(form);
+
+			try {
+				const { data, error } = await actions.getMonthlyInstallment(formData);
+
+				if (error) {
+					console.error("Error:", error);
+				} else {
+					monthlyPaymentField.textContent = data.monthlyInstallment;
+					totalPaymentField.textContent = data.totalPayment;
+					LoanCalculatorResult.style.opacity = "1";
+					LoanCalculatorResult.classList.remove("max-lg:h-0");
+					LoanCalculatorResult.classList.add("max-lg:h-auto");
+					wrapper.classList.add("lg:pb-16", "lg:mb-16");
+				}
+			} catch (error) {
+				console.error("Fetch error:", error);
+			}
+		});
+	});
+</script>

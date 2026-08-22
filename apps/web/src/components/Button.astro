@@ -1,0 +1,22 @@
+---
+import type { ButtonProps as Props } from "~/types";
+const {
+	color = "primary",
+	href = "",
+	newtab = false,
+	As = "a",
+	class: className,
+	...props
+} = Astro.props;
+const buttonClasses = `not-prose button button-${color} ${className}`;
+---
+
+<As
+	class={buttonClasses}
+	href={href}
+	target={newtab ? "_blank" : "_self"}
+	rel={newtab ? "noopener noreferrer" : ""}
+	{...props}
+>
+	<slot />
+</As>

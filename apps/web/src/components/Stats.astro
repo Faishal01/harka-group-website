@@ -1,0 +1,67 @@
+---
+import type { StatsProps as Props } from "~/types";
+const { items = [] } = Astro.props;
+---
+
+<div class="mx-auto max-w-7xl">
+	<dl class="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-3">
+		{
+			items.map((stat) => (
+				<div class="mx-auto flex max-w-xs flex-col gap-y-4">
+					<dt class="text-base text-gray-600">{stat.title}</dt>
+					<dd
+						class="order-first text-3xl font-semibold tracking-tight sm:text-5xl"
+						data-animate-stat={stat.animateNumber}
+						data-animate-from={stat.animateNumber ? stat.animateFrom : ""}
+						data-animate-to={stat.animateNumber ? stat.value : ""}
+					>
+						{stat.animateNumber ? stat.animateFrom : stat.value}
+					</dd>
+				</div>
+			))
+		}
+	</dl>
+</div>
+
+<script>
+	document.addEventListener("astro:page-load", function () {
+		const animatedStats = document.querySelectorAll("[data-animate-stat]");
+
+		if (animatedStats) {
+			const observer = new IntersectionObserver((entries, observer) => {
+				entries.forEach(
+					(entry) => {
+						if (entry.isIntersecting) {
+							const element = entry.target;
+							const animate = element.getAttribute("data-animate-stat");
+
+							if (animate === "true") {
+								let from = parseInt(element.getAttribute("data-animate-from") || "0", 10);
+								const to = parseInt(element.getAttribute("data-animate-to") || "0", 10);
+
+								const interval = setInterval(() => {
+									if (from < to) {
+										from += 1;
+										element.textContent = from.toString();
+									} else {
+										clearInterval(interval);
+									}
+								}, 10);
+
+								observer.unobserve(element);
+							}
+						}
+					},
+					{
+						threshold: 0.5,
+						margin: "-100px",
+					},
+				);
+			});
+
+			animatedStats.forEach((element) => {
+				observer.observe(element);
+			});
+		}
+	});
+</script>

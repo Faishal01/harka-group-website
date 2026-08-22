@@ -1,0 +1,26 @@
+---
+import IconPrint from "~/assets/images/icons/print.svg";
+---
+
+<button
+	type="button"
+	id="button-print-page"
+	class="block text-sm font-medium transition hover:text-gray-500"
+>
+	<IconPrint class="size-3.5 inline-block mr-1 -mt-0.5" />
+	<span>Print</span>
+</button>
+
+<script>
+	document.addEventListener("astro:page-load", function () {
+		const buttonPrintPage = document.getElementById("button-print-page")!;
+
+		if (!buttonPrintPage) {
+			return;
+		}
+
+		buttonPrintPage.addEventListener("click", function () {
+			window.print();
+		});
+	});
+</script>
