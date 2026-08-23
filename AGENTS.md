@@ -21,7 +21,7 @@ We have successfully migrated away from local markdown (`.mdx`) collections for 
 ### What has been completed
 
 1. **D1 Setup & Schema:**
-   - `cars` table schema defined via Drizzle (`src/db/schema.ts`).
+   - `cars` table schema defined via Drizzle in `@harka/db` package (`packages/db/src/schema.ts`).
    - Replicated legacy MDX structure using JSON objects.
    - Successful ingest and migration of initial `.mdx` data to D1 using a migration script.
 2. **TypeScript & Refactor:**
@@ -38,8 +38,8 @@ We have successfully migrated away from local markdown (`.mdx`) collections for 
 ## Usage Commands
 
 - **Install dependencies:** `bun install`
-- **Run local dev server:** `bun run dev`
-- **Check TypeScript/Astro:** `bunx astro check`
-- **Drizzle Generation:** `bunx drizzle-kit generate`
-- **Apply migrations locally:** `bunx wrangler d1 migrations apply DB --local`
-- **Studio (View DB):** `bunx drizzle-kit studio`
+- **Run local dev server:** `bun run dev:all`
+- **Check TypeScript/Astro:** `bun run check`
+- **Drizzle Generation:** `bun run db:generate`
+- **Apply migrations locally:** `bun run db:migrate:dev`
+- **Studio (View DB):** `bun run db:studio`

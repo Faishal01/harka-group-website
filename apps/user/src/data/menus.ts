@@ -36,29 +36,29 @@ export const menuMain: MainMenuItem[] = [
 ];
 
 export const menuNavigation: MenuNavigation = {
-	prettyName: "Navigation",
+	prettyName: "Navigasi",
 	items: [
 		{
-			name: "Home",
+			name: "Beranda",
 			url: "/",
 		},
 		{
-			name: "Cars",
+			name: "Stok",
 			url: "/cars",
 		},
 		{
-			name: "About Us",
+			name: "Tentang",
 			url: "/about-us",
 		},
 		{
-			name: "Services",
+			name: "Layanan",
 			url: "/services",
 		},
 	],
 };
 
 export const menuService: MenuNavigation = {
-	prettyName: "Services",
+	prettyName: "Layanan",
 	items: [
 		{
 			name: "Auto Repairs",
@@ -80,7 +80,7 @@ export const menuService: MenuNavigation = {
 };
 
 export const menuMisc: MenuNavigation = {
-	prettyName: "Explore",
+	prettyName: "Lainnya",
 	items: [
 		{
 			name: "Testimonials",

@@ -8,7 +8,7 @@
 
 ## 🚀 Installation & Local Development
 
-This project is structured as a Bun workspaces monorepo containing a user-facing website (`apps/web`) and a dashboard (`apps/admin`), sharing a database schema (`packages/db`).
+This project is structured as a Bun workspaces monorepo containing a user-facing website (`apps/user`) and a dashboard (`apps/admin`), sharing a database schema (`packages/db`).
 
 1. **Clone project**:
    ```sh
@@ -27,19 +27,19 @@ This project is structured as a Bun workspaces monorepo containing a user-facing
 
 4. **Update wrangler type definitions** (run if `wrangler.jsonc` changes):
    ```sh
-   bun run gen:web
+   bun run gen:user
    bun run gen:admin
    ```
 
 5. **Run local development servers**:
    ```sh
-   # Run both web and admin concurrently
+   # Run both user and admin concurrently
    bun run dev:all
    ```
 
 6. **Preview production build locally (with shared local DB)**:
    ```sh
-   bun run preview:build:web
+   bun run preview:build:user
    bun run preview:build:admin
    ```
 
@@ -47,17 +47,18 @@ This project is structured as a Bun workspaces monorepo containing a user-facing
 
 Both applications are deployed as Cloudflare Workers. 
 
-### Option 1: Native Cloudflare Pages GitHub Integration (Recommended)
-You can deploy automatically on every push via Cloudflare Pages:
+### Option 1: Native Cloudflare Workers GitHub Integration
+Since Pages is not an option, you can deploy the apps natively as Workers using Cloudflare's new GitHub integration:
 
-1. Connect your repository to **Cloudflare Pages** via the Cloudflare Dashboard.
-2. Create two separate Pages projects (one for `web`, one for `admin`).
-3. Configure both projects:
-   - **Framework Preset**: Astro
-   - **Build Command**: `bun install && bun run build:web` (or `build:admin`)
-   - **Build Output Directory**: `apps/web/dist` (or `apps/admin/dist`)
-4. **Bindings**: Ensure you link your D1 Database (`DB`), R2 Bucket (`IMAGES_BUCKET`), and KV Namespace (`SESSION`) in the Settings -> Functions/Bindings tab for both projects.
-5. **Database Deployments**: Run `bun run db:migrate:prod` locally to push any schema changes to your live D1 database.
+1. Go to your [Cloudflare Dashboard](https://dash.cloudflare.com) > **Workers & Pages**.
+2. Click **Create application** > **Workers** tab (not Pages) > **Connect to Git**.
+3. Connect your GitHub repository.
+4. Set up two separate integrations (one for `user`, one for `admin`):
+   - **Root Directory**: `apps/user` (and `apps/admin` for the second one)
+   - **Build Command**: `bun run build`
+   *(Note: Cloudflare will automatically run `bun install` based on your lockfile, and there is no "Build Output Directory" option because the Worker automatically uses the `wrangler.jsonc` config!)*
+5. **Bindings**: Ensure you link your D1 Database (`DB`), R2 Bucket (`IMAGES_BUCKET`), and KV Namespace (`SESSION`) in the Settings -> Bindings tab for both Worker projects.
+6. **Database Deployments**: Run `bun run db:migrate:prod` locally to push any schema changes to your live D1 database.
 
 ### Option 2: Manual CLI Deployment
 If you prefer to deploy manually from your terminal:
@@ -69,7 +70,7 @@ If you prefer to deploy manually from your terminal:
 
 2. **Deploy the user-facing website**:
    ```sh
-   cd apps/web
+   cd apps/user
    bunx wrangler deploy
    ```
 
