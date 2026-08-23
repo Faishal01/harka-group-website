@@ -8,6 +8,7 @@ import Button from "~/components/Button.astro";
 import Heading from "~/components/Heading.astro";
 
 import ShowCars from "~/components/ShowCars.astro";
+import { homePage } from "~/data/captions";
 
 // Images
 import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-451590.jpg";
@@ -25,15 +26,16 @@ import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-4
 		<Container class:list={"relative z-10"}>
 			<Heading class:list={"prose-invert max-w-4xl"}>
 				<h1 slot="heading-title" class="mb-0 lg:text-7xl text-balance">
-					Find your next car in our exclusive collection
+					{homePage.headingTitle}
 				</h1>
 				<p slot="heading-content">
-					Search for your next car here. We have a wide range of cars for sale. Browse through our
-					collection and find the perfect car that suits your needs and budget.
+					{homePage.headingContent}
 				</p>
 			</Heading>
 			<div class="flex justify-center mt-8">
-				<Button href="/cars" color="white" class:list={"px-8 py-3 text-lg"}>Browse All Cars</Button>
+				<Button href="/cars" color="white" class:list={"px-8 py-3 text-lg"}
+					>{homePage.browseButtonLabel}</Button
+				>
 			</div>
 		</Container>
 	</Section>
@@ -42,11 +44,8 @@ import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-4
 	<Section class:list={"bg-gray-50"}>
 		<Container>
 			<Heading>
-				<h2 slot="heading-title" class="mb-0">Recent inventory</h2>
-				<p slot="heading-content">
-					Check out the newest additions to our collection. We hand-pick the best vehicles for our
-					customers.
-				</p>
+				<h2 slot="heading-title" class="mb-0">{homePage.recentTitle}</h2>
+				<p slot="heading-content">{homePage.recentContent}</p>
 			</Heading>
 
 			<ShowCars ui="grid" recent />
@@ -57,15 +56,11 @@ import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-4
 	<Section class:list={"bg-linear-to-br from-gray-900 to-gray-700"}>
 		<Container>
 			<Heading class:list={"mb-0 lg:mb-0 prose-invert text-center mx-auto"}>
-				<h2 slot="heading-title">Can't find the ideal car?</h2>
+				<h2 slot="heading-title">{homePage.ctaTitle}</h2>
 
-				<p slot="heading-content">
-					Our team is here to help you find the perfect car that suits your needs and budget.
-					Whether you're looking for a sleek sports car, a reliable family vehicle, or an
-					eco-friendly hybrid, we have something for everyone.
-				</p>
+				<p slot="heading-content">{homePage.ctaContent}</p>
 
-				<Button href="/contact" color="white" class:list={"mt-8"}>Contact us</Button>
+				<Button href="/contact" color="white" class:list={"mt-8"}>{homePage.contactUsLabel}</Button>
 			</Heading>
 		</Container>
 	</Section>

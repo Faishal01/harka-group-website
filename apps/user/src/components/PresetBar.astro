@@ -1,6 +1,7 @@
 ---
 import type { PresetBarProps as Props } from "~/types";
 import IconClose from "~/assets/images/icons/close.svg";
+import { filterLabels } from "~/data/captions";
 
 const { params } = Astro.props;
 
@@ -20,6 +21,11 @@ const allowedParams = [
 ];
 
 const filteredParams = params.filter(([key]) => allowedParams.includes(key));
+
+// Type guard or default for dynamic keys
+const getLabel = (key: string) => {
+	return filterLabels[key as keyof typeof filterLabels] || key;
+};
 ---
 
 <div class="my-4 max-lg:overflow-x-scroll" style="scrollbar-width: none;">
@@ -31,7 +37,7 @@ const filteredParams = params.filter(([key]) => allowedParams.includes(key));
 						<span class="sr-only">Remove filter</span>
 						<IconClose class="size-2.5 rounded-full bg-gray-800 lg:bg-white text-white lg:text-gray-800" />
 					</button>
-					<span>{key}:</span>
+					<span class="capitalize">{getLabel(key)}:</span>
 					<span class="font-bold">{value}</span>
 				</li>
 			))

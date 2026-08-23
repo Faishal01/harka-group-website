@@ -5,6 +5,7 @@ import IconSearch from "~/assets/images/icons/search.svg";
 import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
 import { getDb } from "@harka/db";
 import { env } from "cloudflare:workers";
+import { searchLabels } from "~/data/captions";
 
 const db = getDb(env);
 const allCars = await getMakeModelSet(db);
@@ -18,29 +19,29 @@ const allCars = await getMakeModelSet(db);
 	data-car-set={JSON.stringify(allCars)}
 >
 	<div>
-		<label class="sr-only" for="make">Make</label>
+		<label class="sr-only" for="make">{searchLabels.make}</label>
 		<div class="grid grid-cols-1">
 			<select name="make" id="make" class="appearance-none col-start-1 row-start-1">
-				<option value="all">Choose make</option>
+				<option value="all">{searchLabels.chooseMake}</option>
 				{allCars.map((car) => <option value={car.make}>{car.make}</option>)}
 			</select>
 			<IconChevronDown class="icon-chevron-down" />
 		</div>
 	</div>
 	<div>
-		<label class="sr-only" for="model">Model</label>
+		<label class="sr-only" for="model">{searchLabels.model}</label>
 		<div class="grid grid-cols-1">
 			<select name="model" id="model" class="appearance-none col-start-1 row-start-1">
-				<option value="all">Choose model</option>
+				<option value="all">{searchLabels.chooseModel}</option>
 			</select>
 			<IconChevronDown class="icon-chevron-down" />
 		</div>
 	</div>
 	<div>
-		<label class="sr-only" for="condition">Condition</label>
+		<label class="sr-only" for="condition">{searchLabels.condition}</label>
 		<div class="grid grid-cols-1">
 			<select name="condition" id="condition" class="appearance-none col-start-1 row-start-1">
-				<option value="all">Choose condition</option>
+				<option value="all">{searchLabels.chooseCondition}</option>
 				{conditions.map((condition) => <option value={condition}>{condition}</option>)}
 			</select>
 			<IconChevronDown class="icon-chevron-down" />
@@ -53,7 +54,7 @@ const allCars = await getMakeModelSet(db);
 			class="bg-red-700 text-white mt-1 rounded-md py-1.5 font-semibold w-full hover:opacity-80 transition"
 		>
 			<IconSearch class="size-5 -mt-0.5 inline-block" />
-			<span>Search</span>
+			<span>{searchLabels.search}</span>
 		</button>
 	</div>
 </form>

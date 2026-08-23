@@ -1,5 +1,4 @@
 ---
-export const prerender = false;
 import { bodyTypes, fuelTypes, transmission, conditions } from "~/data/constants";
 import { getPrice, getMakeModelSet } from "~/utils/helpers";
 import IconReset from "~/assets/images/icons/reset.svg";
@@ -7,6 +6,7 @@ import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
 import IconClose from "~/assets/images/icons/close.svg";
 import { getDb } from "@harka/db";
 import { env } from "cloudflare:workers";
+import { filterLabels } from "~/data/captions";
 
 interface Props {
 	data: {
@@ -41,14 +41,14 @@ const { data } = Astro.props;
 		<form id="form-filter" method="get" class="grid grid-cols-1 gap-y-6">
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="make">Make</label>
+					<label for="make">{filterLabels.make}</label>
 					<button id="clear-input-make" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="make" id="make" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{allMakesModels.map((car) => <option value={car.make}>{car.make}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
@@ -57,14 +57,14 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="model">Model</label>
+					<label for="model">{filterLabels.model}</label>
 					<button id="clear-input-model" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="model" id="model" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
 				</div>
@@ -72,19 +72,19 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="price">Price</label>
+					<label for="price">{filterLabels.price}</label>
 					<button id="clear-input-price" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="price" id="price" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{
 							data.priceSteps.map((step, index) => {
 								const nextStep = data.priceSteps[index + 1];
 								if (index === 0) {
-									return <option value={`0-${step}`}>Lower than {getPrice(step)}</option>;
+									return <option value={`0-${step}`}>{filterLabels.lowerThan} {getPrice(step)}</option>;
 								} else if (nextStep) {
 									return (
 										<option value={`${step}-${nextStep}`}>
@@ -92,7 +92,7 @@ const { data } = Astro.props;
 										</option>
 									);
 								} else {
-									return <option value={`${step}-`}>Higher than {getPrice(step)}</option>;
+									return <option value={`${step}-`}>{filterLabels.higherThan} {getPrice(step)}</option>;
 								}
 							})
 						}
@@ -103,14 +103,14 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="color">Color</label>
+					<label for="color">{filterLabels.color}</label>
 					<button id="clear-input-color" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="color" id="color" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{data.colors.map((color) => <option value={color}>{color}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
@@ -119,14 +119,14 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="bodyType">Body Type</label>
+					<label for="bodyType">{filterLabels.bodyType}</label>
 					<button id="clear-input-bodyType" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="bodyType" id="bodyType" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{bodyTypes.map((bodyType) => <option value={bodyType}>{bodyType}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
@@ -135,14 +135,14 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="fuelType">Bahan Bakar</label>
+					<label for="fuelType">{filterLabels.fuelType}</label>
 					<button id="clear-input-fuelType" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="fuelType" id="fuelType" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{fuelTypes.map((fuelType) => <option value={fuelType}>{fuelType}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
@@ -151,7 +151,7 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="transmission">Transmission</label>
+					<label for="transmission">{filterLabels.transmission}</label>
 					<button id="clear-input-transmission" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
@@ -162,7 +162,7 @@ const { data } = Astro.props;
 						id="transmission"
 						class="appearance-none col-start-1 row-start-1"
 					>
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{
 							transmission.map((transmission) => (
 								<option value={transmission}>{transmission}</option>
@@ -175,14 +175,14 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="condition">Condition</label>
+					<label for="condition">{filterLabels.condition}</label>
 					<button id="clear-input-condition" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
 					<select name="condition" id="condition" class="appearance-none col-start-1 row-start-1">
-						<option value="all">All</option>
+						<option value="all">{filterLabels.all}</option>
 						{conditions.map((condition) => <option value={condition}>{condition}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
@@ -191,7 +191,7 @@ const { data } = Astro.props;
 
 			<div class="sticky bottom-0">
 				<button type="submit" class="button button-primary w-full">
-					Search <span id="filter-result-found" class="ml-1">({data.count})</span></button
+					{filterLabels.search} <span id="filter-result-found" class="ml-1">({data.count})</span></button
 				>
 			</div>
 		</form>
