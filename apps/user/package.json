@@ -1,5 +1,5 @@
 {
-	"name": "web",
+	"name": "user",
 	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
@@ -10,11 +10,6 @@
 		"preview:build": "wrangler types --check && astro build && wrangler dev --config ./dist/server/wrangler.json --persist-to ../../.wrangler/state",
 		"astro": "astro",
 		"gen": "wrangler types",
-		"db:push": "drizzle-kit push",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate:prod": "wrangler d1 migrations apply harka-db --remote",
-		"db:migrate:dev": "wrangler d1 migrations apply harka-db --local --persist-to ../../.wrangler/state",
-		"db:studio": "drizzle-kit studio",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"lint": "eslint .",

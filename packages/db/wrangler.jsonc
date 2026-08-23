@@ -1,0 +1,12 @@
+{
+	"name": "harka-db",
+	"compatibility_date": "2026-08-01",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "harka-db",
+			"database_id": "429c34f1-c65d-4fab-b6d4-74d980cb93ef",
+			"migrations_dir": "drizzle"
+		}
+	]
+}
