@@ -157,3 +157,8 @@ export interface MenuNavigation {
 		url: string;
 	}[];
 }
+
+export interface Link {
+	label: string;
+	url: string;
+}
