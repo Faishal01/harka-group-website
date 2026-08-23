@@ -111,22 +111,29 @@ const allCars = await db.query.cars.findMany({
 
 									{tab === "active" ? (
 										<td class="px-6 py-4 whitespace-nowrap">
-											<span
-												class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-													car.general?.availability === "reserved"
-														? "bg-yellow-100 text-yellow-800"
-														: car.general?.availability === "coming-soon"
-															? "bg-blue-100 text-blue-800"
-															: "bg-green-100 text-green-800"
-												}`}
-											>
-												{car.general?.availability
-													? car.general.availability
-															.split("-")
-															.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-															.join(" ")
-													: "In Stock"}
-											</span>
+											<div class="flex gap-2">
+												{car.misc?.hidden && (
+													<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">
+														Hidden
+													</span>
+												)}
+												<span
+													class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+														car.general?.availability === "reserved"
+															? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+															: car.general?.availability === "coming-soon"
+																? "bg-blue-100 text-blue-800 border border-blue-200"
+																: "bg-green-100 text-green-800 border border-green-200"
+													}`}
+												>
+													{car.general?.availability
+														? car.general.availability
+																.split("-")
+																.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+																.join(" ")
+														: "In Stock"}
+												</span>
+											</div>
 										</td>
 									) : (
 										<td class="px-6 py-4 whitespace-nowrap">
@@ -281,85 +288,92 @@ const allCars = await db.query.cars.findMany({
 	</dialog>
 
 	<script>
-		let carToDelete: string | null | undefined = null;
-		const modal = document.getElementById("delete-modal") as HTMLDialogElement | null;
+		let isGlobalClickAttached = false;
 
-		document.getElementById("btn-cancel-delete")?.addEventListener("click", () => {
-			carToDelete = null;
-			modal?.close();
-		});
+		document.addEventListener("astro:page-load", () => {
+			let carToDelete: string | null | undefined = null;
+			const modal = document.getElementById("delete-modal") as HTMLDialogElement | null;
 
-		document.getElementById("btn-confirm-delete")?.addEventListener("click", async () => {
-			if (!carToDelete) return;
-			const res = await fetch(`/api/cars/${carToDelete}?reason=delete`, {
-				method: "DELETE",
+			document.getElementById("btn-cancel-delete")?.addEventListener("click", () => {
+				carToDelete = null;
+				modal?.close();
 			});
-			if (res.ok) window.location.reload();
-			else alert("Failed to delete vehicle.");
-		});
 
-		// Quick Actions Dropdown Logic
-		document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
-			btn.addEventListener("click", () => {
-				const menu = btn.nextElementSibling;
-				const isHidden = menu?.classList.contains("hidden");
-
-				// Close all other menus first
-				document.querySelectorAll(".quick-actions-menu").forEach((m) => m.classList.add("hidden"));
-
-				// Toggle the clicked menu
-				if (isHidden) {
-					menu?.classList.remove("hidden");
-				}
-			});
-		});
-
-		// Close dropdowns when clicking outside
-		document.addEventListener("click", (e) => {
-			const target = e.target;
-			if (target instanceof Element && !target.closest(".quick-actions-wrapper")) {
-				document.querySelectorAll(".quick-actions-menu").forEach((menu) => {
-					menu.classList.add("hidden");
+			document.getElementById("btn-confirm-delete")?.addEventListener("click", async () => {
+				if (!carToDelete) return;
+				const res = await fetch(`/api/cars/${carToDelete}?reason=delete`, {
+					method: "DELETE",
 				});
-			}
-		});
-
-		document.querySelectorAll(".restore-btn").forEach((btn) => {
-			btn.addEventListener("click", async (e) => {
-				const target = e.currentTarget as HTMLElement;
-				const id = target.dataset.id;
-				if (confirm("Are you sure you want to restore this car back to active status?")) {
-					const res = await fetch(`/api/cars/${id}/restore`, {
-						method: "POST",
-					});
-					if (res.ok) window.location.reload();
-					else alert("Failed to restore vehicle.");
-				}
+				if (res.ok) window.location.reload();
+				else alert("Failed to delete vehicle.");
 			});
-		});
 
-		document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
-			btn.addEventListener("click", async (e) => {
-				const target = e.currentTarget as HTMLElement;
-				const id = target.dataset.id;
-				const reason = target.dataset.reason;
+			// Quick Actions Dropdown Logic
+			document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					const menu = btn.nextElementSibling;
+					const isHidden = menu?.classList.contains("hidden");
 
-				if (reason === "delete") {
-					carToDelete = id;
-					modal?.showModal();
-					return;
-				}
+					// Close all other menus first
+					document.querySelectorAll(".quick-actions-menu").forEach((m) => m.classList.add("hidden"));
 
-				const actionText =
-					reason === "sold" ? "Mark this car as SOLD" : "ARCHIVE this car from the active list";
+					// Toggle the clicked menu
+					if (isHidden) {
+						menu?.classList.remove("hidden");
+					}
+				});
+			});
 
-				if (confirm(`Are you sure you want to ${actionText}?`)) {
-					const res = await fetch(`/api/cars/${id}?reason=${reason}`, {
-						method: "DELETE",
-					});
-					if (res.ok) window.location.reload();
-					else alert("Failed to archive vehicle.");
-				}
+			// Close dropdowns when clicking outside
+			if (!isGlobalClickAttached) {
+				document.addEventListener("click", (e) => {
+					const target = e.target;
+					if (target instanceof Element && !target.closest(".quick-actions-wrapper")) {
+						document.querySelectorAll(".quick-actions-menu").forEach((menu) => {
+							menu.classList.add("hidden");
+						});
+					}
+				});
+				isGlobalClickAttached = true;
+			}
+
+			document.querySelectorAll(".restore-btn").forEach((btn) => {
+				btn.addEventListener("click", async (e) => {
+					const target = e.currentTarget as HTMLElement;
+					const id = target.dataset.id;
+					if (confirm("Are you sure you want to restore this car back to active status?")) {
+						const res = await fetch(`/api/cars/${id}/restore`, {
+							method: "POST",
+						});
+						if (res.ok) window.location.reload();
+						else alert("Failed to restore vehicle.");
+					}
+				});
+			});
+
+			document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
+				btn.addEventListener("click", async (e) => {
+					const target = e.currentTarget as HTMLElement;
+					const id = target.dataset.id;
+					const reason = target.dataset.reason;
+
+					if (reason === "delete") {
+						carToDelete = id;
+						modal?.showModal();
+						return;
+					}
+
+					const actionText =
+						reason === "sold" ? "Mark this car as SOLD" : "ARCHIVE this car from the active list";
+
+					if (confirm(`Are you sure you want to ${actionText}?`)) {
+						const res = await fetch(`/api/cars/${id}?reason=${reason}`, {
+							method: "DELETE",
+						});
+						if (res.ok) window.location.reload();
+						else alert("Failed to archive vehicle.");
+					}
+				});
 			});
 		});
 	</script>

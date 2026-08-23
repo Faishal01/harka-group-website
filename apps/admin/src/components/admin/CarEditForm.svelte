@@ -114,9 +114,15 @@
       <p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
     </div>
     <div class="flex items-center gap-2">
-      <div class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-green-100 text-green-800 border border-green-200">
-        Public (Live)
-      </div>
+      {#if misc.hidden}
+        <div class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-yellow-100 text-yellow-800 border border-yellow-200">
+          Hidden (Draft)
+        </div>
+      {:else}
+        <div class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-green-100 text-green-800 border border-green-200">
+          Public (Live)
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -209,7 +215,14 @@
           </div>
           
           <div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2 flex flex-col gap-4">
-            <!-- Removed Hidden checkbox -->
+            <div>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" bind:checked={misc.hidden} class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <span class="text-sm font-medium text-gray-900">Hidden (Draft Status)</span>
+              </label>
+              <p class="text-xs text-gray-500 mt-1 ml-8">If checked, this car will not appear on the main website.</p>
+            </div>
+            
             <div>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" bind:checked={misc.loanWidget} class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
