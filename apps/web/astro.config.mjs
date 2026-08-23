@@ -12,9 +12,8 @@ export default defineConfig({
 	base: "/",
 	integrations: [mdx(), svelte()],
 	output: "server",
-	adapter: cloudflare({ persistState: "../../.wrangler/state" }),
+	adapter: cloudflare({ persistState: { path: "../../.wrangler/state" } }),
 	vite: {
-		// @ts-ignore
 		plugins: [tailwindcss()],
 	},
 });
