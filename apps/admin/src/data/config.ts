@@ -5,6 +5,7 @@ export const siteDomain = "harkagroup.id";
 export const siteName = "Harka Group";
 export const siteSlogan = "The best car dealership in the galaxy!";
 export const themeColor = "#fef08a";
+export const liveSiteUrl = "https://harkagroup.id";
 export const unitSystem = "imperial";
 export const interestRate = 5.12;
 export const defaultPaginationSize = 12;
