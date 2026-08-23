@@ -16,6 +16,9 @@ export default defineConfig(
 	svelte.configs["flat/recommended"],
 	{
 		languageOptions: {
+			parserOptions: {
+				tsconfigRootDir: import.meta.dirname,
+			},
 			globals: {
 				...globals.browser,
 				...globals.node,
