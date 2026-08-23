@@ -5,16 +5,11 @@ import IconX from "~/assets/images/icons/social-media/x.svg";
 import IconWhatsApp from "~/assets/images/icons/social-media/whatsapp.svg";
 import IconEmail from "~/assets/images/icons/social-media/email.svg";
 import IconLink from "~/assets/images/icons/social-media/link.svg";
+import { buttonLabels, shareMessages } from "~/data/captions";
 
 const currentPageUrl = Astro.url.href;
-const emailSubject = `Check this out car!`;
-const emailBody = `I found an awesome ride for you!
-
-Check out the details here:
-
-${currentPageUrl}
-
-Regards`;
+const emailSubject = shareMessages.emailSubject;
+const emailBody = `${shareMessages.emailBodyTop}${currentPageUrl}${shareMessages.emailBodyBottom}`;
 
 const emailSubjectEncoded = encodeURIComponent(emailSubject);
 const emailBodyEncoded = encodeURIComponent(emailBody);
@@ -37,7 +32,7 @@ const SocialUrls = {
 			aria-haspopup="true"
 		>
 			<IconShare class="size-3 inline-block mr-1 -mt-0.5" />
-			<span>Share</span>
+			<span>{buttonLabels.share}</span>
 		</button>
 	</div>
 
@@ -74,7 +69,7 @@ const SocialUrls = {
 				tabindex="-1"
 			>
 				<IconLink class="size-5 inline-block mr-1 -mt-0.5" />
-				Copy link
+				{buttonLabels.copyLink}
 			</button>
 		</div>
 	</div>

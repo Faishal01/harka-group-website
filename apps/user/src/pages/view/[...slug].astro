@@ -25,6 +25,7 @@ import ButtonCall from "~/components/buttons/ButtonCall.astro";
 import ButtonInquire from "~/components/buttons/ButtonInquire.astro";
 import LinkLoan from "~/components/car/single-page/LinkLoan.astro";
 import { env } from "cloudflare:workers";
+import { viewPage } from "~/data/captions";
 
 export const prerender = false;
 
@@ -86,7 +87,7 @@ const car = { id: carRow.id, data: carRow };
 							) : (
 								<div class="lg:absolute inset-0 text-gray-200 size-full bg-gray-50 flex flex-col gap-4 items-center justify-center">
 									<IconLogo class="h-24" />
-									<span class="text-gray-400 select-none font-bold italic">Coming Soon</span>
+									<span class="text-gray-400 select-none font-bold italic">{viewPage.comingSoon}</span>
 								</div>
 							)
 						}
@@ -130,10 +131,10 @@ const car = { id: carRow.id, data: carRow };
 				</div>
 
 				<div class="p-4 lg:p-8">
-					<h2 class="h6 feature-icon feature-icon-description">Description</h2>
+					<h2 class="h6 feature-icon feature-icon-description">{viewPage.description}</h2>
 					<div class="prose max-w-none mt-8">
 						<p>
-							{car.data.excerpt || car.data.misc?.dealerNotes || "No description provided."}
+							{car.data.excerpt || car.data.misc?.dealerNotes || viewPage.noDescription}
 						</p>
 					</div>
 				</div>

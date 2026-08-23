@@ -2,9 +2,10 @@
 import { phone } from "~/data/config";
 import IconPhone from "~/assets/images/icons/phone.svg";
 import Button from "~/components/Button.astro";
+import { buttonLabels } from "~/data/captions";
 ---
 
 <Button href={phone.href} class:list={"gap-1"}>
 	<IconPhone class="size-4 inline-block -mt-0.5 mr-1" />
-	<span>Call us</span>
+	<span>{buttonLabels.callUs}</span>
 </Button>

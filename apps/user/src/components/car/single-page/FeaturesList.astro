@@ -2,6 +2,7 @@
 import type { Car } from "~/types";
 import { getMileage, getMileageUnit } from "~/utils/helpers";
 import { labels, categoryLabels } from "~/utils/labels";
+import { viewPage } from "~/data/captions";
 
 const { car } = Astro.props as { car: Car };
 
@@ -47,10 +48,10 @@ const excludeFields = [
 												{subKey === "mileage"
 													? `${getMileage(value as number)} ${getMileageUnit()}`
 													: value === true
-														? "Yes"
+														? viewPage.yes
 														: value
 															? value
-															: "N/A"}
+															: viewPage.na}
 											</dd>
 										</>
 									),

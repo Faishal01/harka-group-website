@@ -2,6 +2,7 @@
 import type { Car } from "~/types";
 import { getMileage, getMileageUnit } from "~/utils/helpers";
 import { labels } from "~/utils/labels";
+import { viewPage } from "~/data/captions";
 import IconFuel from "~/assets/images/icons/fuel.svg";
 import IconTransmission from "~/assets/images/icons/transmission.svg";
 import IconMilage from "~/assets/images/icons/milage.svg";
@@ -66,7 +67,7 @@ const mileageUnit = getMileageUnit();
 					{labels.technical.horsePower}
 				</dt>
 				<dd class="font-semibold">
-					{car.data.technical.horsePower} BHP ({(car.data.technical.horsePower / 1.362).toFixed()} kW)
+					{car.data.technical.horsePower} {viewPage.bhp} ({(car.data.technical.horsePower / 1.362).toFixed()} {viewPage.kw})
 				</dd>
 			</div>
 		</div>

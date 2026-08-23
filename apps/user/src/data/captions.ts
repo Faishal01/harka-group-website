@@ -52,3 +52,42 @@ export const searchLabels = {
 	search: "Search",
 	searchPlaceholder: "Search...",
 };
+
+export const viewPage = {
+	comingSoon: "Coming Soon",
+	description: "Description",
+	noDescription: "No description provided.",
+	yes: "Yes",
+	na: "N/A",
+	bhp: "BHP",
+	kw: "kW",
+};
+
+export const buttonLabels = {
+	returnToCars: "Return to Cars",
+	callUs: "Call us",
+	askAQuestion: "Ask a question",
+	share: "Share",
+	copyLink: "Copy link",
+	print: "Print",
+};
+
+export const loanLabels = {
+	calculateYourLoan: "Calculate your loan now",
+};
+
+export const inquireForm = {
+	title: "Ask a question",
+	description:
+		"Interested in this car? Fill out the form below with any questions you may have and we'll get back to you as soon as possible.",
+	name: "Name",
+	email: "Email",
+	message: "Message",
+	send: "Send",
+};
+
+export const shareMessages = {
+	emailSubject: "Check this out car!",
+	emailBodyTop: "I found an awesome ride for you!\n\nCheck out the details here:\n\n",
+	emailBodyBottom: "\n\nRegards",
+};
