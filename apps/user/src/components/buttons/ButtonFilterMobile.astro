@@ -1,11 +1,12 @@
 ---
 import IconFilter from "~/assets/images/icons/filter.svg";
+import { filterLabels } from "~/data/captions";
 ---
 
 <button id="button-modal-filter-open" type="button" class="-m-1 p-1 max-lg:shrink-0">
 	<span class="sr-only">Open filter</span>
 	<div class="flex space-x-2 items-center">
 		<IconFilter class="size-5" />
-		<span>Filter</span>
+		<span>{filterLabels.filter}</span>
 	</div>
 </button>

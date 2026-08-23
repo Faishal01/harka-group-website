@@ -17,6 +17,7 @@ import PresetBar from "~/components/PresetBar.astro";
 import FilterBarMobile from "~/components/FilterBarMobile.astro";
 
 import type { Car } from "~/types";
+import { carsPage } from "~/data/captions";
 
 let APIURL = new URL("/api/getFilteredCars.json", Astro.url);
 
@@ -72,7 +73,7 @@ const paginatedCars = Array.isArray(allCars)
 								paginatedCars.length > 0 ? (
 									paginatedCars.map((car) => <CardCar car={car} />)
 								) : (
-									<li class="text-center text-gray-500">No results found</li>
+									<li class="text-center text-gray-500">{carsPage.noResultFound}</li>
 								)
 							}
 						</ul>

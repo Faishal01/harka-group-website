@@ -1,5 +1,6 @@
 ---
 import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
+import { sortLabels } from "~/data/captions";
 ---
 
 <form id="form-sort">
@@ -13,13 +14,13 @@ import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
 				id="sort"
 				class="appearance-none max-lg:mt-0 col-start-1 bg-transparent max-lg:outline-none outline-gray-300 row-start-1 pr-10"
 			>
-				<option value="all">Sort by</option>
-				<option value="mileage-desc">Mileage: High to Low</option>
-				<option value="mileage-asc">Mileage: Low to High</option>
-				<option value="price-desc">Price: High to Low</option>
-				<option value="price-asc">Price: Low to High</option>
-				<option value="year-desc">Year: High to Low</option>
-				<option value="year-asc">Year: Low to High</option>
+				<option value="all">{sortLabels.sortBy}</option>
+				<option value="mileage-desc">{sortLabels.mileageDesc}</option>
+				<option value="mileage-asc">{sortLabels.mileageAsc}</option>
+				<option value="price-desc">{sortLabels.priceDesc}</option>
+				<option value="price-asc">{sortLabels.priceAsc}</option>
+				<option value="year-desc">{sortLabels.yearDesc}</option>
+				<option value="year-asc">{sortLabels.yearAsc}</option>
 			</select>
 			<IconChevronDown class="icon-chevron-down" />
 		</div>
