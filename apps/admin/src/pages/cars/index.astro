@@ -130,22 +130,6 @@ const allCars = await db.query.cars.findMany({
 														Hidden
 													</span>
 												)}
-												<span
-													class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-														car.general?.availability === "reserved"
-															? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-															: car.general?.availability === "coming-soon"
-																? "bg-blue-100 text-blue-800 border border-blue-200"
-																: "bg-green-100 text-green-800 border border-green-200"
-													}`}
-												>
-													{car.general?.availability
-														? car.general.availability
-																.split("-")
-																.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-																.join(" ")
-														: "In Stock"}
-												</span>
 											</div>
 										</td>
 									) : (

@@ -21,7 +21,6 @@
 		bodyType: "Sedan",
 		doors: 4,
 		seatingCapacity: 5,
-		availability: "in-stock",
 	};
 
 	let history = {

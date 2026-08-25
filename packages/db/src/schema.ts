@@ -24,7 +24,6 @@ export const cars = sqliteTable("cars", {
 			doors: number;
 			seatingCapacity: number;
 			condition?: "New" | "Used" | "Certified Pre-Owned";
-			availability: "in-stock" | "reserved" | "sold" | "coming-soon";
 		}>()
 		.notNull(),
 

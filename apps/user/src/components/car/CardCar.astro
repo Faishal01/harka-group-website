@@ -12,7 +12,6 @@ const isSold = car.data.archiveReason === "sold";
 
 <li
 	data-car-id={car.id}
-	data-car-available={car.data.general.availability}
 	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-r-4 hover:lg:border-red-700"
 >
 	<a href={`/view/${car.id}`} class="relative isolate flex flex-col gap-8 xxl:flex-row">

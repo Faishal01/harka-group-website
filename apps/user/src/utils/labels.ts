@@ -37,7 +37,6 @@ export const labels: ShapeToLabels<Car["data"]> = {
 		doors: "Doors",
 		seatingCapacity: "Seating Capacity",
 		condition: "Condition",
-		availability: "Availability",
 	},
 	history: {
 		mileage: unitSystemTyped === "imperial" ? "Mileage" : "Kilometerage",

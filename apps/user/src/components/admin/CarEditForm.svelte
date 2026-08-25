@@ -243,18 +243,6 @@
 						</select>
 					</div>
 
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Availability</label>
-						<select
-							bind:value={general.availability}
-							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
-						>
-							<option value="in-stock">In Stock</option>
-							<option value="reserved">Reserved</option>
-							<option value="coming-soon">Coming Soon</option>
-						</select>
-					</div>
-
 					<div
 						class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2 flex flex-col gap-4"
 					>

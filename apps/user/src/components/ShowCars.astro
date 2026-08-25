@@ -18,11 +18,11 @@ if (recent) {
 		.from(carsTable)
 		.where(isNull(carsTable.deletedAt))
 		.orderBy(desc(carsTable.publishDate));
-	dbCars = all.filter((c) => c.general?.availability !== "sold").slice(0, 3);
+	dbCars = all.slice(0, 3);
 } else if (featured) {
 	const all = await db.select().from(carsTable).where(isNull(carsTable.deletedAt));
 	dbCars = all
-		.filter((c) => c.misc?.featured && c.general?.availability !== "sold")
+		.filter((c) => c.misc?.featured)
 		.sort(() => 0.5 - Math.random())
 		.slice(0, 3);
 } else if (slugs.length > 0) {
@@ -30,7 +30,6 @@ if (recent) {
 		.select()
 		.from(carsTable)
 		.where(and(inArray(carsTable.id, slugs), isNull(carsTable.deletedAt)));
-	dbCars = dbCars.filter((c) => c.general?.availability !== "sold");
 } else {
 	return;
 }
