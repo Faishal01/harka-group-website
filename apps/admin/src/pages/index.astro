@@ -1,6 +1,7 @@
 ---
 import Layout from "~/layouts/Layout.astro";
 import { adminMenus } from "~/data/adminMenus";
+import { Icon } from "astro-icon/components";
 ---
 
 <Layout title="Dashboard" hideSidebar={true}>
@@ -19,20 +20,13 @@ import { adminMenus } from "~/data/adminMenus";
 						}`}
 					>
 						<div
-							class={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors ${
+							class={`p-4 rounded-full mb-4 ${
 								menu.disabled
 									? "bg-gray-100 text-gray-400"
-									: "bg-red-50 text-red-600 group-hover:bg-red-100"
+									: "bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:scale-110 transition-transform"
 							}`}
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-8 w-8"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-								set:html={menu.icon}
-							/>
+							<Icon name={menu.icon} class="h-8 w-8" />
 						</div>
 
 						<h3 class={`text-lg font-bold ${menu.disabled ? "text-gray-500" : "text-gray-900"}`}>

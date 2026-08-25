@@ -5,6 +5,7 @@ import { siteName, siteLang, themeColor, liveSiteUrl } from "~/data/config";
 import icon from "~/assets/images/icons/logo.png";
 import { Image } from "astro:assets";
 import { adminMenus } from "~/data/adminMenus";
+import { Icon } from "astro-icon/components";
 
 const baseUrl = `${Astro.url.protocol}//${Astro.url.host}`;
 const { pageTitle, title, description, noindex = false, hideSidebar = false } = Astro.props;
@@ -128,13 +129,9 @@ const pathname = Astro.url.pathname;
 								href={menu.disabled ? "#" : menu.url}
 								class={`flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition ${menu.disabled ? "text-gray-400 cursor-not-allowed" : pathname.startsWith(menu.url) && menu.url !== "/" ? "bg-red-50 text-red-700" : "text-gray-700 hover:bg-gray-100"}`}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
+								<Icon
+									name={menu.icon}
 									class={`h-5 w-5 ${menu.disabled ? "opacity-50" : "opacity-75"}`}
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-									set:html={menu.icon}
 								/>
 								{menu.label} {menu.badge && `(${menu.badge})`}
 							</a>
@@ -158,13 +155,9 @@ const pathname = Astro.url.pathname;
 									href={menu.disabled ? "#" : menu.url}
 									class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition ${menu.disabled ? "text-gray-400 cursor-not-allowed" : pathname.startsWith(menu.url) && menu.url !== "/" ? "bg-red-50 text-red-700" : "text-gray-700 hover:bg-gray-100"}`}
 								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
+									<Icon
+										name={menu.icon}
 										class={`h-5 w-5 ${menu.disabled ? "opacity-50" : "opacity-75"}`}
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-										set:html={menu.icon}
 									/>
 									{menu.label} {menu.badge && `(${menu.badge})`}
 								</a>
