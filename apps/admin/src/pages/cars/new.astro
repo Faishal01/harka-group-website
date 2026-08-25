@@ -9,13 +9,23 @@ import CarWizard from "~/components/admin/CarWizard.svelte";
 <Layout pageTitle="Add New Car">
 	<Section class="bg-gray-50 min-h-[70vh] py-12">
 		<Container>
-			<div class="flex justify-between items-center mb-6">
-				<h1 class="text-3xl font-bold text-gray-900">Add New Car</h1>
+			<div class="flex flex-col mb-4">
 				<a
 					href="/cars"
-					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium"
+					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium w-fit"
 				>
-					&larr; Back to Cars
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-4 w-4 mr-1"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+					>
+						<path
+							fill-rule="evenodd"
+							d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+							clip-rule="evenodd"></path>
+					</svg>
+					Back to Cars
 				</a>
 			</div>
 

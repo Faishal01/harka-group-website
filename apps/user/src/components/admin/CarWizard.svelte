@@ -193,7 +193,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
 						<input
 							type="number"
 							bind:value={general.price}

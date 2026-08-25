@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { navigate } from "astro:transitions/client";
 
 	let currentStep = 1;
 	const totalSteps = 4;
@@ -55,9 +56,28 @@
 		if (currentStep > 1) currentStep--;
 	};
 
+	let popup = {
+		show: false,
+		title: "",
+		message: "",
+		type: "success",
+	};
+
+	const showPopup = (title: string, message: string, type: "success" | "error") => {
+		if (type === "success") {
+			navigate("/cars?toast=created");
+		} else {
+			popup = { show: true, title, message, type };
+			setTimeout(() => {
+				popup.show = false;
+			}, 4000);
+		}
+	};
+
 	const submitForm = async () => {
 		if (!title) {
 			errorMessage = "Title is required!";
+			showPopup("Missing Fields", errorMessage, "error");
 			return;
 		}
 
@@ -93,11 +113,14 @@
 				throw new Error(data.error || "Failed to save car");
 			}
 
-			if (data.redirect) {
-				window.location.href = data.redirect;
-			}
+			showPopup(
+				"Success!",
+				"Car has been created successfully. Redirecting to inventory...",
+				"success",
+			);
 		} catch (err: any) {
 			errorMessage = err.message;
+			showPopup("Error", err.message, "error");
 			isLoading = false;
 		}
 	};
@@ -108,7 +131,7 @@
 >
 	<!-- Progress Header -->
 	<div class="bg-gray-50 p-6 border-b border-gray-200">
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 			<h2 class="text-xl font-bold text-gray-900">Add New Vehicle</h2>
 			<div class="text-sm font-medium text-gray-500">
 				Step {currentStep} of {totalSteps}
@@ -423,7 +446,7 @@
 						class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded font-semibold transition"
 						on:click={nextStep}
 					>
-						Continue &rarr;
+						Continue
 					</button>
 				{:else}
 					<button
@@ -474,6 +497,64 @@
 		</form>
 	</div>
 </div>
+
+{#if popup.show}
+	<div
+		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type ===
+		'success'
+			? 'bg-white border-green-500'
+			: 'bg-white border-red-500'}"
+	>
+		<div class="flex items-start gap-3">
+			{#if popup.type === "success"}
+				<svg
+					class="h-6 w-6 text-green-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 13l4 4L19 7"
+					/>
+				</svg>
+			{:else}
+				<svg
+					class="h-6 w-6 text-red-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+					/>
+				</svg>
+			{/if}
+			<div class="flex-1">
+				<h4 class="font-bold text-gray-900">{popup.title}</h4>
+				<p class="text-sm text-gray-600 mt-1">{popup.message}</p>
+			</div>
+			<button
+				class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0"
+				on:click={() => (popup.show = false)}
+			>
+				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
 
 <style>
 	@keyframes fadeIn {

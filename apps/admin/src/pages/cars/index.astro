@@ -29,10 +29,10 @@ const allCars = await db.query.cars.findMany({
 	<Section class="bg-gray-50 min-h-[70vh]">
 		<Container>
 			<div class="flex justify-between items-center mb-6">
-				<h1 class="text-3xl font-bold">Manage Cars</h1>
+				<h1 class="text-2xl md:text-3xl font-bold">Manage Cars</h1>
 				<a
 					href="/cars/new"
-					class="bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+					class="hidden md:inline-block bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
 				>
 					+ Add New Car
 				</a>
@@ -73,7 +73,7 @@ const allCars = await db.query.cars.findMany({
 				</nav>
 			</div>
 
-			<div class="bg-white rounded-lg shadow">
+			<div class="bg-white rounded-lg shadow overflow-x-auto">
 				<table class="min-w-full divide-y divide-gray-200">
 					<thead class="bg-gray-50">
 						<tr>
@@ -175,7 +175,10 @@ const allCars = await db.query.cars.findMany({
 
 													<div class="relative quick-actions-wrapper">
 														<button class="text-gray-500 hover:text-gray-700 flex items-center font-medium quick-actions-btn">
-															Quick Actions
+															<span class="hidden md:inline">Quick Actions</span>
+															<span class="md:hidden tracking-widest text-lg leading-none">
+																...
+															</span>
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																class="h-4 w-4 ml-1"
@@ -299,52 +302,175 @@ const allCars = await db.query.cars.findMany({
 		</Container>
 	</Section>
 
-	<!-- Delete Confirmation Modal -->
+	<!-- Dynamic Action Confirmation Modal -->
 	<dialog
-		id="delete-modal"
-		class="p-0 rounded-lg shadow-xl backdrop:bg-gray-800/50 open:animate-in open:fade-in-0 duration-200"
+		id="action-modal"
+		class="p-0 m-auto rounded-lg shadow-xl backdrop:bg-gray-800/50 open:animate-in open:fade-in-0 duration-200"
 	>
 		<div class="bg-white p-6 max-w-sm w-full">
-			<h3 class="text-lg font-bold mb-4 text-gray-900">Confirm Hard Delete</h3>
-			<p class="text-sm text-gray-600 mb-6">
-				Are you sure you want to permanently delete this car? This action cannot be undone, and the
-				associated images will be deleted from Cloudflare R2 storage.
+			<h3 id="action-modal-title" class="text-lg font-bold mb-4 text-gray-900">Confirm Action</h3>
+			<p id="action-modal-desc" class="text-sm text-gray-600 mb-6">
+				Are you sure you want to proceed?
 			</p>
 			<div class="flex justify-end gap-3">
 				<button
 					type="button"
 					class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 font-medium"
-					id="btn-cancel-delete">Cancel</button
+					id="btn-cancel-action">Cancel</button
 				>
 				<button
 					type="button"
-					class="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700 font-medium"
-					id="btn-confirm-delete">Delete</button
+					class="px-4 py-2 text-white rounded font-medium transition-colors"
+					id="btn-confirm-action">Confirm</button
 				>
 			</div>
 		</div>
 	</dialog>
 
+	<!-- Toast UI Container -->
+	<div
+		id="toast-container"
+		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 bg-white border-green-500 hidden transition-opacity duration-300"
+	>
+		<div class="flex items-start gap-3">
+			<svg
+				class="h-6 w-6 text-green-500 flex-shrink-0"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"
+				></path>
+			</svg>
+			<div class="flex-1">
+				<h4 id="toast-title" class="font-bold text-gray-900">Success!</h4>
+				<p id="toast-message" class="text-sm text-gray-600 mt-1">Action completed successfully.</p>
+			</div>
+			<button id="toast-close" class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0">
+				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"></path>
+				</svg>
+			</button>
+		</div>
+	</div>
+
 	<script>
 		let isGlobalClickAttached = false;
 
 		document.addEventListener("astro:page-load", () => {
-			let carToDelete: string | null | undefined = null;
-			const modal = document.getElementById("delete-modal") as HTMLDialogElement | null;
+			// Toast logic
+			const params = new URLSearchParams(window.location.search);
+			const toast = params.get("toast");
+			if (toast) {
+				const container = document.getElementById("toast-container");
+				const titleEl = document.getElementById("toast-title");
+				const messageEl = document.getElementById("toast-message");
 
-			document.getElementById("btn-cancel-delete")?.addEventListener("click", () => {
-				carToDelete = null;
+				if (container && titleEl && messageEl) {
+					if (toast === "created") {
+						titleEl.textContent = "Vehicle Created!";
+						messageEl.textContent = "The new car has been added to the inventory.";
+					} else if (toast === "updated") {
+						titleEl.textContent = "Vehicle Updated!";
+						messageEl.textContent = "Your changes have been saved successfully.";
+					} else if (toast === "deleted") {
+						titleEl.textContent = "Vehicle Deleted!";
+						messageEl.textContent = "The car has been moved to the archive.";
+					}
+
+					container.classList.remove("hidden");
+
+					// Remove the param from URL without reloading
+					const newUrl = new URL(window.location.href);
+					newUrl.searchParams.delete("toast");
+					window.history.replaceState({}, "", newUrl);
+
+					// Auto hide
+					setTimeout(() => {
+						container.classList.add("opacity-0");
+						setTimeout(() => container.classList.add("hidden"), 300);
+					}, 4000);
+
+					document.getElementById("toast-close")?.addEventListener("click", () => {
+						container.classList.add("opacity-0");
+						setTimeout(() => container.classList.add("hidden"), 300);
+					});
+				}
+			}
+			let currentAction: { id: string; type: "restore" | "sold" | "archive" | "delete" } | null =
+				null;
+			const modal = document.getElementById("action-modal") as HTMLDialogElement | null;
+			const titleEl = document.getElementById("action-modal-title");
+			const descEl = document.getElementById("action-modal-desc");
+			const confirmBtn = document.getElementById("btn-confirm-action");
+
+			document.getElementById("btn-cancel-action")?.addEventListener("click", () => {
+				currentAction = null;
 				modal?.close();
 			});
 
-			document.getElementById("btn-confirm-delete")?.addEventListener("click", async () => {
-				if (!carToDelete) return;
-				const res = await fetch(`/api/cars/${carToDelete}?reason=delete`, {
-					method: "DELETE",
-				});
-				if (res.ok) window.location.reload();
-				else alert("Failed to delete vehicle.");
+			confirmBtn?.addEventListener("click", async () => {
+				if (!currentAction) return;
+				const { id, type } = currentAction;
+
+				const originalText = confirmBtn.textContent;
+				confirmBtn.textContent = "Processing...";
+				confirmBtn.classList.add("opacity-50", "pointer-events-none");
+
+				let res;
+				if (type === "restore") {
+					res = await fetch(`/api/cars/${id}/restore`, { method: "POST" });
+				} else {
+					res = await fetch(`/api/cars/${id}?reason=${type}`, { method: "DELETE" });
+				}
+
+				if (res.ok) {
+					window.location.reload();
+				} else {
+					alert(`Failed to ${type} vehicle.`);
+					confirmBtn.textContent = originalText;
+					confirmBtn.classList.remove("opacity-50", "pointer-events-none");
+					modal?.close();
+				}
 			});
+
+			const openModal = (id: string, type: "restore" | "sold" | "archive" | "delete") => {
+				currentAction = { id, type };
+				if (!titleEl || !descEl || !confirmBtn) return;
+
+				confirmBtn.className = "px-4 py-2 text-white rounded font-medium transition-colors ";
+
+				if (type === "delete") {
+					titleEl.textContent = "Confirm Hard Delete";
+					descEl.textContent =
+						"Are you sure you want to permanently delete this car? This action cannot be undone, and the associated images will be deleted from Cloudflare R2 storage.";
+					confirmBtn.textContent = "Delete";
+					confirmBtn.className += "bg-red-600 hover:bg-red-700";
+				} else if (type === "sold") {
+					titleEl.textContent = "Mark as Sold";
+					descEl.textContent =
+						"Are you sure you want to mark this car as SOLD? It will be moved to the Sold tab.";
+					confirmBtn.textContent = "Mark Sold";
+					confirmBtn.className += "bg-blue-600 hover:bg-blue-700";
+				} else if (type === "archive") {
+					titleEl.textContent = "Archive Vehicle";
+					descEl.textContent =
+						"Are you sure you want to ARCHIVE this car? It will be removed from the active list.";
+					confirmBtn.textContent = "Archive";
+					confirmBtn.className += "bg-yellow-600 hover:bg-yellow-700";
+				} else if (type === "restore") {
+					titleEl.textContent = "Restore Vehicle";
+					descEl.textContent = "Are you sure you want to RESTORE this car back to active status?";
+					confirmBtn.textContent = "Restore";
+					confirmBtn.className += "bg-green-600 hover:bg-green-700";
+				}
+
+				modal?.showModal();
+			};
 
 			// Quick Actions Dropdown Logic
 			document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
@@ -378,43 +504,34 @@ const allCars = await db.query.cars.findMany({
 			}
 
 			document.querySelectorAll(".restore-btn").forEach((btn) => {
-				btn.addEventListener("click", async (e) => {
+				btn.addEventListener("click", (e) => {
 					const target = e.currentTarget as HTMLElement;
-					const id = target.dataset.id;
-					if (confirm("Are you sure you want to restore this car back to active status?")) {
-						const res = await fetch(`/api/cars/${id}/restore`, {
-							method: "POST",
-						});
-						if (res.ok) window.location.reload();
-						else alert("Failed to restore vehicle.");
-					}
+					openModal(target.dataset.id!, "restore");
 				});
 			});
 
 			document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
-				btn.addEventListener("click", async (e) => {
+				btn.addEventListener("click", (e) => {
 					const target = e.currentTarget as HTMLElement;
-					const id = target.dataset.id;
-					const reason = target.dataset.reason;
-
-					if (reason === "delete") {
-						carToDelete = id;
-						modal?.showModal();
-						return;
-					}
-
-					const actionText =
-						reason === "sold" ? "Mark this car as SOLD" : "ARCHIVE this car from the active list";
-
-					if (confirm(`Are you sure you want to ${actionText}?`)) {
-						const res = await fetch(`/api/cars/${id}?reason=${reason}`, {
-							method: "DELETE",
-						});
-						if (res.ok) window.location.reload();
-						else alert("Failed to archive vehicle.");
-					}
+					openModal(target.dataset.id!, target.dataset.reason as any);
 				});
 			});
 		});
 	</script>
+	<a
+		href="/cars/new"
+		class="md:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition"
+		aria-label="Add New Car"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			class="h-6 w-6"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke="currentColor"
+		>
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"
+			></path>
+		</svg>
+	</a>
 </Layout>

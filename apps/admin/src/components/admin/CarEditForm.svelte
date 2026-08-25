@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { navigate } from "astro:transitions/client";
+
 	export let car: any;
 
 	let activeTab = "general";
@@ -8,6 +10,29 @@
 	let showDeleteConfirm = false;
 	let errorMessage = "";
 	let successMessage = "";
+
+	let popup = {
+		show: false,
+		title: "",
+		message: "",
+		type: "success",
+	};
+
+	const showPopup = (
+		title: string,
+		message: string,
+		type: "success" | "error",
+		action: string = "updated",
+	) => {
+		if (type === "success") {
+			navigate(`/cars?toast=${action}`);
+		} else {
+			popup = { show: true, title, message, type };
+			setTimeout(() => {
+				popup.show = false;
+			}, 4000);
+		}
+	};
 
 	// Data bindings (Initialize with existing car data or defaults)
 	let title = car.title || "";
@@ -34,6 +59,7 @@
 	const submitForm = async () => {
 		if (!title) {
 			errorMessage = "Title is required!";
+			showPopup("Missing Fields", errorMessage, "error");
 			return;
 		}
 
@@ -72,10 +98,10 @@
 			}
 
 			successMessage = "Vehicle updated successfully!";
-			// Optionally redirect: if (data.redirect) window.location.href = data.redirect;
+			showPopup("Success!", "Vehicle updated successfully! Redirecting to inventory...", "success");
 		} catch (err: any) {
 			errorMessage = err.message;
-		} finally {
+			showPopup("Error", err.message, "error");
 			isLoading = false;
 		}
 	};
@@ -95,13 +121,16 @@
 				throw new Error(data.error || "Failed to delete car");
 			}
 
-			if (data.redirect) {
-				window.location.href = data.redirect;
-			}
+			showPopup(
+				"Deleted!",
+				"Vehicle has been moved to archive. Redirecting...",
+				"success",
+				"deleted",
+			);
 		} catch (err: any) {
 			errorMessage = err.message;
+			showPopup("Error", err.message, "error");
 			isDeleting = false;
-			showDeleteConfirm = false;
 		}
 	};
 </script>
@@ -110,7 +139,9 @@
 	class="max-w-5xl mx-auto bg-white text-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-200"
 >
 	<!-- Header -->
-	<div class="bg-gray-50 p-6 border-b border-gray-200 flex justify-between items-center">
+	<div
+		class="bg-gray-50 p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
+	>
 		<div>
 			<h2 class="text-xl font-bold text-gray-900">Edit Vehicle</h2>
 			<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
@@ -228,7 +259,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
 						<input
 							type="number"
 							bind:value={general.price}
@@ -543,6 +574,64 @@
 		</form>
 	</div>
 </div>
+
+{#if popup.show}
+	<div
+		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type ===
+		'success'
+			? 'bg-white border-green-500'
+			: 'bg-white border-red-500'}"
+	>
+		<div class="flex items-start gap-3">
+			{#if popup.type === "success"}
+				<svg
+					class="h-6 w-6 text-green-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 13l4 4L19 7"
+					/>
+				</svg>
+			{:else}
+				<svg
+					class="h-6 w-6 text-red-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+					/>
+				</svg>
+			{/if}
+			<div class="flex-1">
+				<h4 class="font-bold text-gray-900">{popup.title}</h4>
+				<p class="text-sm text-gray-600 mt-1">{popup.message}</p>
+			</div>
+			<button
+				class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0"
+				on:click={() => (popup.show = false)}
+			>
+				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
 
 <style>
 	@keyframes fadeIn {
