@@ -180,7 +180,7 @@ const allCars = await db.query.cars.findMany({
 															</svg>
 														</button>
 														{/* Dropdown Menu */}
-														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
+														<div class="fixed w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
 															<div class="py-1 divide-y divide-gray-100">
 																<div class="py-1">
 																	<a
@@ -232,7 +232,7 @@ const allCars = await db.query.cars.findMany({
 															</svg>
 														</button>
 														{/* Dropdown Menu */}
-														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
+														<div class="fixed w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
 															<div class="py-1 divide-y divide-gray-100">
 																<div class="py-1">
 																	<button
@@ -459,8 +459,9 @@ const allCars = await db.query.cars.findMany({
 
 			// Quick Actions Dropdown Logic
 			document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
-				btn.addEventListener("click", () => {
-					const menu = btn.nextElementSibling;
+				btn.addEventListener("click", (e) => {
+					const target = e.currentTarget as HTMLElement;
+					const menu = target.nextElementSibling as HTMLElement;
 					const isHidden = menu?.classList.contains("hidden");
 
 					// Close all other menus first
@@ -471,20 +472,37 @@ const allCars = await db.query.cars.findMany({
 					// Toggle the clicked menu
 					if (isHidden) {
 						menu?.classList.remove("hidden");
+
+						// Use fixed positioning to escape table overflow clipping
+						const rect = target.getBoundingClientRect();
+						menu.style.top = `${rect.bottom + 8}px`; // Add 8px spacing
+						// Align right edge of menu with right edge of button
+						menu.style.left = `${rect.right - menu.offsetWidth}px`;
 					}
 				});
 			});
 
-			// Close dropdowns when clicking outside
+			// Close dropdowns when clicking outside or scrolling
 			if (!isGlobalClickAttached) {
+				const closeAllMenus = () => {
+					document.querySelectorAll(".quick-actions-menu").forEach((menu) => {
+						menu.classList.add("hidden");
+					});
+				};
+
 				document.addEventListener("click", (e) => {
 					const target = e.target;
 					if (target instanceof Element && !target.closest(".quick-actions-wrapper")) {
-						document.querySelectorAll(".quick-actions-menu").forEach((menu) => {
-							menu.classList.add("hidden");
-						});
+						closeAllMenus();
 					}
 				});
+
+				// Capture scroll events on any element to close menus
+				document.addEventListener("scroll", closeAllMenus, true);
+
+				// Also close on window resize
+				window.addEventListener("resize", closeAllMenus);
+
 				isGlobalClickAttached = true;
 			}
 
