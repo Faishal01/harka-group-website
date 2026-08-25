@@ -7,6 +7,7 @@ import { getDb } from "@harka/db";
 import { cars as carsTable } from "@harka/db";
 import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
+import { getPrice } from "~/utils/helpers";
 
 const { id } = Astro.params;
 const db = getDb(env);
@@ -85,7 +86,7 @@ if (!car) {
 						</h2>
 
 						<p class="text-3xl font-bold text-gray-900 mb-6">
-							${car.general.price.toLocaleString()}
+							{getPrice(car.general.price)}
 						</p>
 
 						<!-- Status Banner -->

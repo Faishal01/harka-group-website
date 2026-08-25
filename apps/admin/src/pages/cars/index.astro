@@ -6,6 +6,7 @@ import { getDb } from "@harka/db";
 import { cars as carsTable } from "@harka/db";
 import { isNull, isNotNull, eq, and, or } from "drizzle-orm";
 import { env } from "cloudflare:workers";
+import { getPrice } from "~/utils/helpers";
 
 const url = new URL(Astro.request.url);
 const tab = url.searchParams.get("tab") || "active";
@@ -118,7 +119,7 @@ const allCars = await db.query.cars.findMany({
 										</div>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
-										<div class="text-sm text-gray-900">${car.general.price.toLocaleString()}</div>
+										<div class="text-sm text-gray-900">{getPrice(car.general.price)}</div>
 									</td>
 
 									{tab === "active" ? (

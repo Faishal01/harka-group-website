@@ -43,7 +43,9 @@ export function getPrice(price: number): string {
 		currency: siteCurrency,
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
-	}).format(price);
+	})
+		.format(price)
+		.replace(/^Rp(?! )/, "Rp ");
 }
 
 /**
