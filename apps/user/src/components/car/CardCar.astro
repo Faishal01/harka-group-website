@@ -5,12 +5,13 @@ import CarHighlights from "~/components/car/CardHighlights.astro";
 import CardPrice from "~/components/car/CardPrice.astro";
 import IconLogo from "~/assets/images/icons/logo.svg";
 const { car } = Astro.props as { car: Car };
+
+const isSold = (car.data as any).archiveReason === 'sold';
 // console.log(car);
 ---
 
 <li
 	data-car-id={car.id}
-	data-car-on-sale={car.data.general.salePrice ? "true" : "false"}
 	data-car-available={car.data.general.availability}
 	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-r-4 hover:lg:border-red-700"
 >
@@ -30,6 +31,11 @@ const { car } = Astro.props as { car: Car };
 					</div>
 				)
 			}
+			{isSold && (
+				<div class="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+					<span class="inline-block bg-red-600 text-white font-black text-2xl lg:text-3xl px-6 py-2 uppercase tracking-widest rounded shadow transform -skew-x-6 z-10 text-center border-2 border-white/90">SOLD</span>
+				</div>
+			)}
 		</div>
 		<div class="flex flex-col items-start lg:py-4 grow max-xxl:px-4 max-lg:pb-8">
 			<div class="relative xxl:flex xxl:items-start xxl:gap-4 xxl:justify-between w-full">

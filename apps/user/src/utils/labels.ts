@@ -29,7 +29,6 @@ export const labels: ShapeToLabels<Car["data"]> = {
 		model: "Model",
 		type: "Type",
 		price: "Price",
-		salePrice: "Sale Price",
 		bodyType: "Body Type",
 		drivetrain: "Drivetrain",
 		doors: "Doors",

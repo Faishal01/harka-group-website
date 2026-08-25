@@ -4,7 +4,7 @@ import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
 import { getDb } from "@harka/db";
 import { cars as carsTable } from "@harka/db";
-import { isNull, isNotNull } from "drizzle-orm";
+import { isNull, isNotNull, eq, and, or } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 
 const url = new URL(Astro.request.url);
@@ -12,7 +12,15 @@ const tab = url.searchParams.get("tab") || "active";
 
 const db = getDb(env);
 const allCars = await db.query.cars.findMany({
-	where: tab === "archived" ? isNotNull(carsTable.deletedAt) : isNull(carsTable.deletedAt),
+	where:
+		tab === "sold"
+			? and(isNotNull(carsTable.deletedAt), eq(carsTable.archiveReason, "sold"))
+			: tab === "archived"
+				? and(
+						isNotNull(carsTable.deletedAt),
+						or(eq(carsTable.archiveReason, "removed"), isNull(carsTable.archiveReason)),
+					)
+				: isNull(carsTable.deletedAt),
 	orderBy: (cars, { desc }) => [desc(cars.publishDate)],
 });
 ---
@@ -43,6 +51,16 @@ const allCars = await db.query.cars.findMany({
 						Active Cars
 					</a>
 					<a
+						href="?tab=sold"
+						class={`${
+							tab === "sold"
+								? "border-blue-500 text-blue-600"
+								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+					>
+						Sold
+					</a>
+					<a
 						href="?tab=archived"
 						class={`${
 							tab === "archived"
@@ -50,7 +68,7 @@ const allCars = await db.query.cars.findMany({
 								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
 						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
 					>
-						Sold / Archived
+						Archived
 					</a>
 				</nav>
 			</div>
@@ -67,17 +85,11 @@ const allCars = await db.query.cars.findMany({
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
 								>Price</th
 							>
-							{
-								tab === "active" ? (
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-										Status
-									</th>
-								) : (
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-										Date Archived
-									</th>
-								)
-							}
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>
+								{tab === "active" ? "Status" : tab === "sold" ? "Date Sold" : "Date Archived"}
+							</th>
 							<th
 								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider last:rounded-tr-lg"
 								>Actions</th
@@ -137,22 +149,11 @@ const allCars = await db.query.cars.findMany({
 										</td>
 									) : (
 										<td class="px-6 py-4 whitespace-nowrap">
-											<div class="font-medium text-gray-900">
-												{car.archiveReason === "sold" ? (
-													<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-														Sold
-													</span>
-												) : (
-													<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-														Removed
-													</span>
-												)}
-											</div>
-											<div class="text-xs text-gray-500 mt-1">
+											<div class="text-sm font-medium text-gray-900">
 												{car.deletedAt
 													? car.deletedAt.toLocaleDateString("en-US", {
 															year: "numeric",
-															month: "short",
+															month: "long",
 															day: "numeric",
 														})
 													: "Unknown"}
@@ -163,21 +164,58 @@ const allCars = await db.query.cars.findMany({
 									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 										<div class="flex justify-end gap-3 items-center">
 											{car.deletedAt ? (
-												<>
+												<div class="flex items-center gap-4">
 													<button
 														type="button"
-														class="text-green-600 hover:text-green-900 restore-btn"
+														class="text-green-600 hover:text-green-900 font-semibold restore-btn"
 														data-id={car.id}
 													>
-														Restore
+														{tab === "sold" ? "Undo" : "Restore"}
 													</button>
-													<a
-														href={`/cars/view/${car.id}`}
-														class="text-blue-600 hover:text-blue-900"
-													>
-														View
-													</a>
-												</>
+
+													<div class="relative quick-actions-wrapper">
+														<button class="text-gray-500 hover:text-gray-700 flex items-center font-medium quick-actions-btn">
+															Quick Actions
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																class="h-4 w-4 ml-1"
+																fill="none"
+																viewBox="0 0 24 24"
+																stroke="currentColor"
+															>
+																<path
+																	stroke-linecap="round"
+																	stroke-linejoin="round"
+																	stroke-width="2"
+																	d="M19 9l-7 7-7-7"
+																/>
+															</svg>
+														</button>
+														{/* Dropdown Menu */}
+														<div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 z-50 hidden quick-actions-menu">
+															<div class="py-1 divide-y divide-gray-100">
+																<div class="py-1">
+																	<a
+																		href={`/cars/view/${car.id}`}
+																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+																	>
+																		View Record
+																	</a>
+																</div>
+																<div class="py-1">
+																	<button
+																		type="button"
+																		class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 quick-archive-btn font-medium"
+																		data-id={car.id}
+																		data-reason="delete"
+																	>
+																		Hard Delete
+																	</button>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
 											) : (
 												<div class="flex items-center gap-4">
 													<a
@@ -315,7 +353,9 @@ const allCars = await db.query.cars.findMany({
 					const isHidden = menu?.classList.contains("hidden");
 
 					// Close all other menus first
-					document.querySelectorAll(".quick-actions-menu").forEach((m) => m.classList.add("hidden"));
+					document
+						.querySelectorAll(".quick-actions-menu")
+						.forEach((m) => m.classList.add("hidden"));
 
 					// Toggle the clicked menu
 					if (isHidden) {

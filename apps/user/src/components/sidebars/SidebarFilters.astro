@@ -84,7 +84,11 @@ const { data } = Astro.props;
 							data.priceSteps.map((step, index) => {
 								const nextStep = data.priceSteps[index + 1];
 								if (index === 0) {
-									return <option value={`0-${step}`}>{filterLabels.lowerThan} {getPrice(step)}</option>;
+									return (
+										<option value={`0-${step}`}>
+											{filterLabels.lowerThan} {getPrice(step)}
+										</option>
+									);
 								} else if (nextStep) {
 									return (
 										<option value={`${step}-${nextStep}`}>
@@ -92,7 +96,11 @@ const { data } = Astro.props;
 										</option>
 									);
 								} else {
-									return <option value={`${step}-`}>{filterLabels.higherThan} {getPrice(step)}</option>;
+									return (
+										<option value={`${step}-`}>
+											{filterLabels.higherThan} {getPrice(step)}
+										</option>
+									);
 								}
 							})
 						}
@@ -191,7 +199,8 @@ const { data } = Astro.props;
 
 			<div class="sticky bottom-0">
 				<button type="submit" class="button button-primary w-full">
-					{filterLabels.search} <span id="filter-result-found" class="ml-1">({data.count})</span></button
+					{filterLabels.search}
+					<span id="filter-result-found" class="ml-1">({data.count})</span></button
 				>
 			</div>
 		</form>

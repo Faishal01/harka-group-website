@@ -4,20 +4,10 @@ import { getPrice } from "~/utils/helpers";
 const { properties } = Astro.props;
 
 const price = getPrice(properties.price);
-const salePrice = properties.salePrice ? getPrice(properties.salePrice) : null;
 ---
 
 <div id="single-page-price-wrapper" class="mt-8 space-x-2">
-	<span
-		class={`price ${properties.salePrice ? "on-sale text-xl line-through" : "font-semibold text-2xl"}`}
-	>
+	<span class="price font-semibold text-2xl">
 		{price}
 	</span>
-	{
-		properties.salePrice && (
-			<mark class="price-on-sale text-2xl font-bold py-1 px-4 bg-red-700 text-white">
-				{salePrice}
-			</mark>
-		)
-	}
 </div>

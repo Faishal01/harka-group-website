@@ -14,7 +14,6 @@ import Price from "~/components/car/single-page/Price.astro";
 import FeatureBox from "~/components/car/single-page/FeatureBox.astro";
 import FeaturesList from "~/components/car/single-page/FeaturesList.astro";
 import FormInquire from "~/components/forms/Inquire.astro";
-import WidgetLoan from "~/components/car/single-page/WidgetLoan.astro";
 import ModalSlider from "~/components/modals/ModalSlider.astro";
 
 // Buttons
@@ -23,7 +22,6 @@ import ButtonShare from "~/components/buttons/ButtonShare.astro";
 import ButtonPrint from "~/components/buttons/ButtonPrint.astro";
 import ButtonCall from "~/components/buttons/ButtonCall.astro";
 import ButtonInquire from "~/components/buttons/ButtonInquire.astro";
-import LinkLoan from "~/components/car/single-page/LinkLoan.astro";
 import { env } from "cloudflare:workers";
 import { viewPage } from "~/data/captions";
 
@@ -40,11 +38,12 @@ const carRow = await db.query.cars.findFirst({
 	where: eq(carsTable.id, slug),
 });
 
-if (!carRow) {
+if (!carRow || carRow.misc?.hidden || carRow.archiveReason === 'removed') {
 	return Astro.redirect("/404");
 }
 
 const car = { id: carRow.id, data: carRow };
+const isSold = car.data.archiveReason === 'sold';
 ---
 
 <Layout
@@ -87,7 +86,9 @@ const car = { id: carRow.id, data: carRow };
 							) : (
 								<div class="lg:absolute inset-0 text-gray-200 size-full bg-gray-50 flex flex-col gap-4 items-center justify-center">
 									<IconLogo class="h-24" />
-									<span class="text-gray-400 select-none font-bold italic">{viewPage.comingSoon}</span>
+									<span class="text-gray-400 select-none font-bold italic">
+										{viewPage.comingSoon}
+									</span>
 								</div>
 							)
 						}
@@ -105,9 +106,15 @@ const car = { id: carRow.id, data: carRow };
 
 							<hr class="w-full border-gray-200" />
 
-							<Price properties={car.data.general} />
-
-							{car.data.misc?.loanWidget && <LinkLoan />}
+							{
+								isSold ? (
+									<div class="mt-8 mb-6">
+										<span class="inline-block bg-red-600 text-white font-black text-4xl px-8 py-3 uppercase tracking-widest rounded shadow-sm transform -skew-x-6">SOLD</span>
+									</div>
+								) : (
+									<Price properties={car.data.general} />
+								)
+							}
 
 							<FeatureBox car={car} />
 
@@ -118,7 +125,7 @@ const car = { id: carRow.id, data: carRow };
 							>
 								<div class="flex items-center max-sm:justify-center gap-x-4 w-full">
 									<ButtonCall />
-									<ButtonInquire />
+									{!isSold && <ButtonInquire />}
 								</div>
 
 								<div class="sm:ml-auto flex items-center max-sm:justify-center gap-x-4 shrink-0">
@@ -143,24 +150,17 @@ const car = { id: carRow.id, data: carRow };
 					id="features-list"
 					class="p-4 lg:p-8 divide-y divide-gray-200 max-w-5xl grid grid-cols-1 gap-y-12 feature-list"
 				>
-					{
-						car.data.misc?.loanWidget && (
-							<WidgetLoan
-								price={
-									car.data.general.salePrice ? car.data.general.salePrice : car.data.general.price
-								}
-							/>
-						)
-					}
 					<FeaturesList car={car} />
 				</div>
 
 				<hr class="border-gray-200" />
 
 				<!-- Form -->
-				<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
-					<FormInquire />
-				</div>
+				{!isSold && (
+					<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
+						<FormInquire />
+					</div>
+				)}
 			</div>
 		</Container>
 	</Section>

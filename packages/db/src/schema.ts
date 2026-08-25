@@ -18,7 +18,6 @@ export const cars = sqliteTable("cars", {
 			model: string;
 			type?: string;
 			price: number;
-			salePrice?: number;
 			bodyType: "SUV" | "Sedan" | "Hatchback" | "Coupe" | "Convertible" | "Pickup";
 			drivetrain?:
 				"Front-Wheel Drive" | "Rear-Wheel Drive" | "All-Wheel Drive" | "Four-Wheel Drive";

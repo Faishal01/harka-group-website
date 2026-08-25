@@ -10,7 +10,6 @@ const { car } = Astro.props as { car: Car };
 
 <li
 	data-car-id={car.id}
-	data-car-on-sale={car.data.general.salePrice ? "true" : "false"}
 	data-car-available={car.data.general.availability}
 	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-r-4 hover:lg:border-red-700"
 >

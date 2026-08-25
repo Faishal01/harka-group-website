@@ -19,16 +19,16 @@ if (!car) {
 }
 ---
 
-<Layout pageTitle={`View Archived: ${car.title}`}>
+<Layout pageTitle={`${car.archiveReason === 'sold' ? 'View Sold' : 'View Archived'}: ${car.title}`}>
 	<Section class="bg-gray-50 min-h-[70vh] py-12">
 		<Container>
 			<div class="flex justify-between items-center mb-6">
-				<h1 class="text-3xl font-bold text-gray-900">Archived Record</h1>
+				<h1 class="text-3xl font-bold text-gray-900">{car.archiveReason === 'sold' ? 'Sold Record' : 'Archived Record'}</h1>
 				<a
-					href="/cars?tab=archived"
+					href={`/cars?tab=${car.archiveReason === "sold" ? "sold" : "archived"}`}
 					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium"
 				>
-					&larr; Back to Archive
+					&larr; {car.archiveReason === "sold" ? "Back to Sold" : "Back to Archive"}
 				</a>
 			</div>
 
@@ -72,11 +72,7 @@ if (!car) {
 						</h2>
 
 						<p class="text-3xl font-bold text-gray-900 mb-6">
-							${
-								car.general.salePrice
-									? car.general.salePrice.toLocaleString()
-									: car.general.price.toLocaleString()
-							}
+							${car.general.price.toLocaleString()}
 						</p>
 
 						<!-- Status Banner -->
