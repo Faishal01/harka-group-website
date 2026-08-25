@@ -25,5 +25,8 @@
     "format": "bun --filter='*' run format",
     "lint": "bun --filter='*' run lint",
     "check": "bun --filter='*' run check"
+  },
+  "devDependencies": {
+    "prettier-plugin-svelte": "^4.1.1"
   }
 }

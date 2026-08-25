@@ -38,12 +38,12 @@ const carRow = await db.query.cars.findFirst({
 	where: eq(carsTable.id, slug),
 });
 
-if (!carRow || carRow.misc?.hidden || carRow.archiveReason === 'removed') {
+if (!carRow || carRow.misc?.hidden || carRow.archiveReason === "removed") {
 	return Astro.redirect("/404");
 }
 
 const car = { id: carRow.id, data: carRow };
-const isSold = car.data.archiveReason === 'sold';
+const isSold = car.data.archiveReason === "sold";
 ---
 
 <Layout
@@ -109,7 +109,9 @@ const isSold = car.data.archiveReason === 'sold';
 							{
 								isSold ? (
 									<div class="mt-8 mb-6">
-										<span class="inline-block bg-red-600 text-white font-black text-4xl px-8 py-3 uppercase tracking-widest rounded shadow-sm transform -skew-x-6">SOLD</span>
+										<span class="inline-block bg-red-600 text-white font-black text-4xl px-8 py-3 uppercase tracking-widest rounded shadow-sm transform -skew-x-6">
+											SOLD
+										</span>
 									</div>
 								) : (
 									<Price properties={car.data.general} />
@@ -156,11 +158,13 @@ const isSold = car.data.archiveReason === 'sold';
 				<hr class="border-gray-200" />
 
 				<!-- Form -->
-				{!isSold && (
-					<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
-						<FormInquire />
-					</div>
-				)}
+				{
+					!isSold && (
+						<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
+							<FormInquire />
+						</div>
+					)
+				}
 			</div>
 		</Container>
 	</Section>

@@ -4,13 +4,14 @@ import { unitSystem } from "~/data/config";
 type UnitSystem = "imperial" | "metric";
 const unitSystemTyped: UnitSystem = unitSystem as UnitSystem;
 
-type ShapeToLabels<T> = NonNullable<T> extends Date | any[]
-	? string | Record<string, string>
-	: NonNullable<T> extends Record<string, any>
-		? {
-				[K in keyof NonNullable<T>]: ShapeToLabels<NonNullable<T>[K]>;
-		  }
-		: string | Record<string, string>;
+type ShapeToLabels<T> =
+	NonNullable<T> extends Date | any[]
+		? string | Record<string, string>
+		: NonNullable<T> extends Record<string, any>
+			? {
+					[K in keyof NonNullable<T>]: ShapeToLabels<NonNullable<T>[K]>;
+				}
+			: string | Record<string, string>;
 
 export const labels: ShapeToLabels<Car["data"]> = {
 	id: "ID",

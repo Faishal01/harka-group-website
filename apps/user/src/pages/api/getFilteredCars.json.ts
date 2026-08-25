@@ -75,7 +75,7 @@ export const GET: APIRoute = async ({ request }) => {
 		search,
 	} = result.data;
 
-	const filters: CarFilter[] = [(data) => !data.misc?.hidden && data.archiveReason !== 'removed'];
+	const filters: CarFilter[] = [(data) => !data.misc?.hidden && data.archiveReason !== "removed"];
 
 	const afterParsing = performance.now();
 
@@ -201,8 +201,8 @@ export const GET: APIRoute = async ({ request }) => {
 	// Sort
 	allCars.sort((a, b) => {
 		// 1. Always push sold cars to the end
-		const aIsSold = a.data.archiveReason === 'sold';
-		const bIsSold = b.data.archiveReason === 'sold';
+		const aIsSold = a.data.archiveReason === "sold";
+		const bIsSold = b.data.archiveReason === "sold";
 		if (aIsSold && !bIsSold) return 1;
 		if (!aIsSold && bIsSold) return -1;
 
