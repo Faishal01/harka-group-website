@@ -182,8 +182,7 @@
             <input type="number" bind:value={general.price} class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900">
           </div>
           
-          <div>
-          
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Body Type</label>
             <select bind:value={general.bodyType} class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900">
