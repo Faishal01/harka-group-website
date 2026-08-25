@@ -43,7 +43,7 @@ export const cars = sqliteTable("cars", {
 			transmission: "Automatic" | "Manual" | "CVT" | "Dual-Clutch";
 			engineSizeCC: number;
 			gears?: number;
-			cilinders?: number;
+			cylinders?: number;
 			weight?: number;
 		}>()
 		.notNull(),
@@ -91,7 +91,6 @@ export const cars = sqliteTable("cars", {
 		warranty?: string;
 		dealerNotes?: string;
 		hidden?: boolean;
-		loanWidget?: boolean;
 		featured?: boolean;
 	}>(),
 });

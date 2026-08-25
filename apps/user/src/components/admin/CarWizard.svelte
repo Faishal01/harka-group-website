@@ -188,13 +188,6 @@
               </label>
               <p class="text-xs text-gray-500 mt-1 ml-8">If checked, this car will not appear on the main website until you edit it and unhide it.</p>
             </div>
-            <div>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" bind:checked={misc.loanWidget} class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                <span class="text-sm font-medium text-gray-900">Enable Loan Calculator Widget</span>
-              </label>
-              <p class="text-xs text-gray-500 mt-1 ml-8">If checked, a dynamic loan calculator will be rendered on the car's detail page.</p>
-            </div>
           </div>
         </div>
       </div>

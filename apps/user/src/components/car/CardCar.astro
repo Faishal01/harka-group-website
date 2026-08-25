@@ -6,7 +6,7 @@ import CardPrice from "~/components/car/CardPrice.astro";
 import IconLogo from "~/assets/images/icons/logo.svg";
 const { car } = Astro.props as { car: Car };
 
-const isSold = (car.data as any).archiveReason === 'sold';
+const isSold = car.data.archiveReason === 'sold';
 // console.log(car);
 ---
 
