@@ -1,11 +1,12 @@
 ---
 import type { WidgetLoanProps as Props } from "~/types";
 import FormLoanCalculator from "~/components/forms/LoanCalculator.astro";
+import { loanLabels } from "~/data/captions";
 const { price } = Astro.props;
 ---
 
 <div id="loan-calculator" class="grid grid-cols-1 lg:grid-cols-3 pb-12 order-2 print:hidden">
-	<h2 class="h6 feature-icon feature-icon-loan">Calculate your loan now</h2>
+	<h2 class="h6 feature-icon feature-icon-loan">{loanLabels.calculateYourLoan}</h2>
 
 	<div
 		id="form-loan-calculator-wrapper"

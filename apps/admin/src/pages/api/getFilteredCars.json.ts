@@ -75,7 +75,7 @@ export const GET: APIRoute = async ({ request }) => {
 		search,
 	} = result.data;
 
-	const filters: CarFilter[] = [(data) => !data.misc?.hidden && !(data as any).deletedAt];
+	const filters: CarFilter[] = [(data) => !data.misc?.hidden && !data.deletedAt];
 
 	const afterParsing = performance.now();
 
@@ -115,16 +115,12 @@ export const GET: APIRoute = async ({ request }) => {
 
 		filters.push((data) => {
 			const regularPrice = data.general.price;
-			const salePrice = data.general.salePrice;
 
 			if (maxPrice) {
-				return (
-					(regularPrice >= minPrice && regularPrice <= maxPrice) ||
-					(salePrice !== undefined && salePrice >= minPrice && salePrice <= maxPrice)
-				);
+				return regularPrice >= minPrice && regularPrice <= maxPrice;
 			}
 
-			return regularPrice >= minPrice || (salePrice !== undefined && salePrice >= minPrice);
+			return regularPrice >= minPrice;
 		});
 	}
 
@@ -197,7 +193,7 @@ export const GET: APIRoute = async ({ request }) => {
 	const mappedCars = dbCars.map((car) => ({ id: car.id, data: car }));
 
 	const allCars = mappedCars.filter(({ data }) => {
-		return filters.every((filter) => filter(data as any));
+		return filters.every((filter) => filter(data));
 	});
 
 	const afterGetCollection = performance.now();
@@ -213,8 +209,8 @@ export const GET: APIRoute = async ({ request }) => {
 			switch (sort) {
 				case "price-asc":
 				case "price-desc":
-					aValue = a.data.general.salePrice ? a.data.general.salePrice : a.data.general.price;
-					bValue = b.data.general.salePrice ? b.data.general.salePrice : b.data.general.price;
+					aValue = a.data.general.price;
+					bValue = b.data.general.price;
 					break;
 				case "mileage-asc":
 				case "mileage-desc":

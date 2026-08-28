@@ -75,7 +75,7 @@ export const GET: APIRoute = async ({ request }) => {
 		search,
 	} = result.data;
 
-	const filters: CarFilter[] = [(data) => !data.misc?.hidden && !(data as any).deletedAt];
+	const filters: CarFilter[] = [(data) => !data.misc?.hidden && data.archiveReason !== "removed"];
 
 	const afterParsing = performance.now();
 
@@ -115,16 +115,12 @@ export const GET: APIRoute = async ({ request }) => {
 
 		filters.push((data) => {
 			const regularPrice = data.general.price;
-			const salePrice = data.general.salePrice;
 
 			if (maxPrice) {
-				return (
-					(regularPrice >= minPrice && regularPrice <= maxPrice) ||
-					(salePrice !== undefined && salePrice >= minPrice && salePrice <= maxPrice)
-				);
+				return regularPrice >= minPrice && regularPrice <= maxPrice;
 			}
 
-			return regularPrice >= minPrice || (salePrice !== undefined && salePrice >= minPrice);
+			return regularPrice >= minPrice;
 		});
 	}
 
@@ -197,24 +193,30 @@ export const GET: APIRoute = async ({ request }) => {
 	const mappedCars = dbCars.map((car) => ({ id: car.id, data: car }));
 
 	const allCars = mappedCars.filter(({ data }) => {
-		return filters.every((filter) => filter(data as any));
+		return filters.every((filter) => filter(data));
 	});
 
 	const afterGetCollection = performance.now();
 
 	// Sort
-	if (sort) {
-		const order = sort.endsWith("-asc") ? 1 : -1;
+	allCars.sort((a, b) => {
+		// 1. Always push sold cars to the end
+		const aIsSold = a.data.archiveReason === "sold";
+		const bIsSold = b.data.archiveReason === "sold";
+		if (aIsSold && !bIsSold) return 1;
+		if (!aIsSold && bIsSold) return -1;
 
-		allCars.sort((a, b) => {
-			let aValue: number;
-			let bValue: number;
+		// 2. Apply user sorting (if selected)
+		if (sort) {
+			const order = sort.endsWith("-asc") ? 1 : -1;
+			let aValue: number = 0;
+			let bValue: number = 0;
 
 			switch (sort) {
 				case "price-asc":
 				case "price-desc":
-					aValue = a.data.general.salePrice ? a.data.general.salePrice : a.data.general.price;
-					bValue = b.data.general.salePrice ? b.data.general.salePrice : b.data.general.price;
+					aValue = a.data.general.price;
+					bValue = b.data.general.price;
 					break;
 				case "mileage-asc":
 				case "mileage-desc":
@@ -230,9 +232,10 @@ export const GET: APIRoute = async ({ request }) => {
 
 			if (aValue < bValue) return -1 * order;
 			if (aValue > bValue) return 1 * order;
-			return 0;
-		});
-	}
+		}
+
+		return 0;
+	});
 
 	const afterSort = performance.now();
 

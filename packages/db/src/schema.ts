@@ -18,14 +18,12 @@ export const cars = sqliteTable("cars", {
 			model: string;
 			type?: string;
 			price: number;
-			salePrice?: number;
 			bodyType: "SUV" | "Sedan" | "Hatchback" | "Coupe" | "Convertible" | "Pickup";
 			drivetrain?:
 				"Front-Wheel Drive" | "Rear-Wheel Drive" | "All-Wheel Drive" | "Four-Wheel Drive";
 			doors: number;
 			seatingCapacity: number;
 			condition?: "New" | "Used" | "Certified Pre-Owned";
-			availability: "in-stock" | "reserved" | "sold" | "coming-soon";
 		}>()
 		.notNull(),
 
@@ -44,7 +42,7 @@ export const cars = sqliteTable("cars", {
 			transmission: "Automatic" | "Manual" | "CVT" | "Dual-Clutch";
 			engineSizeCC: number;
 			gears?: number;
-			cilinders?: number;
+			cylinders?: number;
 			weight?: number;
 		}>()
 		.notNull(),
@@ -92,7 +90,6 @@ export const cars = sqliteTable("cars", {
 		warranty?: string;
 		dealerNotes?: string;
 		hidden?: boolean;
-		loanWidget?: boolean;
 		featured?: boolean;
 	}>(),
 });

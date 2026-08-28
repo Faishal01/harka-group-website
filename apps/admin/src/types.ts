@@ -114,14 +114,12 @@ export interface LoanCalculatorProps {
 export interface CardPriceProps {
 	data: {
 		price: number;
-		salePrice?: number;
 	};
 }
 
 export interface PriceProps {
 	properties: {
 		price: number;
-		salePrice?: number;
 	};
 }
 

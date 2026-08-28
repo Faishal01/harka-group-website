@@ -5,13 +5,13 @@ import CarHighlights from "~/components/car/CardHighlights.astro";
 import CardPrice from "~/components/car/CardPrice.astro";
 import IconLogo from "~/assets/images/icons/logo.svg";
 const { car } = Astro.props as { car: Car };
+
+const isSold = car.data.archiveReason === "sold";
 // console.log(car);
 ---
 
 <li
 	data-car-id={car.id}
-	data-car-on-sale={car.data.general.salePrice ? "true" : "false"}
-	data-car-available={car.data.general.availability}
 	class="card-car bg-white shadow overflow-hidden xxl:transition xxl:border-transparent xxl:border-r-4 hover:lg:border-red-700"
 >
 	<a href={`/view/${car.id}`} class="relative isolate flex flex-col gap-8 xxl:flex-row">
@@ -27,6 +27,15 @@ const { car } = Astro.props as { car: Car };
 					<div class="absolute inset-0 text-gray-400 size-full bg-gray-100 flex flex-col gap-4 items-center justify-center">
 						<IconLogo class="h-24" />
 						<span class="text-gray-400 font-bold italic">Coming Soon</span>
+					</div>
+				)
+			}
+			{
+				isSold && (
+					<div class="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+						<span class="inline-block bg-red-600 text-white font-black text-2xl lg:text-3xl px-6 py-2 uppercase tracking-widest rounded shadow transform -skew-x-6 z-10 text-center border-2 border-white/90">
+							SOLD
+						</span>
 					</div>
 				)
 			}

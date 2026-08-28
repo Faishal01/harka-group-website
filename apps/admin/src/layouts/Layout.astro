@@ -1,19 +1,24 @@
 ---
 import "~/styles/global.css";
 import { ClientRouter } from "astro:transitions";
-import Header from "~/components/Header.astro";
-import Footer from "~/components/Footer.astro";
-import { siteName, siteLang, themeColor } from "~/data/config";
+import { siteName, siteLang, themeColor, liveSiteUrl } from "~/data/config";
+import icon from "~/assets/images/icons/logo.png";
+import { Image } from "astro:assets";
+import { adminMenus } from "~/data/adminMenus";
+import { Icon } from "astro-icon/components";
 
 const baseUrl = `${Astro.url.protocol}//${Astro.url.host}`;
-const { pageTitle, title, description, noindex = false } = Astro.props;
+const { pageTitle, title, description, noindex = false, hideSidebar = false } = Astro.props;
 
 interface Props {
 	pageTitle?: string;
 	title?: string;
 	description?: string;
 	noindex?: boolean;
+	hideSidebar?: boolean;
 }
+
+const pathname = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -31,7 +36,6 @@ interface Props {
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<meta name="apple-mobile-web-app-title" content={siteName} />
-		<!-- <link rel="manifest" href="/site.webmanifest" /> -->
 
 		<meta property="og:url" content={Astro.url} />
 		<meta property="og:type" content="website" />
@@ -45,22 +49,173 @@ interface Props {
 		<meta name="twitter:url" content={Astro.url} />
 		<meta name="twitter:title" content={`${title} | ${siteName}`} />
 		<meta name="twitter:description" content={description} />
-		<!-- <meta name="twitter:image" content={`${baseUrl}/images/og-image.jpg`} /> -->
 
 		<title>{pageTitle}</title>
 		<ClientRouter />
 	</head>
-	<body>
-		<Header />
-		<main>
-			<slot />
-		</main>
-		<Footer />
+	<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+		<!-- Top Header -->
+		<header
+			class="h-16 bg-red-700 text-white flex items-center justify-between px-6 flex-shrink-0 z-20 shadow"
+		>
+			<a href="/" class="flex items-center gap-x-2">
+				<Image src={icon} class="h-10 w-auto inline-block" alt="Logo" />
+				<span class="font-bold text-xl lg:text-2xl"
+					>Harka <span class="font-normal">Admin</span></span
+				>
+			</a>
+			<div class="flex items-center gap-4">
+				<a
+					href={liveSiteUrl}
+					target="_blank"
+					class="text-sm font-medium hover:text-red-200 transition hidden sm:inline-block"
+					>View Live Site</a
+				>
+				<span
+					class="text-sm bg-red-800 px-3 py-1 rounded-full border border-red-600 shadow-sm hidden md:inline-block"
+					>Admin Dashboard</span
+				>
+				<button
+					id="mobile-menu-btn"
+					class="md:hidden text-white hover:text-red-200 focus:outline-none"
+					aria-label="Open Menu"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 6h16M4 12h16M4 18h16"></path>
+					</svg>
+				</button>
+			</div>
+		</header>
+
+		<!-- Mobile Drawer -->
+		<div id="mobile-drawer" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 hidden md:hidden">
+			<div
+				class="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out"
+				id="mobile-drawer-panel"
+			>
+				<div class="flex items-center justify-between p-4 border-b border-gray-200">
+					<span class="font-bold text-lg text-gray-900">Navigation</span>
+					<button id="close-drawer-btn" class="text-gray-500 hover:text-gray-700">
+						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				</div>
+				<nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+					<a
+						href="/"
+						class="flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition text-gray-700 hover:bg-gray-100"
+					>
+						Dashboard Home
+					</a>
+					<div class="my-2 border-t border-gray-100"></div>
+					{
+						adminMenus.map((menu) => (
+							<a
+								href={menu.disabled ? "#" : menu.url}
+								class={`flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition ${menu.disabled ? "text-gray-400 cursor-not-allowed" : pathname.startsWith(menu.url) && menu.url !== "/" ? "bg-red-50 text-red-700" : "text-gray-700 hover:bg-gray-100"}`}
+							>
+								<Icon
+									name={menu.icon}
+									class={`h-5 w-5 ${menu.disabled ? "opacity-50" : "opacity-75"}`}
+								/>
+								{menu.label} {menu.badge && `(${menu.badge})`}
+							</a>
+						))
+					}
+				</nav>
+			</div>
+		</div>
+
+		<div class="flex flex-1 overflow-hidden">
+			<!-- Sidebar Navigation -->
+			{
+				!hideSidebar && (
+					<aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 flex flex-col shadow-sm hidden md:flex z-10">
+						<nav class="flex-1 px-4 py-6 space-y-2">
+							<div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">
+								Management
+							</div>
+							{adminMenus.map((menu) => (
+								<a
+									href={menu.disabled ? "#" : menu.url}
+									class={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition ${menu.disabled ? "text-gray-400 cursor-not-allowed" : pathname.startsWith(menu.url) && menu.url !== "/" ? "bg-red-50 text-red-700" : "text-gray-700 hover:bg-gray-100"}`}
+								>
+									<Icon
+										name={menu.icon}
+										class={`h-5 w-5 ${menu.disabled ? "opacity-50" : "opacity-75"}`}
+									/>
+									{menu.label} {menu.badge && `(${menu.badge})`}
+								</a>
+							))}
+						</nav>
+					</aside>
+				)
+			}
+
+			<!-- Main Content -->
+			<main class="flex-1 overflow-y-auto bg-gray-50 pb-12 w-full">
+				<slot />
+			</main>
+		</div>
 	</body>
 </html>
 
 <script>
+	const setupDrawer = () => {
+		const btn = document.getElementById("mobile-menu-btn");
+		const closeBtn = document.getElementById("close-drawer-btn");
+		const drawer = document.getElementById("mobile-drawer");
+		const panel = document.getElementById("mobile-drawer-panel");
+
+		if (!btn || !closeBtn || !drawer || !panel) return;
+
+		// Clean up existing listeners if this is a view transition re-run
+		const newBtn = btn.cloneNode(true);
+		btn.parentNode?.replaceChild(newBtn, btn);
+
+		const newCloseBtn = closeBtn.cloneNode(true);
+		closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
+
+		const toggleMenu = () => {
+			const isHidden = drawer.classList.contains("hidden");
+			if (isHidden) {
+				drawer.classList.remove("hidden");
+				setTimeout(() => panel.classList.remove("translate-x-full"), 10);
+			} else {
+				panel.classList.add("translate-x-full");
+				setTimeout(() => drawer.classList.add("hidden"), 300);
+			}
+		};
+
+		newBtn.addEventListener("click", toggleMenu);
+		newCloseBtn.addEventListener("click", toggleMenu);
+		drawer.addEventListener("click", (e) => {
+			if (e.target === drawer) toggleMenu();
+		});
+	};
+
+	document.addEventListener("astro:page-load", () => {
+		setupDrawer();
+	});
+
 	document.addEventListener("astro:after-swap", () => {
-		scrollTo({ top: history.state.scrollY, behavior: "instant" });
+		setupDrawer();
+		const main = document.querySelector("main");
+		if (main) main.scrollTo({ top: 0, behavior: "instant" });
 	});
 </script>
