@@ -42,8 +42,8 @@ export const sortLabels = {
 };
 
 export const searchLabels = {
-	make: "Tahun",
-	chooseMake: "Pilih tahun",
+	make: "Merek",
+	chooseMake: "Pilih merek",
 	model: "Model",
 	chooseModel: "Pilih model",
 	condition: "Kondisi",
