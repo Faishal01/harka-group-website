@@ -17,11 +17,11 @@ export const carsPage = {
 
 export const filterLabels = {
 	filter: "Filter",
-	make: "Make",
+	make: "Merek",
 	model: "Model",
 	price: "Harga",
-	lowerThan: "Lower than",
-	higherThan: "Higher than",
+	lowerThan: "Di bawah",
+	higherThan: "Di atas",
 	color: "Warna",
 	bodyType: "Tipe Mobil",
 	fuelType: "Jenis bahan bakar",
