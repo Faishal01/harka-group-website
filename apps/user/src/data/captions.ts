@@ -4,8 +4,7 @@ export const homePage = {
 		"Cari unit lain anda disini. Kami punya banyak pilihan dalam koleksi showroom kami. Telusuri stok kami dan temukan mobil impian anda sesuai budget dan kebutuhan.",
 	browseButtonLabel: "Lihat Stok",
 	recentTitle: "Stok Terbaru",
-	recentContent:
-		"Cek stok terbaru kami. Kami menyediakan unit terbaik untuk para pelanggan kami.",
+	recentContent: "Cek stok terbaru kami. Kami menyediakan unit terbaik untuk para pelanggan kami.",
 	ctaTitle: "Tidak bisa menemukan anda?",
 	ctaContent:
 		"Showroom kami dapat membantu anda menemukan unit terbaik sesuai budget dan kebutuhan anda. Kami memiliki beragam mobil dari berbagai merek, jenis transmisi, tahun, dan budget untuk semua kalangan.",
