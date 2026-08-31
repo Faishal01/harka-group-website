@@ -1,56 +1,95 @@
 export const homePage = {
-	headingTitle: "Find your next car in our exclusive collection",
+	headingTitle: "Temukan mobil sesuai kebutuhanmu!",
 	headingContent:
-		"Search for your next car here. We have a wide range of cars for sale. Browse through our collection and find the perfect car that suits your needs and budget.",
+		"Cari unit lain anda disini. Kami punya banyak pilihan dalam koleksi showroom kami. Telusuri stok kami dan temukan mobil impian anda sesuai budget dan kebutuhan.",
 	browseButtonLabel: "Lihat Stok",
-	recentTitle: "Recent inventory",
+	recentTitle: "Stok Terbaru",
 	recentContent:
-		"Check out the newest additions to our collection. We hand-pick the best vehicles for our customers.",
-	ctaTitle: "Can't find the ideal car?",
+		"Cek stok terbaru kami. Kami menyediakan unit terbaik untuk para pelanggan kami.",
+	ctaTitle: "Tidak bisa menemukan anda?",
 	ctaContent:
-		"Our team is here to help you find the perfect car that suits your needs and budget. Whether you're looking for a sleek sports car, a reliable family vehicle, or an eco-friendly hybrid, we have something for everyone.",
-	contactUsLabel: "Contact us",
+		"Showroom kami dapat membantu anda menemukan unit terbaik sesuai budget dan kebutuhan anda. Kami memiliki beragam mobil dari berbagai merek, jenis transmisi, tahun, dan budget untuk semua kalangan.",
+	contactUsLabel: "Hubungi kami",
 };
 
 export const carsPage = {
-	noResultFound: "No results found",
+	noResultFound: "Hasil tidak ditemukan",
 };
 
 export const filterLabels = {
 	filter: "Filter",
 	make: "Make",
 	model: "Model",
-	price: "Price",
+	price: "Harga",
 	lowerThan: "Lower than",
 	higherThan: "Higher than",
-	color: "Color",
-	bodyType: "Body Type",
-	fuelType: "Fuel Type",
-	transmission: "Transmission",
-	condition: "Condition",
-	search: "Search",
-	all: "All",
+	color: "Warna",
+	bodyType: "Tipe Mobil",
+	fuelType: "Jenis bahan bakar",
+	transmission: "Transmisi",
+	condition: "Kondisi",
+	search: "Cari",
+	all: "Semua",
 };
 
 export const sortLabels = {
-	sortBy: "Sort by",
-	mileageDesc: "Mileage: High to Low",
-	mileageAsc: "Mileage: Low to High",
-	priceDesc: "Price: High to Low",
-	priceAsc: "Price: Low to High",
-	yearDesc: "Year: High to Low",
-	yearAsc: "Year: Low to High",
+	sortBy: "Urutkan",
+	mileageDesc: "Jarak tempuh : Tinggi ke Rendah",
+	mileageAsc: "Jarak tempuh : Rendah ke Tinggi",
+	priceDesc: "Harga : Tinggi ke Rendah",
+	priceAsc: "Harga : Rendah ke Tinggi",
+	yearDesc: "Tahun : Tinggi ke Rendah",
+	yearAsc: "Tahun : Rendah ke Tinggi",
 };
 
 export const searchLabels = {
-	make: "Make",
-	chooseMake: "Choose make",
+	make: "Tahun",
+	chooseMake: "Pilih tahun",
 	model: "Model",
-	chooseModel: "Choose model",
-	condition: "Condition",
-	chooseCondition: "Choose condition",
-	search: "Search",
-	searchPlaceholder: "Search...",
+	chooseModel: "Pilih model",
+	condition: "Kondisi",
+	chooseCondition: "Pilih kondisi",
+	search: "Cari",
+	searchPlaceholder: "Cari...",
+};
+
+export const viewPage = {
+	comingSoon: "Segera hadir!",
+	description: "Deskripsi",
+	noDescription: "Deskripsi tidak tersedia.",
+	yes: "Ya",
+	na: "Tidak tersedia",
+	bhp: "Kecepatan",
+	kw: "Jarak tempuh",
+};
+
+export const buttonLabels = {
+	returnToCars: "Kembali ke Stok",
+	callUs: "Hubungi kami",
+	askAQuestion: "Tanya Kami",
+	share: "Bagikan",
+	copyLink: "Salin tautan",
+	print: "Print",
+};
+
+export const loanLabels = {
+	calculateYourLoan: "Jumlahkan pinjaman Anda",
+};
+
+export const inquireForm = {
+	title: "Tanya Kami",
+	description:
+		"Tertarik dengan unit ini? Isi formulir dibawah beserta pertanyaan Anda dan Kami akan merespon secepat mungkin.",
+	name: "Nama",
+	email: "E-mail",
+	message: "Pesan",
+	send: "Kirim",
+};
+
+export const shareMessages = {
+	emailSubject: "Cek unit ini!",
+	emailBodyTop: "Kami menemukan mobil Anda!\n\nCek rincian disini:\n\n",
+	emailBodyBottom: "\n\nSalam kami",
 };
 
 export const viewPage = {
