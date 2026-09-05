@@ -19,7 +19,7 @@ export function getMileage(mileage: number): string {
  * @returns {string} The mileage unit, either "mi" for imperial or "km" for metric.
  */
 export function getMileageUnit(): string {
-	return unitSystem === "imperial" ? "mi" : "km";
+	return (unitSystem as string) === "imperial" ? "mi" : "km";
 }
 
 /**
@@ -28,7 +28,7 @@ export function getMileageUnit(): string {
  * @returns {string} The label, either "Mileage" for imperial or "Kilometerage" for metric.
  */
 export function getMileageLabel(): string {
-	return unitSystem === "imperial" ? "Mileage" : "Kilometerage";
+	return (unitSystem as string) === "imperial" ? "Mileage" : "Kilometerage";
 }
 
 /**

@@ -19,19 +19,19 @@ import FilterBarMobile from "~/components/FilterBarMobile.astro";
 import type { Car } from "~/types";
 import { carsPage } from "~/data/captions";
 
-let APIURL = new URL("/api/getFilteredCars.json", Astro.url);
+import { getFilteredCars } from "~/utils/getFilteredCars";
+import { env } from "cloudflare:workers";
 
 const searchParamsValue = Astro.url.searchParams;
 const searchParamsArray = Array.from(searchParamsValue);
+const searchParamsRecord = Object.fromEntries(searchParamsValue.entries());
 
-// console.log(searchParamsValue);
-// console.log(searchParamsArray);
-
-APIURL.search = searchParamsValue.toString();
-
-const response = await fetch(APIURL);
-const responseData = response.status === 404 ? { allCars: [] } : ((await response.json()) as any);
-const allCars: Car[] = responseData.allCars;
+let allCars: Car[] = [];
+try {
+	allCars = await getFilteredCars(searchParamsRecord, env);
+} catch (error) {
+	// If error, allCars remains empty
+}
 
 const makes = [...new Set(allCars.map((car: Car) => car.data.general.make))].sort();
 const colors = [...new Set(allCars.map((car: Car) => car.data.exterior.color))].sort();
