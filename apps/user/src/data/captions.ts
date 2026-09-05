@@ -1,11 +1,11 @@
 export const homePage = {
-	headingTitle: "Temukan mobil sesuai kebutuhanmu!",
+	headingTitle: "Temukan mobil impianmu!",
 	headingContent:
 		"Cari unit lain anda disini. Kami punya banyak pilihan dalam koleksi showroom kami. Telusuri stok kami dan temukan mobil impian anda sesuai budget dan kebutuhan.",
 	browseButtonLabel: "Lihat Stok",
 	recentTitle: "Stok Terbaru",
 	recentContent: "Cek stok terbaru kami. Kami menyediakan unit terbaik untuk para pelanggan kami.",
-	ctaTitle: "Tidak bisa menemukan anda?",
+	ctaTitle: "Tidak bisa menemukan mobil yang anda cari?",
 	ctaContent:
 		"Showroom kami dapat membantu anda menemukan unit terbaik sesuai budget dan kebutuhan anda. Kami memiliki beragam mobil dari berbagai merek, jenis transmisi, tahun, dan budget untuk semua kalangan.",
 	contactUsLabel: "Hubungi kami",
@@ -20,8 +20,8 @@ export const filterLabels = {
 	make: "Merek",
 	model: "Model",
 	price: "Harga",
-	lowerThan: "Di bawah",
-	higherThan: "Di atas",
+	lowerThan: "Di Bawah",
+	higherThan: "Di Atas",
 	color: "Warna",
 	bodyType: "Tipe Mobil",
 	fuelType: "Jenis bahan bakar",
