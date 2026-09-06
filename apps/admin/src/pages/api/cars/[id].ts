@@ -14,8 +14,18 @@ export const PUT: APIRoute = async ({ request, params }) => {
 		const general = generalStr ? JSON.parse(generalStr) : {};
 		const history = historyStr ? JSON.parse(historyStr) : {};
 
-		if (!general.make || !general.model || !general.price || !history.year || history.mileage === undefined || history.mileage === "") {
-			return new Response(JSON.stringify({ error: "Make, Model, Price, Year, and Mileage are required fields." }), { status: 400 });
+		if (
+			!general.make ||
+			!general.model ||
+			!general.price ||
+			!history.year ||
+			history.mileage === undefined ||
+			history.mileage === ""
+		) {
+			return new Response(
+				JSON.stringify({ error: "Make, Model, Price, Year, and Mileage are required fields." }),
+				{ status: 400 },
+			);
 		}
 
 		const updateData: any = {};

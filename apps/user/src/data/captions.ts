@@ -58,8 +58,8 @@ export const viewPage = {
 	noDescription: "Deskripsi tidak tersedia.",
 	yes: "Ya",
 	na: "Tidak tersedia",
-	bhp: "Kecepatan",
-	kw: "Jarak tempuh",
+	bhp: "PS",
+	kw: "kW",
 };
 
 export const buttonLabels = {

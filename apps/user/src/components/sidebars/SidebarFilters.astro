@@ -1,5 +1,12 @@
 ---
-import { bodyTypes, fuelTypes, transmission, conditions } from "~/data/constants";
+import {
+	bodyTypes,
+	fuelTypes,
+	transmission,
+	conditions,
+	fuelTypeMap,
+	transmissionMap,
+} from "~/data/constants";
 import { getPrice, getMakeModelSet } from "~/utils/helpers";
 import IconReset from "~/assets/images/icons/reset.svg";
 import IconChevronDown from "~/assets/images/icons/chevron-down-select.svg";
@@ -151,7 +158,11 @@ const { data } = Astro.props;
 				<div class="grid grid-cols-1">
 					<select name="fuelType" id="fuelType" class="appearance-none col-start-1 row-start-1">
 						<option value="all">{filterLabels.all}</option>
-						{fuelTypes.map((fuelType) => <option value={fuelType}>{fuelType}</option>)}
+						{
+							fuelTypes.map((fuelType) => (
+								<option value={fuelType}>{fuelTypeMap[fuelType] || fuelType}</option>
+							))
+						}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
 				</div>
@@ -171,11 +182,7 @@ const { data } = Astro.props;
 						class="appearance-none col-start-1 row-start-1"
 					>
 						<option value="all">{filterLabels.all}</option>
-						{
-							transmission.map((transmission) => (
-								<option value={transmission}>{transmission}</option>
-							))
-						}
+						{transmission.map((t) => <option value={t}>{transmissionMap[t] || t}</option>)}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
 				</div>

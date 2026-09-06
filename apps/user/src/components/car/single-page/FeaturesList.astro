@@ -3,6 +3,7 @@ import type { Car } from "~/types";
 import { getMileage, getMileageUnit } from "~/utils/helpers";
 import { labels, categoryLabels } from "~/utils/labels";
 import { viewPage } from "~/data/captions";
+import { fuelTypeMap, transmissionMap } from "~/data/constants";
 
 const { car } = Astro.props as { car: Car };
 
@@ -39,11 +40,19 @@ const excludeFields = ["price", "hidden", "vin", "featured"];
 											<dd class="font-bold md:whitespace-nowrap">
 												{subKey === "mileage"
 													? `${getMileage(value as number)} ${getMileageUnit()}`
-													: value === true
-														? viewPage.yes
-														: value
-															? value
-															: viewPage.na}
+													: subKey === "fuelType"
+														? fuelTypeMap[value as string] || value
+														: subKey === "transmission"
+															? transmissionMap[value as string] || value
+															: subKey === "horsePower" && value
+																? `${value} PS`
+																: subKey === "engineSizeCC" && value
+																	? `${value} cc`
+																	: value === true
+																		? viewPage.yes
+																		: value
+																			? value
+																			: viewPage.na}
 											</dd>
 										</>
 									),

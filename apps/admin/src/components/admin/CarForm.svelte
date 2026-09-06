@@ -38,14 +38,27 @@
 	let existingImage = car?.image || "";
 	let files: FileList | null = null;
 
-	let general = car?.general || { make: "", model: "", price: 0, bodyType: "SUV", doors: 4, seatingCapacity: 5 };
+	let general = car?.general || {
+		make: "",
+		model: "",
+		price: 0,
+		bodyType: "SUV",
+		doors: 4,
+		seatingCapacity: 5,
+	};
 	let history = car?.history || { year: new Date().getFullYear(), mileage: 0 };
 	let technical = car?.technical || { horsePower: 0, engineSizeCC: 0, transmission: "Automatic" };
 	let efficiency = car?.efficiency || { fuelType: "Petrol" };
 	let exterior = car?.exterior || { color: "" };
 	let misc = car?.misc || { hidden: false };
 
-	$: isFormValid = general.make && general.model && general.price > 0 && history.year > 0 && (history.mileage >= 0 && history.mileage !== "");
+	$: isFormValid =
+		general.make &&
+		general.model &&
+		general.price > 0 &&
+		history.year > 0 &&
+		history.mileage >= 0 &&
+		history.mileage !== "";
 
 	const submitForm = async () => {
 		const finalTitle = title.trim() || `${general.make} ${general.model} ${history.year}`;
@@ -60,7 +73,7 @@
 			formData.append("excerpt", excerpt);
 			formData.append("imageAlt", imageAlt);
 			formData.append("videoTourUrl", videoTourUrl);
-			
+
 			if (car?.id) {
 				formData.append("image", existingImage); // fallback if no new file
 			}
@@ -92,7 +105,12 @@
 
 			const action = car?.id ? "updated" : "created";
 			successMessage = `Vehicle ${action} successfully!`;
-			showPopup("Success!", `Vehicle ${action} successfully! Redirecting to inventory...`, "success", action);
+			showPopup(
+				"Success!",
+				`Vehicle ${action} successfully! Redirecting to inventory...`,
+				"success",
+				action,
+			);
 		} catch (err: any) {
 			errorMessage = err.message;
 			showPopup("Error", err.message, "error");
@@ -109,7 +127,9 @@
 		class="bg-gray-50 p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
 	>
 		<div>
-			<h2 class="text-xl font-bold text-gray-900">{car?.id ? "Edit Vehicle" : "Add New Vehicle"}</h2>
+			<h2 class="text-xl font-bold text-gray-900">
+				{car?.id ? "Edit Vehicle" : "Add New Vehicle"}
+			</h2>
 			{#if car?.id}
 				<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
 			{/if}
@@ -180,12 +200,18 @@
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Display Title <span class="text-gray-400 font-normal text-xs ml-2">(Optional - Auto-generates if blank)</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Display Title <span class="text-gray-400 font-normal text-xs ml-2"
+								>(Optional - Auto-generates if blank)</span
+							></label
+						>
 						<input
 							type="text"
 							bind:value={title}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
-							placeholder="{general.make && general.model && history.year ? `${general.make} ${general.model} ${history.year}` : 'e.g. 2026 Porsche 911 Turbo S'}"
+							placeholder={general.make && general.model && history.year
+								? `${general.make} ${general.model} ${history.year}`
+								: "e.g. 2026 Porsche 911 Turbo S"}
 						/>
 					</div>
 
@@ -200,7 +226,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Make <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Make <span class="text-red-500">*</span></label
+						>
 						<input
 							type="text"
 							bind:value={general.make}
@@ -210,7 +238,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Model <span class="text-red-500">*</span></label
+						>
 						<input
 							type="text"
 							bind:value={general.model}
@@ -220,7 +250,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp) <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Price (Rp) <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={general.price}
@@ -272,7 +304,9 @@
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model Year <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Model Year <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={history.year}
@@ -283,7 +317,9 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Mileage (km) <span class="text-red-500">*</span></label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Mileage (km) <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={history.mileage}
@@ -294,7 +330,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Horsepower (BHP)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Horsepower (PS)</label>
 						<input
 							type="number"
 							bind:value={technical.horsePower}
@@ -394,7 +430,9 @@
 					{/if}
 
 					<div class={existingImage ? "" : "col-span-1 md:col-span-2"}>
-						<label class="block text-sm font-medium text-gray-700 mb-1">{existingImage ? "Replace Image" : "Main Image"}</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>{existingImage ? "Replace Image" : "Main Image"}</label
+						>
 						<div
 							class="bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-lg h-48 flex flex-col items-center justify-center text-center hover:border-blue-500 transition cursor-pointer relative group"
 						>
@@ -448,9 +486,7 @@
 			</div>
 
 			<!-- Actions Footer -->
-			<div
-				class="mt-10 flex items-center justify-end pt-6 border-t border-gray-200"
-			>
+			<div class="mt-10 flex items-center justify-end pt-6 border-t border-gray-200">
 				<button
 					type="submit"
 					disabled={isLoading || !isFormValid}
@@ -463,8 +499,19 @@
 							fill="none"
 							viewBox="0 0 24 24"
 						>
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							></circle>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							></path>
 						</svg>
 						Saving...
 					{:else}
@@ -490,25 +537,56 @@
 
 {#if popup.show}
 	<div
-		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type === 'success' ? 'bg-white border-green-500' : 'bg-white border-red-500'}"
+		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type ===
+		'success'
+			? 'bg-white border-green-500'
+			: 'bg-white border-red-500'}"
 	>
 		<div class="flex items-start gap-3">
 			{#if popup.type === "success"}
-				<svg class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+				<svg
+					class="h-6 w-6 text-green-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M5 13l4 4L19 7"
+					/>
 				</svg>
 			{:else}
-				<svg class="h-6 w-6 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+				<svg
+					class="h-6 w-6 text-red-500 flex-shrink-0"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+					/>
 				</svg>
 			{/if}
 			<div class="flex-1">
 				<h4 class="font-bold text-gray-900">{popup.title}</h4>
 				<p class="text-sm text-gray-600 mt-1">{popup.message}</p>
 			</div>
-			<button class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0" on:click={() => (popup.show = false)}>
+			<button
+				class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0"
+				on:click={() => (popup.show = false)}
+			>
 				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
 				</svg>
 			</button>
 		</div>
