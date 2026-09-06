@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { navigate } from "astro:transitions/client";
 
-	export let car: any;
-
-	let activeTab = "general";
+	export let car: any = null;
 
 	let isLoading = false;
-	let isDeleting = false;
-	let showDeleteConfirm = false;
 	let errorMessage = "";
 	let successMessage = "";
 
@@ -34,34 +30,25 @@
 		}
 	};
 
-	// Data bindings (Initialize with existing car data or defaults)
-	let title = car.title || "";
-	let excerpt = car.excerpt || "";
-	let imageAlt = car.imageAlt || "";
-	let videoTourUrl = car.videoTourUrl || "";
-	let existingImage = car.image || "";
+	// Data bindings (Initialize with existing car data or empty defaults)
+	let title = car?.title || "";
+	let excerpt = car?.excerpt || "";
+	let imageAlt = car?.imageAlt || "";
+	let videoTourUrl = car?.videoTourUrl || "";
+	let existingImage = car?.image || "";
 	let files: FileList | null = null;
 
-	let general = car.general || {};
-	let history = car.history || {};
-	let technical = car.technical || {};
-	let efficiency = car.efficiency || {};
-	let exterior = car.exterior || {};
-	let misc = car.misc || {};
+	let general = car?.general || { make: "", model: "", price: 0, bodyType: "SUV", doors: 4, seatingCapacity: 5 };
+	let history = car?.history || { year: new Date().getFullYear(), mileage: 0 };
+	let technical = car?.technical || { horsePower: 0, engineSizeCC: 0, transmission: "Automatic" };
+	let efficiency = car?.efficiency || { fuelType: "Petrol" };
+	let exterior = car?.exterior || { color: "" };
+	let misc = car?.misc || { hidden: false };
 
-	const tabs = [
-		{ id: "general", label: "General Info" },
-		{ id: "technical", label: "Performance" },
-		{ id: "style", label: "Style & Efficiency" },
-		{ id: "media", label: "Media" },
-	];
+	$: isFormValid = general.make && general.model && general.price > 0 && history.year > 0 && (history.mileage >= 0 && history.mileage !== "");
 
 	const submitForm = async () => {
-		if (!title) {
-			errorMessage = "Title is required!";
-			showPopup("Missing Fields", errorMessage, "error");
-			return;
-		}
+		const finalTitle = title.trim() || `${general.make} ${general.model} ${history.year}`;
 
 		isLoading = true;
 		errorMessage = "";
@@ -69,11 +56,14 @@
 
 		try {
 			const formData = new FormData();
-			formData.append("title", title);
+			formData.append("title", finalTitle);
 			formData.append("excerpt", excerpt);
 			formData.append("imageAlt", imageAlt);
 			formData.append("videoTourUrl", videoTourUrl);
-			formData.append("image", existingImage); // fallback if no new file
+			
+			if (car?.id) {
+				formData.append("image", existingImage); // fallback if no new file
+			}
 
 			if (files && files.length > 0) {
 				formData.append("imageFile", files[0]);
@@ -86,65 +76,43 @@
 			formData.append("exterior", JSON.stringify(exterior));
 			formData.append("misc", JSON.stringify(misc));
 
-			const response = await fetch(`/api/cars/${car.id}`, {
-				method: "PUT",
+			const url = car?.id ? `/api/cars/${car.id}` : "/api/cars";
+			const method = car?.id ? "PUT" : "POST";
+
+			const response = await fetch(url, {
+				method,
 				body: formData,
 			});
 
 			const data = await response.json();
 
 			if (!response.ok) {
-				throw new Error(data.error || "Failed to update car");
+				throw new Error(data.error || "Failed to save car");
 			}
 
-			successMessage = "Vehicle updated successfully!";
-			showPopup("Success!", "Vehicle updated successfully! Redirecting to inventory...", "success");
+			const action = car?.id ? "updated" : "created";
+			successMessage = `Vehicle ${action} successfully!`;
+			showPopup("Success!", `Vehicle ${action} successfully! Redirecting to inventory...`, "success", action);
 		} catch (err: any) {
 			errorMessage = err.message;
 			showPopup("Error", err.message, "error");
 			isLoading = false;
 		}
 	};
-
-	const deleteCar = async () => {
-		isDeleting = true;
-		errorMessage = "";
-
-		try {
-			const response = await fetch(`/api/cars/${car.id}`, {
-				method: "DELETE",
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to delete car");
-			}
-
-			showPopup(
-				"Deleted!",
-				"Vehicle has been moved to archive. Redirecting...",
-				"success",
-				"deleted",
-			);
-		} catch (err: any) {
-			errorMessage = err.message;
-			showPopup("Error", err.message, "error");
-			isDeleting = false;
-		}
-	};
 </script>
 
 <div
-	class="max-w-5xl mx-auto bg-white text-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-200"
+	class="max-w-4xl mx-auto bg-white text-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-200 mb-12"
 >
 	<!-- Header -->
 	<div
 		class="bg-gray-50 p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
 	>
 		<div>
-			<h2 class="text-xl font-bold text-gray-900">Edit Vehicle</h2>
-			<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
+			<h2 class="text-xl font-bold text-gray-900">{car?.id ? "Edit Vehicle" : "Add New Vehicle"}</h2>
+			{#if car?.id}
+				<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
+			{/if}
 		</div>
 		<div class="flex items-center gap-2">
 			{#if misc.hidden}
@@ -161,19 +129,6 @@
 				</div>
 			{/if}
 		</div>
-	</div>
-
-	<!-- Tabs Navigation -->
-	<div class="flex border-b border-gray-200 bg-gray-100 overflow-x-auto">
-		{#each tabs as tab}
-			<button
-				type="button"
-				on:click={() => (activeTab = tab.id)}
-				class={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${activeTab === tab.id ? "border-blue-600 text-blue-700 bg-white" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-			>
-				{tab.label}
-			</button>
-		{/each}
 	</div>
 
 	<div class="p-8">
@@ -217,17 +172,20 @@
 			</div>
 		{/if}
 
-		<form on:submit|preventDefault={submitForm}>
-			<!-- TAB 1: General -->
-			<div class={activeTab === "general" ? "block animate-fade-in" : "hidden"}>
+		<form on:submit|preventDefault={submitForm} class="space-y-12">
+			<!-- General Information -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> General Information
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Display Title *</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Display Title <span class="text-gray-400 font-normal text-xs ml-2">(Optional - Auto-generates if blank)</span></label>
 						<input
 							type="text"
 							bind:value={title}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
-							required
+							placeholder="{general.make && general.model && history.year ? `${general.make} ${general.model} ${history.year}` : 'e.g. 2026 Porsche 911 Turbo S'}"
 						/>
 					</div>
 
@@ -237,32 +195,37 @@
 							type="text"
 							bind:value={excerpt}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
+							placeholder="Short description for cards..."
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Make</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Make <span class="text-red-500">*</span></label>
 						<input
 							type="text"
 							bind:value={general.make}
+							required
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Model <span class="text-red-500">*</span></label>
 						<input
 							type="text"
 							bind:value={general.model}
+							required
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp) <span class="text-red-500">*</span></label>
 						<input
 							type="number"
 							bind:value={general.price}
+							required
+							min="1"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
@@ -286,7 +249,7 @@
 						class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2 flex flex-col gap-4"
 					>
 						<div>
-							<label class="flex items-center gap-3 cursor-pointer">
+							<label class="flex items-center gap-3 cursor-pointer w-fit">
 								<input
 									type="checkbox"
 									bind:checked={misc.hidden}
@@ -302,23 +265,30 @@
 				</div>
 			</div>
 
-			<!-- TAB 2: Technical & History -->
-			<div class={activeTab === "technical" ? "block animate-fade-in" : "hidden"}>
+			<!-- Performance & History -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performance & History
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model Year</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Model Year <span class="text-red-500">*</span></label>
 						<input
 							type="number"
 							bind:value={history.year}
+							required
+							min="1900"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Mileage</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Mileage (km) <span class="text-red-500">*</span></label>
 						<input
 							type="number"
 							bind:value={history.mileage}
+							required
+							min="0"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
@@ -356,11 +326,14 @@
 				</div>
 			</div>
 
-			<!-- TAB 3: Style & Efficiency -->
-			<div class={activeTab === "style" ? "block animate-fade-in" : "hidden"}>
+			<!-- Configuration -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Configuration
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Bahan Bakar</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
 						<select
 							bind:value={efficiency.fuelType}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -401,12 +374,15 @@
 				</div>
 			</div>
 
-			<!-- TAB 4: Media -->
-			<div class={activeTab === "media" ? "block animate-fade-in" : "hidden"}>
+			<!-- Media -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Media
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Current Image</label>
-						{#if existingImage}
+					{#if existingImage}
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-1">Current Image</label>
 							<div class="rounded-lg overflow-hidden border border-gray-700 h-48 bg-gray-100">
 								<img
 									src={existingImage}
@@ -414,17 +390,11 @@
 									class="w-full h-full object-cover opacity-80 hover:opacity-100 transition"
 								/>
 							</div>
-						{:else}
-							<div
-								class="rounded-lg border border-gray-700 h-48 bg-gray-100 flex items-center justify-center text-gray-600"
-							>
-								No image available
-							</div>
-						{/if}
-					</div>
+						</div>
+					{/if}
 
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Replace Image</label>
+					<div class={existingImage ? "" : "col-span-1 md:col-span-2"}>
+						<label class="block text-sm font-medium text-gray-700 mb-1">{existingImage ? "Replace Image" : "Main Image"}</label>
 						<div
 							class="bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-lg h-48 flex flex-col items-center justify-center text-center hover:border-blue-500 transition cursor-pointer relative group"
 						>
@@ -450,7 +420,7 @@
 								/>
 							</svg>
 							<p class="text-sm font-medium text-gray-400 px-4">
-								{files && files.length ? files[0].name : "Drag & drop to replace"}
+								{files && files.length ? files[0].name : "Drag & drop to replace or upload"}
 							</p>
 						</div>
 					</div>
@@ -479,45 +449,11 @@
 
 			<!-- Actions Footer -->
 			<div
-				class="mt-10 flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4"
+				class="mt-10 flex items-center justify-end pt-6 border-t border-gray-200"
 			>
-				<!-- Delete Action -->
-				{#if showDeleteConfirm}
-					<div
-						class="flex items-center gap-3 bg-red-50 p-3 rounded border border-red-200 animate-fade-in w-full sm:w-auto"
-					>
-						<span class="text-red-700 text-sm font-bold ml-2">Are you sure?</span>
-						<button
-							type="button"
-							class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded text-sm transition"
-							on:click={() => (showDeleteConfirm = false)}>Cancel</button
-						>
-						<button
-							type="button"
-							on:click={deleteCar}
-							disabled={isDeleting}
-							class="bg-red-700 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-bold transition flex items-center gap-2"
-						>
-							{#if isDeleting}
-								Wait...
-							{:else}
-								Confirm Delete
-							{/if}
-						</button>
-					</div>
-				{:else}
-					<button
-						type="button"
-						class="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded text-sm font-bold uppercase tracking-wider transition w-full sm:w-auto text-left sm:text-center"
-						on:click={() => (showDeleteConfirm = true)}
-					>
-						Remove Vehicle
-					</button>
-				{/if}
-
 				<button
 					type="submit"
-					disabled={isLoading}
+					disabled={isLoading || !isFormValid}
 					class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded font-bold uppercase tracking-wider text-sm transition disabled:opacity-50 flex items-center gap-2 w-full sm:w-auto justify-center"
 				>
 					{#if isLoading}
@@ -527,19 +463,8 @@
 							fill="none"
 							viewBox="0 0 24 24"
 						>
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 						</svg>
 						Saving...
 					{:else}
@@ -555,7 +480,7 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						Save Changes
+						Save Vehicle
 					{/if}
 				</button>
 			</div>
@@ -565,56 +490,25 @@
 
 {#if popup.show}
 	<div
-		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type ===
-		'success'
-			? 'bg-white border-green-500'
-			: 'bg-white border-red-500'}"
+		class="fixed top-20 right-4 md:right-8 z-50 animate-fade-in max-w-sm w-full shadow-xl rounded-lg border-l-4 p-4 {popup.type === 'success' ? 'bg-white border-green-500' : 'bg-white border-red-500'}"
 	>
 		<div class="flex items-start gap-3">
 			{#if popup.type === "success"}
-				<svg
-					class="h-6 w-6 text-green-500 flex-shrink-0"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M5 13l4 4L19 7"
-					/>
+				<svg class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 				</svg>
 			{:else}
-				<svg
-					class="h-6 w-6 text-red-500 flex-shrink-0"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-					/>
+				<svg class="h-6 w-6 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 				</svg>
 			{/if}
 			<div class="flex-1">
 				<h4 class="font-bold text-gray-900">{popup.title}</h4>
 				<p class="text-sm text-gray-600 mt-1">{popup.message}</p>
 			</div>
-			<button
-				class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0"
-				on:click={() => (popup.show = false)}
-			>
+			<button class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0" on:click={() => (popup.show = false)}>
 				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 				</svg>
 			</button>
 		</div>
@@ -625,7 +519,7 @@
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
-			transform: translateY(5px);
+			transform: translateY(10px);
 		}
 		to {
 			opacity: 1;
@@ -633,6 +527,6 @@
 		}
 	}
 	.animate-fade-in {
-		animation: fadeIn 0.3s ease-out forwards;
+		animation: fadeIn 0.4s ease-out forwards;
 	}
 </style>

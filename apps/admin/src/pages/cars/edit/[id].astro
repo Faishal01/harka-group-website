@@ -3,7 +3,7 @@ export const prerender = false;
 import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
-import CarEditForm from "~/components/admin/CarEditForm.svelte";
+import CarForm from "~/components/admin/CarForm.svelte";
 import { getDb } from "@harka/db";
 import { cars as carsTable } from "@harka/db";
 import { eq } from "drizzle-orm";
@@ -43,7 +43,7 @@ if (!car) {
 				</a>
 			</div>
 
-			<CarEditForm client:load {car} />
+			<CarForm client:load {car} />
 		</Container>
 	</Section>
 </Layout>

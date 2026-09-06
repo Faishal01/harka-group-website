@@ -3,7 +3,7 @@ export const prerender = false;
 import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
-import CarWizard from "~/components/admin/CarWizard.svelte";
+import CarForm from "~/components/admin/CarForm.svelte";
 ---
 
 <Layout pageTitle="Add New Car">
@@ -29,7 +29,7 @@ import CarWizard from "~/components/admin/CarWizard.svelte";
 				</a>
 			</div>
 
-			<CarWizard client:load />
+			<CarForm client:load car={null} />
 		</Container>
 	</Section>
 </Layout>
