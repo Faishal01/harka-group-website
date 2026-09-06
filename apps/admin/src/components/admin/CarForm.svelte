@@ -128,7 +128,7 @@
 	>
 		<div>
 			<h2 class="text-xl font-bold text-gray-900">
-				{car?.id ? "Edit Vehicle" : "Add New Vehicle"}
+				{car?.id ? "Edit Kendaraan" : "Tambah Kendaraan Baru"}
 			</h2>
 			{#if car?.id}
 				<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
@@ -139,13 +139,13 @@
 				<div
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-yellow-100 text-yellow-800 border border-yellow-200"
 				>
-					Hidden (Draft)
+					Sembunyi (Draf)
 				</div>
 			{:else}
 				<div
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-green-100 text-green-800 border border-green-200"
 				>
-					Public (Live)
+					Publik (Live)
 				</div>
 			{/if}
 		</div>
@@ -193,16 +193,16 @@
 		{/if}
 
 		<form on:submit|preventDefault={submitForm} class="space-y-12">
-			<!-- General Information -->
+			<!-- Informasi Umum -->
 			<div>
 				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> General Information
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Informasi Umum
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div class="col-span-1 md:col-span-2">
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>Display Title <span class="text-gray-400 font-normal text-xs ml-2"
-								>(Optional - Auto-generates if blank)</span
+							>Judul Tampilan <span class="text-gray-400 font-normal text-xs ml-2"
+								>(Opsional - Otomatis jika kosong)</span
 							></label
 						>
 						<input
@@ -211,23 +211,23 @@
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 							placeholder={general.make && general.model && history.year
 								? `${general.make} ${general.model} ${history.year}`
-								: "e.g. 2026 Porsche 911 Turbo S"}
+								: "mis. 2026 Porsche 911 Turbo S"}
 						/>
 					</div>
 
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kutipan Singkat</label>
 						<input
 							type="text"
 							bind:value={excerpt}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
-							placeholder="Short description for cards..."
+							placeholder="Deskripsi singkat untuk kartu..."
 						/>
 					</div>
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>Make <span class="text-red-500">*</span></label
+							>Merek <span class="text-red-500">*</span></label
 						>
 						<input
 							type="text"
@@ -251,7 +251,7 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>Price (Rp) <span class="text-red-500">*</span></label
+							>Harga (Rp) <span class="text-red-500">*</span></label
 						>
 						<input
 							type="number"
@@ -263,7 +263,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Body Type</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Tipe Body</label>
 						<select
 							bind:value={general.bodyType}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -287,25 +287,25 @@
 									bind:checked={misc.hidden}
 									class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
 								/>
-								<span class="text-sm font-medium text-gray-900">Hidden (Draft Status)</span>
+								<span class="text-sm font-medium text-gray-900">Sembunyikan (Status Draf)</span>
 							</label>
 							<p class="text-xs text-gray-500 mt-1 ml-8">
-								If checked, this car will not appear on the main website.
+								Jika dicentang, mobil ini tidak akan muncul di situs utama.
 							</p>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Performance & History -->
+			<!-- Performa & Riwayat -->
 			<div>
 				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performance & History
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performa & Riwayat
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>Model Year <span class="text-red-500">*</span></label
+							>Tahun Model <span class="text-red-500">*</span></label
 						>
 						<input
 							type="number"
@@ -318,7 +318,7 @@
 
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>Mileage (km) <span class="text-red-500">*</span></label
+							>Jarak Tempuh (km) <span class="text-red-500">*</span></label
 						>
 						<input
 							type="number"
@@ -330,7 +330,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Horsepower (PS)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Tenaga (PS)</label>
 						<input
 							type="number"
 							bind:value={technical.horsePower}
@@ -339,7 +339,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Engine Size (CC)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Mesin</label>
 						<input
 							type="number"
 							bind:value={technical.engineSizeCC}
@@ -348,7 +348,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Transmisi</label>
 						<select
 							bind:value={technical.transmission}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -362,14 +362,14 @@
 				</div>
 			</div>
 
-			<!-- Configuration -->
+			<!-- Konfigurasi -->
 			<div>
 				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Configuration
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Konfigurasi
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Bahan Bakar</label>
 						<select
 							bind:value={efficiency.fuelType}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -382,7 +382,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Exterior Color</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Warna Eksterior</label>
 						<input
 							type="text"
 							bind:value={exterior.color}
@@ -391,7 +391,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Doors</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Pintu</label>
 						<input
 							type="number"
 							bind:value={general.doors}
@@ -400,7 +400,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Seating</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Duduk</label>
 						<input
 							type="number"
 							bind:value={general.seatingCapacity}
@@ -431,7 +431,7 @@
 
 					<div class={existingImage ? "" : "col-span-1 md:col-span-2"}>
 						<label class="block text-sm font-medium text-gray-700 mb-1"
-							>{existingImage ? "Replace Image" : "Main Image"}</label
+							>{existingImage ? "Replace Image" : "Gambar Utama"}</label
 						>
 						<div
 							class="bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-lg h-48 flex flex-col items-center justify-center text-center hover:border-blue-500 transition cursor-pointer relative group"
@@ -458,14 +458,18 @@
 								/>
 							</svg>
 							<p class="text-sm font-medium text-gray-400 px-4">
-								{files && files.length ? files[0].name : "Drag & drop to replace or upload"}
+								{files && files.length
+									? files[0].name
+									: "Seret & lepas untuk mengganti atau mengunggah"}
 							</p>
 						</div>
 					</div>
 
 					<div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Image Alt Text</label>
+							<label class="block text-sm font-medium text-gray-700 mb-1"
+								>Teks Alternatif Gambar</label
+							>
 							<input
 								type="text"
 								bind:value={imageAlt}
@@ -474,7 +478,7 @@
 						</div>
 
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Video Tour URL</label>
+							<label class="block text-sm font-medium text-gray-700 mb-1">URL Tur Video</label>
 							<input
 								type="url"
 								bind:value={videoTourUrl}
@@ -527,7 +531,7 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						Save Vehicle
+						Simpan Kendaraan
 					{/if}
 				</button>
 			</div>
