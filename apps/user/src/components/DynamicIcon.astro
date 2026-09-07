@@ -1,0 +1,39 @@
+---
+export interface Props {
+	name: string;
+	class?: string;
+}
+
+const { name, class: className = "" } = Astro.props;
+const [prefix, iconName] = name.split(":");
+
+let svgBody = "";
+let width = 24;
+let height = 24;
+
+try {
+	let iconsData;
+	if (prefix === "mdi") {
+		iconsData = (await import("@iconify-json/mdi/icons.json")).default;
+	} else if (prefix === "bi") {
+		iconsData = (await import("@iconify-json/bi/icons.json")).default;
+	}
+
+	if (iconsData && iconsData.icons[iconName]) {
+		svgBody = iconsData.icons[iconName].body;
+		width = iconsData.width || 24;
+		height = iconsData.height || 24;
+	}
+} catch (e) {
+	console.error(`Failed to load icon ${name}`, e);
+}
+---
+
+{svgBody ? (
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox={`0 0 ${width} ${height}`}
+		class={className}
+		set:html={svgBody}
+	/>
+) : null}

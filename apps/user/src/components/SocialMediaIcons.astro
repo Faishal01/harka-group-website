@@ -1,5 +1,6 @@
 ---
 import { socialMedia } from "~/data/config.js";
+import DynamicIcon from "./DynamicIcon.astro";
 ---
 
 <Fragment>
@@ -12,9 +13,8 @@ import { socialMedia } from "~/data/config.js";
 				rel="noopener noreferrer"
 				class="social-media-icon text-gray-600 hover:text-gray-800 transition"
 			>
-				<iconify-icon icon={item.icon} class="size-8 p-1" inline />
+				<DynamicIcon name={item.icon} class="size-8" />
 			</a>
 		))
 	}
-	<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </Fragment>

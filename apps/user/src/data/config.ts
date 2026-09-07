@@ -32,15 +32,15 @@ export const socialMedia = {
 	facebook: {
 		url: "https://facebook.com",
 		label: "Facebook",
-		icon: "mdi:facebook",
+		icon: "bi:facebook",
 	},
 	instagram: {
 		url: "https://instagram.com",
 		label: "Instagram",
-		icon: "mdi:instagram",
+		icon: "bi:instagram",
 	},
 	tiktok: {
-		url: "https://toktok.com",
+		url: "https://tiktok.com",
 		label: "TikTok",
 		icon: "bi:tiktok",
 	},
