@@ -5,70 +5,50 @@ import icon from "~/assets/images/icons/logo.png";
 import SocialMediaIcons from "./SocialMediaIcons.astro";
 import { Image } from "astro:assets";
 const year = new Date().getFullYear();
+
+// Combine all menu items into one array for the horizontal list
+const allLinks = [...menuNavigation.items, ...menuMisc.items];
 ---
 
-<footer class="bg-gray-50">
-	<div class="container py-16">
-		<div class="xl:grid xl:grid-cols-3 xl:gap-8">
-			<div>
-				<a href="/">
-					<div class="flex items-center gap-x-2">
-						<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
-						<span class="font-bold text-2xl lg:text-4xl"
-							>Harka <span class="font-normal">Group</span></span
-						>
-					</div>
-				</a>
+<footer class="bg-gray-50 border-t border-gray-200">
+	<div class="container py-12 flex flex-col items-center text-center">
+		<!-- Logo -->
+		<a href="/" class="mb-8">
+			<div class="flex items-center gap-x-2">
+				<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
+				<span class="font-bold text-2xl lg:text-4xl"
+					>Harka <span class="font-normal">Group</span></span
+				>
 			</div>
-			<div class="mt-16 flex flex-col sm:flex-row sm:justify-end gap-12 sm:gap-24 xl:col-span-2 xl:mt-0">
+		</a>
+
+		<!-- Navigation Links -->
+		<nav class="mb-8 w-full">
+			<ul class="flex flex-wrap justify-center gap-x-8 gap-y-4">
 				{
-					menuNavigation.items.length > 0 && (
-						<div class="min-w-[120px]">
-							<span class="text-base font-semibold">{menuNavigation.prettyName}</span>
-							<ul role="list" class="mt-6 space-y-4">
-								{menuNavigation.items.map((item) => (
-									<li>
-										<a
-											href={item.url}
-											class="text-base transition text-gray-600 hover:text-gray-800"
-										>
-											{item.name}
-										</a>
-									</li>
-								))}
-							</ul>
-						</div>
-					)
+					allLinks.map((item) => (
+						<li>
+							<a
+								href={item.url}
+								class="text-base font-medium text-gray-600 hover:text-gray-900 transition"
+							>
+								{item.name}
+							</a>
+						</li>
+					))
 				}
-				{
-					menuMisc.items.length > 0 && (
-						<div class="min-w-[120px]">
-							<span class="text-base font-semibold">{menuMisc.prettyName}</span>
-							<ul role="list" class="mt-6 space-y-4">
-								{menuMisc.items.map((item) => (
-									<li>
-										<a
-											href={item.url}
-											class="text-base transition text-gray-600 hover:text-gray-800"
-										>
-											{item.name}
-										</a>
-									</li>
-								))}
-							</ul>
-						</div>
-					)
-				}
-			</div>
+			</ul>
+		</nav>
+
+		<!-- Social Media -->
+		<div class="mb-8 flex justify-center gap-6">
+			<SocialMediaIcons />
 		</div>
-		<div class="mt-8 border-t border-gray-800/10 pt-8 md:flex md:items-center md:justify-between">
-			<div class="flex gap-x-6 md:order-2">
-				<SocialMediaIcons />
-			</div>
-			<p class="mt-8 text-sm/6 text-gray-600 md:order-1 md:mt-0">
-				<span>&copy; {year} </span>
-				<span>{siteName}. All rights reserved.</span>
-			</p>
-		</div>
+
+		<!-- Copyright -->
+		<p class="text-sm text-gray-500">
+			<span>&copy; {year} </span>
+			{siteName}. All rights reserved.
+		</p>
 	</div>
 </footer>
