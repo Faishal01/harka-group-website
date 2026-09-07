@@ -14,11 +14,28 @@ This project is an automotive dealership website/platform built as a **Bun works
 ## Tech Stack
 
 - **Framework:** Astro (SSR configured with `@astrojs/cloudflare` adapter for both apps)
+- **UI Framework:** Svelte
 - **Runtime & Package Manager:** Bun (Do not use Node.js `npm` or `npx` when executing scripts)
 - **Database:** Cloudflare D1 (Serverless SQL)
 - **ORM:** Drizzle ORM (`drizzle-orm`, `drizzle-kit`)
 - **Asset Storage:** Cloudflare R2 (for car images and media)
 - **Styling:** Tailwind CSS
+
+## How the Project Works (Overall Flow)
+
+When navigating or modifying the project workflow, follow these directives:
+
+1. **Data Lifecycle:**
+   - **Write (Admin):** The `apps/admin` dashboard manages the inventory. Car metadata is written to Cloudflare D1 using Drizzle ORM (`@harka/db`). Physical images are uploaded directly via multipart form to the Cloudflare R2 bucket (`IMAGES_BUCKET`).
+   - **Read (User):** The `apps/user` storefront reads car data from D1 and retrieves images from R2 via an Astro edge API relay (`/api/images/[...id]`).
+   - **Static Content:** For non-inventory data like `team` and `testimonials`, rely on local JSON Astro Content Collections rather than the database.
+
+2. **Component Rendering (Astro + Svelte):**
+   - Rely on Astro components (`.astro`) for the heavy lifting: page structure, layouts, routing, SEO, and initial SSR data fetching.
+   - Use Svelte components (`.svelte`) strictly for interactive, stateful client-side "islands" (e.g., carousels, admin forms, image viewers).
+
+3. **Cloudflare Edge Bindings:**
+   - Server-side logic and database/bucket connections must execute at the edge. Always retrieve your Cloudflare resources utilizing `import { env } from "cloudflare:workers"` (e.g., `env.DB`, `env.IMAGES_BUCKET`).
 
 ## Current Architectural State
 

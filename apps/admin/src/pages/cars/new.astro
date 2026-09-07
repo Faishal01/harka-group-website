@@ -3,10 +3,10 @@ export const prerender = false;
 import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
-import CarWizard from "~/components/admin/CarWizard.svelte";
+import CarForm from "~/components/admin/CarForm.svelte";
 ---
 
-<Layout pageTitle="Add New Car">
+<Layout pageTitle="Tambah Mobil Baru">
 	<Section class="bg-gray-50 min-h-[70vh] py-12">
 		<Container>
 			<div class="flex flex-col mb-4">
@@ -25,11 +25,11 @@ import CarWizard from "~/components/admin/CarWizard.svelte";
 							d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
 							clip-rule="evenodd"></path>
 					</svg>
-					Back to Cars
+					Kembali ke Stok
 				</a>
 			</div>
 
-			<CarWizard client:load />
+			<CarForm client:load car={null} />
 		</Container>
 	</Section>
 </Layout>

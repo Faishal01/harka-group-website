@@ -26,16 +26,16 @@ const allCars = await db.query.cars.findMany({
 });
 ---
 
-<Layout pageTitle="Admin - Cars">
+<Layout pageTitle="Admin - Mobil">
 	<Section class="bg-gray-50 min-h-[70vh]">
 		<Container>
 			<div class="flex justify-between items-center mb-6">
-				<h1 class="text-2xl md:text-3xl font-bold">Manage Cars</h1>
+				<h1 class="text-2xl md:text-3xl font-bold">Kelola Mobil</h1>
 				<a
 					href="/cars/new"
 					class="hidden md:inline-block bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
 				>
-					+ Add New Car
+					+ Tambah Mobil Baru
 				</a>
 			</div>
 
@@ -49,7 +49,7 @@ const allCars = await db.query.cars.findMany({
 								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
 						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
 					>
-						Active Cars
+						Mobil Aktif
 					</a>
 					<a
 						href="?tab=sold"
@@ -59,7 +59,7 @@ const allCars = await db.query.cars.findMany({
 								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
 						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
 					>
-						Sold
+						Terjual
 					</a>
 					<a
 						href="?tab=archived"
@@ -69,7 +69,7 @@ const allCars = await db.query.cars.findMany({
 								: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
 						} whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
 					>
-						Archived
+						Diarsipkan
 					</a>
 				</nav>
 			</div>
@@ -80,20 +80,26 @@ const allCars = await db.query.cars.findMany({
 						<tr>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider first:rounded-tl-lg"
-								>Car</th
+								>Mobil</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-								>Price</th
+								>Harga</th
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
 							>
-								{tab === "active" ? "Status" : tab === "sold" ? "Date Sold" : "Date Archived"}
+								{
+									tab === "active"
+										? "Status"
+										: tab === "sold"
+											? "Tanggal Terjual"
+											: "Tanggal Diarsipkan"
+								}
 							</th>
 							<th
 								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider last:rounded-tr-lg"
-								>Actions</th
+								>Aksi</th
 							>
 						</tr>
 					</thead>
@@ -141,7 +147,7 @@ const allCars = await db.query.cars.findMany({
 															month: "long",
 															day: "numeric",
 														})
-													: "Unknown"}
+													: "Tidak diketahui"}
 											</div>
 										</td>
 									)}
@@ -155,12 +161,12 @@ const allCars = await db.query.cars.findMany({
 														class="text-green-600 hover:text-green-900 font-semibold restore-btn"
 														data-id={car.id}
 													>
-														{tab === "sold" ? "Undo" : "Restore"}
+														{tab === "sold" ? "Batal" : "Pulihkan"}
 													</button>
 
 													<div class="relative quick-actions-wrapper">
 														<button class="md:text-gray-500 md:hover:text-gray-700 md:bg-transparent md:p-0 md:border-0 border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded flex items-center font-medium quick-actions-btn transition-colors">
-															<span class="hidden md:inline">Quick Actions</span>
+															<span class="hidden md:inline">Aksi Cepat</span>
 															<span class="md:hidden flex items-center justify-center">
 																<svg
 																	xmlns="http://www.w3.org/2000/svg"
@@ -194,7 +200,7 @@ const allCars = await db.query.cars.findMany({
 																		href={`/cars/view/${car.id}`}
 																		class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 																	>
-																		View Record
+																		Lihat Detail
 																	</a>
 																</div>
 																<div class="py-1">
@@ -204,7 +210,7 @@ const allCars = await db.query.cars.findMany({
 																		data-id={car.id}
 																		data-reason="delete"
 																	>
-																		Hard Delete
+																		Hapus Permanen
 																	</button>
 																</div>
 															</div>
@@ -217,12 +223,12 @@ const allCars = await db.query.cars.findMany({
 														href={`/cars/edit/${car.id}`}
 														class="text-blue-600 hover:text-blue-900 font-semibold"
 													>
-														Edit
+														Ubah
 													</a>
 
 													<div class="relative quick-actions-wrapper">
 														<button class="md:text-gray-500 md:hover:text-gray-700 md:bg-transparent md:p-0 md:border-0 border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded flex items-center font-medium quick-actions-btn transition-colors">
-															<span class="hidden md:inline">Quick Actions</span>
+															<span class="hidden md:inline">Aksi Cepat</span>
 															<span class="md:hidden flex items-center justify-center">
 																<svg
 																	xmlns="http://www.w3.org/2000/svg"
@@ -258,7 +264,7 @@ const allCars = await db.query.cars.findMany({
 																		data-id={car.id}
 																		data-reason="sold"
 																	>
-																		Mark Sold
+																		Tandai Terjual
 																	</button>
 																	<button
 																		type="button"
@@ -276,7 +282,7 @@ const allCars = await db.query.cars.findMany({
 																		data-id={car.id}
 																		data-reason="delete"
 																	>
-																		Hard Delete
+																		Hapus Permanen
 																	</button>
 																</div>
 															</div>
@@ -293,7 +299,7 @@ const allCars = await db.query.cars.findMany({
 							allCars.length === 0 && (
 								<tr>
 									<td colspan="4" class="px-6 py-4 text-center text-gray-500">
-										No cars found in this view.
+										Tidak ada mobil di tampilan ini.
 									</td>
 								</tr>
 							)
@@ -310,20 +316,20 @@ const allCars = await db.query.cars.findMany({
 		class="p-0 m-auto rounded-lg shadow-xl backdrop:bg-gray-800/50 open:animate-in open:fade-in-0 duration-200"
 	>
 		<div class="bg-white p-6 max-w-sm w-full">
-			<h3 id="action-modal-title" class="text-lg font-bold mb-4 text-gray-900">Confirm Action</h3>
+			<h3 id="action-modal-title" class="text-lg font-bold mb-4 text-gray-900">Konfirmasi Aksi</h3>
 			<p id="action-modal-desc" class="text-sm text-gray-600 mb-6">
-				Are you sure you want to proceed?
+				Apakah Anda yakin ingin melanjutkan?
 			</p>
 			<div class="flex justify-end gap-3">
 				<button
 					type="button"
 					class="px-4 py-2 text-gray-700 bg-gray-100 rounded hover:bg-gray-200 font-medium"
-					id="btn-cancel-action">Cancel</button
+					id="btn-cancel-action">Batal</button
 				>
 				<button
 					type="button"
 					class="px-4 py-2 text-white rounded font-medium transition-colors"
-					id="btn-confirm-action">Confirm</button
+					id="btn-confirm-action">Konfirmasi</button
 				>
 			</div>
 		</div>
@@ -345,8 +351,8 @@ const allCars = await db.query.cars.findMany({
 				></path>
 			</svg>
 			<div class="flex-1">
-				<h4 id="toast-title" class="font-bold text-gray-900">Success!</h4>
-				<p id="toast-message" class="text-sm text-gray-600 mt-1">Action completed successfully.</p>
+				<h4 id="toast-title" class="font-bold text-gray-900">Berhasil!</h4>
+				<p id="toast-message" class="text-sm text-gray-600 mt-1">Aksi berhasil diselesaikan.</p>
 			</div>
 			<button id="toast-close" class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0">
 				<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,14 +380,14 @@ const allCars = await db.query.cars.findMany({
 
 				if (container && titleEl && messageEl) {
 					if (toast === "created") {
-						titleEl.textContent = "Vehicle Created!";
-						messageEl.textContent = "The new car has been added to the inventory.";
+						titleEl.textContent = "Kendaraan Dibuat!";
+						messageEl.textContent = "Mobil baru telah ditambahkan ke stok.";
 					} else if (toast === "updated") {
-						titleEl.textContent = "Vehicle Updated!";
-						messageEl.textContent = "Your changes have been saved successfully.";
+						titleEl.textContent = "Kendaraan Diperbarui!";
+						messageEl.textContent = "Perubahan Anda berhasil disimpan.";
 					} else if (toast === "deleted") {
-						titleEl.textContent = "Vehicle Deleted!";
-						messageEl.textContent = "The car has been moved to the archive.";
+						titleEl.textContent = "Kendaraan Dihapus!";
+						messageEl.textContent = "Mobil telah dipindahkan ke arsip.";
 					}
 
 					container.classList.remove("hidden");
@@ -433,7 +439,7 @@ const allCars = await db.query.cars.findMany({
 				if (res.ok) {
 					window.location.reload();
 				} else {
-					alert(`Failed to ${type} vehicle.`);
+					alert(`Gagal melakukan ${type} pada kendaraan.`);
 					confirmBtn.textContent = originalText;
 					confirmBtn.classList.remove("opacity-50", "pointer-events-none");
 					modal?.close();
@@ -447,26 +453,27 @@ const allCars = await db.query.cars.findMany({
 				confirmBtn.className = "px-4 py-2 text-white rounded font-medium transition-colors ";
 
 				if (type === "delete") {
-					titleEl.textContent = "Confirm Hard Delete";
+					titleEl.textContent = "Confirm Hapus Permanen";
 					descEl.textContent =
-						"Are you sure you want to permanently delete this car? This action cannot be undone, and the associated images will be deleted from Cloudflare R2 storage.";
+						"Apakah Anda yakin ingin menghapus mobil ini secara permanen? Aksi ini tidak dapat dibatalkan, dan gambar terkait akan dihapus dari penyimpanan Cloudflare R2.";
 					confirmBtn.textContent = "Delete";
 					confirmBtn.className += "bg-red-600 hover:bg-red-700";
 				} else if (type === "sold") {
-					titleEl.textContent = "Mark as Sold";
+					titleEl.textContent = "Tandai sebagai Terjual";
 					descEl.textContent =
-						"Are you sure you want to mark this car as SOLD? It will be moved to the Sold tab.";
-					confirmBtn.textContent = "Mark Sold";
+						"Apakah Anda yakin ingin menandai mobil ini sebagai TERJUAL? Mobil ini akan dipindahkan ke tab Terjual.";
+					confirmBtn.textContent = "Tandai Terjual";
 					confirmBtn.className += "bg-blue-600 hover:bg-blue-700";
 				} else if (type === "archive") {
-					titleEl.textContent = "Archive Vehicle";
+					titleEl.textContent = "Arsipkan Kendaraan";
 					descEl.textContent =
-						"Are you sure you want to ARCHIVE this car? It will be removed from the active list.";
+						"Apakah Anda yakin ingin MENGARSIPKAN mobil ini? Mobil ini akan dihapus dari daftar aktif.";
 					confirmBtn.textContent = "Archive";
 					confirmBtn.className += "bg-yellow-600 hover:bg-yellow-700";
 				} else if (type === "restore") {
-					titleEl.textContent = "Restore Vehicle";
-					descEl.textContent = "Are you sure you want to RESTORE this car back to active status?";
+					titleEl.textContent = "Pulihkan Kendaraan";
+					descEl.textContent =
+						"Apakah Anda yakin ingin MEMULIHKAN mobil ini kembali ke status aktif?";
 					confirmBtn.textContent = "Restore";
 					confirmBtn.className += "bg-green-600 hover:bg-green-700";
 				}
@@ -474,7 +481,7 @@ const allCars = await db.query.cars.findMany({
 				modal?.showModal();
 			};
 
-			// Quick Actions Dropdown Logic
+			// Aksi Cepat Dropdown Logic
 			document.querySelectorAll(".quick-actions-btn").forEach((btn) => {
 				btn.addEventListener("click", (e) => {
 					const target = e.currentTarget as HTMLElement;
@@ -541,7 +548,7 @@ const allCars = await db.query.cars.findMany({
 	<a
 		href="/cars/new"
 		class="md:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition"
-		aria-label="Add New Car"
+		aria-label="Tambah Mobil Baru"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"

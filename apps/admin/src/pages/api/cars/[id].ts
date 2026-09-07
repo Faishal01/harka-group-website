@@ -9,8 +9,31 @@ export const PUT: APIRoute = async ({ request, params }) => {
 		const formData = await request.formData();
 		const id = params.id as string;
 
+		const generalStr = formData.get("general") as string;
+		const historyStr = formData.get("history") as string;
+		const general = generalStr ? JSON.parse(generalStr) : {};
+		const history = historyStr ? JSON.parse(historyStr) : {};
+
+		if (
+			!general.make ||
+			!general.model ||
+			!general.price ||
+			!history.year ||
+			history.mileage === undefined ||
+			history.mileage === ""
+		) {
+			return new Response(
+				JSON.stringify({ error: "Make, Model, Price, Year, and Mileage are required fields." }),
+				{ status: 400 },
+			);
+		}
+
 		const updateData: any = {};
-		updateData.title = formData.get("title") as string;
+		let title = formData.get("title") as string;
+		if (!title || title.trim() === "") {
+			title = `${general.make} ${general.model} ${history.year}`;
+		}
+		updateData.title = title;
 		updateData.excerpt = formData.get("excerpt") as string;
 		updateData.imageAlt = formData.get("imageAlt") as string;
 		updateData.videoTourUrl = formData.get("videoTourUrl") as string;

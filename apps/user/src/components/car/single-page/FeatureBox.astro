@@ -9,6 +9,7 @@ import IconMilage from "~/assets/images/icons/milage.svg";
 import IconCalendar from "~/assets/images/icons/calendar.svg";
 import IconOdometer from "~/assets/images/icons/odometer.svg";
 import IconColor from "~/assets/images/icons/color.svg";
+import { fuelTypeMap, transmissionMap } from "~/data/constants";
 
 const { car } = Astro.props as { car: Car };
 
@@ -24,7 +25,9 @@ const mileageUnit = getMileageUnit();
 				<dt class="flex items-center text-gray-500">
 					{labels.efficiency.fuelType}
 				</dt>
-				<dd class="font-semibold">{car.data.efficiency.fuelType}</dd>
+				<dd class="font-semibold">
+					{fuelTypeMap[car.data.efficiency.fuelType] || car.data.efficiency.fuelType}
+				</dd>
 			</div>
 		</div>
 
@@ -34,7 +37,9 @@ const mileageUnit = getMileageUnit();
 				<dt class="flex items-center text-gray-500">
 					{labels.technical.transmission}
 				</dt>
-				<dd class="font-semibold">{car.data.technical.transmission}</dd>
+				<dd class="font-semibold">
+					{transmissionMap[car.data.technical.transmission] || car.data.technical.transmission}
+				</dd>
 			</div>
 		</div>
 

@@ -6,6 +6,7 @@ import IconTransmission from "~/assets/images/icons/transmission.svg";
 import IconCalendar from "~/assets/images/icons/calendar.svg";
 import IconFuel from "~/assets/images/icons/fuel.svg";
 import IconOdometer from "~/assets/images/icons/odometer.svg";
+import { fuelTypeMap, transmissionMap } from "~/data/constants";
 const { data } = Astro.props as { data: Car["data"] };
 
 const mileage = getMileage(data.history.mileage);
@@ -24,7 +25,7 @@ const pillClasses =
 	<li class={pillClasses}>
 		<IconTransmission class="size-4 lg:size-5" />
 		<span>
-			{data.technical.transmission}
+			{transmissionMap[data.technical.transmission] || data.technical.transmission}
 		</span>
 	</li>
 	<li class={pillClasses}>
@@ -36,13 +37,13 @@ const pillClasses =
 	<li class={pillClasses}>
 		<IconFuel class="size-4 lg:size-5 -mt-0.5" />
 		<span>
-			{data.efficiency.fuelType}
+			{fuelTypeMap[data.efficiency.fuelType] || data.efficiency.fuelType}
 		</span>
 	</li>
 	<li class={pillClasses}>
 		<IconOdometer class="size-4 lg:size-5 -mt-0.5" />
 		<span>
-			{data.technical.horsePower} BHP ({(data.technical.horsePower / 1.362).toFixed()} kW)
+			{data.technical.horsePower} PS ({(data.technical.horsePower / 1.362).toFixed()} kW)
 		</span>
 	</li>
 </ul>

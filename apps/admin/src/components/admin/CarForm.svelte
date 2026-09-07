@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { navigate } from "astro:transitions/client";
 
-	export let car: any;
-
-	let activeTab = "general";
+	export let car: any = null;
 
 	let isLoading = false;
-	let isDeleting = false;
-	let showDeleteConfirm = false;
 	let errorMessage = "";
 	let successMessage = "";
 
@@ -34,34 +30,38 @@
 		}
 	};
 
-	// Data bindings (Initialize with existing car data or defaults)
-	let title = car.title || "";
-	let excerpt = car.excerpt || "";
-	let imageAlt = car.imageAlt || "";
-	let videoTourUrl = car.videoTourUrl || "";
-	let existingImage = car.image || "";
+	// Data bindings (Initialize with existing car data or empty defaults)
+	let title = car?.title || "";
+	let excerpt = car?.excerpt || "";
+	let imageAlt = car?.imageAlt || "";
+	let videoTourUrl = car?.videoTourUrl || "";
+	let existingImage = car?.image || "";
 	let files: FileList | null = null;
 
-	let general = car.general || {};
-	let history = car.history || {};
-	let technical = car.technical || {};
-	let efficiency = car.efficiency || {};
-	let exterior = car.exterior || {};
-	let misc = car.misc || {};
+	let general = car?.general || {
+		make: "",
+		model: "",
+		price: 0,
+		bodyType: "SUV",
+		doors: 4,
+		seatingCapacity: 5,
+	};
+	let history = car?.history || { year: new Date().getFullYear(), mileage: 0 };
+	let technical = car?.technical || { horsePower: 0, engineSizeCC: 0, transmission: "Automatic" };
+	let efficiency = car?.efficiency || { fuelType: "Petrol" };
+	let exterior = car?.exterior || { color: "" };
+	let misc = car?.misc || { hidden: false };
 
-	const tabs = [
-		{ id: "general", label: "General Info" },
-		{ id: "technical", label: "Performance" },
-		{ id: "style", label: "Style & Efficiency" },
-		{ id: "media", label: "Media" },
-	];
+	$: isFormValid =
+		general.make &&
+		general.model &&
+		general.price > 0 &&
+		history.year > 0 &&
+		history.mileage >= 0 &&
+		history.mileage !== "";
 
 	const submitForm = async () => {
-		if (!title) {
-			errorMessage = "Title is required!";
-			showPopup("Missing Fields", errorMessage, "error");
-			return;
-		}
+		const finalTitle = title.trim() || `${general.make} ${general.model} ${history.year}`;
 
 		isLoading = true;
 		errorMessage = "";
@@ -69,11 +69,14 @@
 
 		try {
 			const formData = new FormData();
-			formData.append("title", title);
+			formData.append("title", finalTitle);
 			formData.append("excerpt", excerpt);
 			formData.append("imageAlt", imageAlt);
 			formData.append("videoTourUrl", videoTourUrl);
-			formData.append("image", existingImage); // fallback if no new file
+
+			if (car?.id) {
+				formData.append("image", existingImage); // fallback if no new file
+			}
 
 			if (files && files.length > 0) {
 				formData.append("imageFile", files[0]);
@@ -86,94 +89,66 @@
 			formData.append("exterior", JSON.stringify(exterior));
 			formData.append("misc", JSON.stringify(misc));
 
-			const response = await fetch(`/api/cars/${car.id}`, {
-				method: "PUT",
+			const url = car?.id ? `/api/cars/${car.id}` : "/api/cars";
+			const method = car?.id ? "PUT" : "POST";
+
+			const response = await fetch(url, {
+				method,
 				body: formData,
 			});
 
 			const data = await response.json();
 
 			if (!response.ok) {
-				throw new Error(data.error || "Failed to update car");
+				throw new Error(data.error || "Failed to save car");
 			}
 
-			successMessage = "Vehicle updated successfully!";
-			showPopup("Success!", "Vehicle updated successfully! Redirecting to inventory...", "success");
+			const action = car?.id ? "updated" : "created";
+			successMessage = `Vehicle ${action} successfully!`;
+			showPopup(
+				"Success!",
+				`Vehicle ${action} successfully! Redirecting to inventory...`,
+				"success",
+				action,
+			);
 		} catch (err: any) {
 			errorMessage = err.message;
 			showPopup("Error", err.message, "error");
 			isLoading = false;
 		}
 	};
-
-	const deleteCar = async () => {
-		isDeleting = true;
-		errorMessage = "";
-
-		try {
-			const response = await fetch(`/api/cars/${car.id}`, {
-				method: "DELETE",
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to delete car");
-			}
-
-			showPopup(
-				"Deleted!",
-				"Vehicle has been moved to archive. Redirecting...",
-				"success",
-				"deleted",
-			);
-		} catch (err: any) {
-			errorMessage = err.message;
-			showPopup("Error", err.message, "error");
-			isDeleting = false;
-		}
-	};
 </script>
 
 <div
-	class="max-w-5xl mx-auto bg-white text-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-200"
+	class="max-w-4xl mx-auto bg-white text-gray-900 rounded-xl shadow-md overflow-hidden border border-gray-200 mb-12"
 >
 	<!-- Header -->
 	<div
 		class="bg-gray-50 p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
 	>
 		<div>
-			<h2 class="text-xl font-bold text-gray-900">Edit Vehicle</h2>
-			<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
+			<h2 class="text-xl font-bold text-gray-900">
+				{car?.id ? "Edit Kendaraan" : "Tambah Kendaraan Baru"}
+			</h2>
+			{#if car?.id}
+				<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
+			{/if}
 		</div>
 		<div class="flex items-center gap-2">
 			{#if misc.hidden}
 				<div
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-yellow-100 text-yellow-800 border border-yellow-200"
 				>
-					Hidden (Draft)
+					Sembunyi (Draf)
 				</div>
 			{:else}
 				<div
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-green-100 text-green-800 border border-green-200"
 				>
-					Public (Live)
+					Publik (Live)
 				</div>
 			{/if}
 		</div>
-	</div>
-
-	<!-- Tabs Navigation -->
-	<div class="flex border-b border-gray-200 bg-gray-100 overflow-x-auto">
-		{#each tabs as tab}
-			<button
-				type="button"
-				on:click={() => (activeTab = tab.id)}
-				class={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${activeTab === tab.id ? "border-blue-600 text-blue-700 bg-white" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
-			>
-				{tab.label}
-			</button>
-		{/each}
 	</div>
 
 	<div class="p-8">
@@ -217,58 +192,78 @@
 			</div>
 		{/if}
 
-		<form on:submit|preventDefault={submitForm}>
-			<!-- TAB 1: General -->
-			<div class={activeTab === "general" ? "block animate-fade-in" : "hidden"}>
+		<form on:submit|preventDefault={submitForm} class="space-y-12">
+			<!-- Informasi Umum -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Informasi Umum
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Display Title *</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Judul Tampilan <span class="text-gray-400 font-normal text-xs ml-2"
+								>(Opsional - Otomatis jika kosong)</span
+							></label
+						>
 						<input
 							type="text"
 							bind:value={title}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
-							required
+							placeholder={general.make && general.model && history.year
+								? `${general.make} ${general.model} ${history.year}`
+								: "mis. 2026 Porsche 911 Turbo S"}
 						/>
 					</div>
 
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kutipan Singkat</label>
 						<input
 							type="text"
 							bind:value={excerpt}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
+							placeholder="Deskripsi singkat untuk kartu..."
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Make</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Merek <span class="text-red-500">*</span></label
+						>
 						<input
 							type="text"
 							bind:value={general.make}
+							required
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Model <span class="text-red-500">*</span></label
+						>
 						<input
 							type="text"
 							bind:value={general.model}
+							required
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Price (Rp)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Harga (Rp) <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={general.price}
+							required
+							min="1"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Body Type</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Tipe Body</label>
 						<select
 							bind:value={general.bodyType}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -286,45 +281,56 @@
 						class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2 flex flex-col gap-4"
 					>
 						<div>
-							<label class="flex items-center gap-3 cursor-pointer">
+							<label class="flex items-center gap-3 cursor-pointer w-fit">
 								<input
 									type="checkbox"
 									bind:checked={misc.hidden}
 									class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
 								/>
-								<span class="text-sm font-medium text-gray-900">Hidden (Draft Status)</span>
+								<span class="text-sm font-medium text-gray-900">Sembunyikan (Status Draf)</span>
 							</label>
 							<p class="text-xs text-gray-500 mt-1 ml-8">
-								If checked, this car will not appear on the main website.
+								Jika dicentang, mobil ini tidak akan muncul di situs utama.
 							</p>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- TAB 2: Technical & History -->
-			<div class={activeTab === "technical" ? "block animate-fade-in" : "hidden"}>
+			<!-- Performa & Riwayat -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performa & Riwayat
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Model Year</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Tahun Model <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={history.year}
+							required
+							min="1900"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Mileage</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Jarak Tempuh (km) <span class="text-red-500">*</span></label
+						>
 						<input
 							type="number"
 							bind:value={history.mileage}
+							required
+							min="0"
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Horsepower (BHP)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Tenaga (PS)</label>
 						<input
 							type="number"
 							bind:value={technical.horsePower}
@@ -333,7 +339,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Engine Size (CC)</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Mesin</label>
 						<input
 							type="number"
 							bind:value={technical.engineSizeCC}
@@ -342,7 +348,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Transmisi</label>
 						<select
 							bind:value={technical.transmission}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-gray-900"
@@ -356,8 +362,11 @@
 				</div>
 			</div>
 
-			<!-- TAB 3: Style & Efficiency -->
-			<div class={activeTab === "style" ? "block animate-fade-in" : "hidden"}>
+			<!-- Konfigurasi -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Konfigurasi
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Bahan Bakar</label>
@@ -373,7 +382,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Exterior Color</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Warna Eksterior</label>
 						<input
 							type="text"
 							bind:value={exterior.color}
@@ -382,7 +391,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Doors</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Pintu</label>
 						<input
 							type="number"
 							bind:value={general.doors}
@@ -391,7 +400,7 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Seating</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Duduk</label>
 						<input
 							type="number"
 							bind:value={general.seatingCapacity}
@@ -401,12 +410,15 @@
 				</div>
 			</div>
 
-			<!-- TAB 4: Media -->
-			<div class={activeTab === "media" ? "block animate-fade-in" : "hidden"}>
+			<!-- Media -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Media
+				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Current Image</label>
-						{#if existingImage}
+					{#if existingImage}
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-1">Current Image</label>
 							<div class="rounded-lg overflow-hidden border border-gray-700 h-48 bg-gray-100">
 								<img
 									src={existingImage}
@@ -414,17 +426,13 @@
 									class="w-full h-full object-cover opacity-80 hover:opacity-100 transition"
 								/>
 							</div>
-						{:else}
-							<div
-								class="rounded-lg border border-gray-700 h-48 bg-gray-100 flex items-center justify-center text-gray-600"
-							>
-								No image available
-							</div>
-						{/if}
-					</div>
+						</div>
+					{/if}
 
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Replace Image</label>
+					<div class={existingImage ? "" : "col-span-1 md:col-span-2"}>
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>{existingImage ? "Replace Image" : "Gambar Utama"}</label
+						>
 						<div
 							class="bg-gray-50 border border-dashed border-gray-300 hover:border-blue-500 rounded-lg h-48 flex flex-col items-center justify-center text-center hover:border-blue-500 transition cursor-pointer relative group"
 						>
@@ -450,14 +458,18 @@
 								/>
 							</svg>
 							<p class="text-sm font-medium text-gray-400 px-4">
-								{files && files.length ? files[0].name : "Drag & drop to replace"}
+								{files && files.length
+									? files[0].name
+									: "Seret & lepas untuk mengganti atau mengunggah"}
 							</p>
 						</div>
 					</div>
 
 					<div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Image Alt Text</label>
+							<label class="block text-sm font-medium text-gray-700 mb-1"
+								>Teks Alternatif Gambar</label
+							>
 							<input
 								type="text"
 								bind:value={imageAlt}
@@ -466,7 +478,7 @@
 						</div>
 
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-1">Video Tour URL</label>
+							<label class="block text-sm font-medium text-gray-700 mb-1">URL Tur Video</label>
 							<input
 								type="url"
 								bind:value={videoTourUrl}
@@ -478,46 +490,10 @@
 			</div>
 
 			<!-- Actions Footer -->
-			<div
-				class="mt-10 flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4"
-			>
-				<!-- Delete Action -->
-				{#if showDeleteConfirm}
-					<div
-						class="flex items-center gap-3 bg-red-50 p-3 rounded border border-red-200 animate-fade-in w-full sm:w-auto"
-					>
-						<span class="text-red-700 text-sm font-bold ml-2">Are you sure?</span>
-						<button
-							type="button"
-							class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-1.5 rounded text-sm transition"
-							on:click={() => (showDeleteConfirm = false)}>Cancel</button
-						>
-						<button
-							type="button"
-							on:click={deleteCar}
-							disabled={isDeleting}
-							class="bg-red-700 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-bold transition flex items-center gap-2"
-						>
-							{#if isDeleting}
-								Wait...
-							{:else}
-								Confirm Delete
-							{/if}
-						</button>
-					</div>
-				{:else}
-					<button
-						type="button"
-						class="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded text-sm font-bold uppercase tracking-wider transition w-full sm:w-auto text-left sm:text-center"
-						on:click={() => (showDeleteConfirm = true)}
-					>
-						Remove Vehicle
-					</button>
-				{/if}
-
+			<div class="mt-10 flex items-center justify-end pt-6 border-t border-gray-200">
 				<button
 					type="submit"
-					disabled={isLoading}
+					disabled={isLoading || !isFormValid}
 					class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded font-bold uppercase tracking-wider text-sm transition disabled:opacity-50 flex items-center gap-2 w-full sm:w-auto justify-center"
 				>
 					{#if isLoading}
@@ -555,7 +531,7 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-						Save Changes
+						Simpan Kendaraan
 					{/if}
 				</button>
 			</div>
@@ -625,7 +601,7 @@
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
-			transform: translateY(5px);
+			transform: translateY(10px);
 		}
 		to {
 			opacity: 1;
@@ -633,6 +609,6 @@
 		}
 	}
 	.animate-fade-in {
-		animation: fadeIn 0.3s ease-out forwards;
+		animation: fadeIn 0.4s ease-out forwards;
 	}
 </style>

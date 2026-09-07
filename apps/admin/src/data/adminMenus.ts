@@ -10,24 +10,24 @@ export interface AdminMenuItem {
 export const adminMenus: AdminMenuItem[] = [
 	{
 		id: "inventory",
-		label: "Cars",
+		label: "Stok",
 		url: "/cars",
 		icon: "lucide:car-front",
 	},
 	{
 		id: "team",
-		label: "Team",
+		label: "Tim",
 		url: "#",
 		disabled: true,
-		badge: "Soon",
+		badge: "Segera",
 		icon: "lucide:users",
 	},
 	{
 		id: "settings",
-		label: "Settings",
+		label: "Pengaturan",
 		url: "#",
 		disabled: true,
-		badge: "Soon",
+		badge: "Segera",
 		icon: "lucide:settings",
 	},
 ];
