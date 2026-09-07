@@ -272,7 +272,7 @@ const allCars = await db.query.cars.findMany({
 																		data-id={car.id}
 																		data-reason="removed"
 																	>
-																		Archive
+																		Arsipkan
 																	</button>
 																</div>
 																<div class="py-1">
@@ -409,7 +409,7 @@ const allCars = await db.query.cars.findMany({
 					});
 				}
 			}
-			let currentAction: { id: string; type: "restore" | "sold" | "archive" | "delete" } | null =
+			let currentAction: { id: string; type: "restore" | "sold" | "removed" | "delete" } | null =
 				null;
 			const modal = document.getElementById("action-modal") as HTMLDialogElement | null;
 			const titleEl = document.getElementById("action-modal-title");
@@ -446,17 +446,17 @@ const allCars = await db.query.cars.findMany({
 				}
 			});
 
-			const openModal = (id: string, type: "restore" | "sold" | "archive" | "delete") => {
+			const openModal = (id: string, type: "restore" | "sold" | "removed" | "delete") => {
 				currentAction = { id, type };
 				if (!titleEl || !descEl || !confirmBtn) return;
 
 				confirmBtn.className = "px-4 py-2 text-white rounded font-medium transition-colors ";
 
 				if (type === "delete") {
-					titleEl.textContent = "Confirm Hapus Permanen";
+					titleEl.textContent = "Konfirmasi Hapus Permanen";
 					descEl.textContent =
 						"Apakah Anda yakin ingin menghapus mobil ini secara permanen? Aksi ini tidak dapat dibatalkan, dan gambar terkait akan dihapus dari penyimpanan Cloudflare R2.";
-					confirmBtn.textContent = "Delete";
+					confirmBtn.textContent = "Hapus";
 					confirmBtn.className += "bg-red-600 hover:bg-red-700";
 				} else if (type === "sold") {
 					titleEl.textContent = "Tandai sebagai Terjual";
@@ -464,19 +464,20 @@ const allCars = await db.query.cars.findMany({
 						"Apakah Anda yakin ingin menandai mobil ini sebagai TERJUAL? Mobil ini akan dipindahkan ke tab Terjual.";
 					confirmBtn.textContent = "Tandai Terjual";
 					confirmBtn.className += "bg-blue-600 hover:bg-blue-700";
-				} else if (type === "archive") {
+				} else if (type === "removed") {
 					titleEl.textContent = "Arsipkan Kendaraan";
 					descEl.textContent =
 						"Apakah Anda yakin ingin MENGARSIPKAN mobil ini? Mobil ini akan dihapus dari daftar aktif.";
-					confirmBtn.textContent = "Archive";
+					confirmBtn.textContent = "Arsipkan";
 					confirmBtn.className += "bg-yellow-600 hover:bg-yellow-700";
 				} else if (type === "restore") {
 					titleEl.textContent = "Pulihkan Kendaraan";
 					descEl.textContent =
 						"Apakah Anda yakin ingin MEMULIHKAN mobil ini kembali ke status aktif?";
-					confirmBtn.textContent = "Restore";
+					confirmBtn.textContent = "Pulihkan";
 					confirmBtn.className += "bg-green-600 hover:bg-green-700";
 				}
+
 
 				modal?.showModal();
 			};
