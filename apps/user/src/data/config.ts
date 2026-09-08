@@ -32,22 +32,17 @@ export const socialMedia = {
 	facebook: {
 		url: "https://facebook.com",
 		label: "Facebook",
-		icon: "facebook",
-	},
-	x: {
-		url: "https://x.com",
-		label: "X",
-		icon: "x",
+		icon: "bi:facebook",
 	},
 	instagram: {
 		url: "https://instagram.com",
 		label: "Instagram",
-		icon: "instagram",
+		icon: "bi:instagram",
 	},
-	youtube: {
-		url: "https://youtube.com",
-		label: "YouTube",
-		icon: "youtube",
+	tiktok: {
+		url: "https://tiktok.com",
+		label: "TikTok",
+		icon: "bi:tiktok",
 	},
 };
 
