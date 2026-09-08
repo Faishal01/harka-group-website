@@ -29,11 +29,13 @@ try {
 }
 ---
 
-{svgBody ? (
-	<svg
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox={`0 0 ${width} ${height}`}
-		class={className}
-		set:html={svgBody}
-	/>
-) : null}
+{
+	svgBody ? (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox={`0 0 ${width} ${height}`}
+			class={className}
+			set:html={svgBody}
+		/>
+	) : null
+}
