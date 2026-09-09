@@ -1,0 +1,28 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import LoginButton from "~/components/LoginButton.svelte";
+
+// If already logged in, redirect to home
+if (Astro.locals.user) {
+	return Astro.redirect("/");
+}
+---
+
+<Layout title="Sign In | Harka Admin" hideSidebar={true}>
+	<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+		<div class="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-lg">
+			<div>
+				<h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+					Harka Admin
+				</h2>
+				<p class="mt-2 text-center text-sm text-gray-600">
+					Sign in to manage your dealership inventory
+				</p>
+			</div>
+
+			<div class="mt-8 flex justify-center">
+				<LoginButton client:load />
+			</div>
+		</div>
+	</div>
+</Layout>
