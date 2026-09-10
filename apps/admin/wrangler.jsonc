@@ -30,4 +30,7 @@
 			"bucket_name": "harka-images",
 		},
 	],
+	"dev": {
+		"port": 5173,
+	},
 }
