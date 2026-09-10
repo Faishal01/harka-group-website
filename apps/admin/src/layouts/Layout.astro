@@ -6,9 +6,12 @@ import icon from "~/assets/images/icons/logo.png";
 import { Image } from "astro:assets";
 import { adminMenus } from "~/data/adminMenus";
 import { Icon } from "astro-icon/components";
+import UserProfile from "~/components/admin/UserProfile.svelte";
 
 const baseUrl = `${Astro.url.protocol}//${Astro.url.host}`;
 const { pageTitle, title, description, noindex = false, hideSidebar = false } = Astro.props;
+
+const user = Astro.locals.user;
 
 interface Props {
 	pageTitle?: string;
@@ -75,6 +78,7 @@ const pathname = Astro.url.pathname;
 					class="text-sm bg-red-800 px-3 py-1 rounded-full border border-red-600 shadow-sm hidden md:inline-block"
 					>Dasbor Admin</span
 				>
+				{user && <UserProfile user={user} client:load />}
 				<button
 					id="mobile-menu-btn"
 					class="md:hidden text-white hover:text-red-200 focus:outline-none"
@@ -98,7 +102,7 @@ const pathname = Astro.url.pathname;
 		</header>
 
 		<!-- Mobile Drawer -->
-		<div id="mobile-drawer" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 hidden md:hidden">
+		<div id="mobile-drawer" class="fixed inset-0 z-40 bg-gray-900/50 hidden md:hidden">
 			<div
 				class="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out"
 				id="mobile-drawer-panel"
@@ -138,6 +142,41 @@ const pathname = Astro.url.pathname;
 						))
 					}
 				</nav>
+				{
+					user && (
+						<div class="border-t border-gray-200 p-4 bg-gray-50 flex-shrink-0">
+							<div class="flex items-center gap-3 mb-4">
+								<img
+									src={
+										user.image ||
+										`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`
+									}
+									alt={user.name}
+									class="h-10 w-10 rounded-full border border-gray-300 object-cover"
+									referrerpolicy="no-referrer"
+								/>
+								<div class="flex flex-col">
+									<span class="text-sm font-medium text-gray-900 leading-tight">{user.name}</span>
+									<span class="text-xs text-gray-500 truncate max-w-[180px]">{user.email}</span>
+								</div>
+							</div>
+							<button
+								id="mobile-logout-btn"
+								class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+							>
+								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+									/>
+								</svg>
+								Sign out
+							</button>
+						</div>
+					)
+				}
 			</div>
 		</div>
 
@@ -176,11 +215,23 @@ const pathname = Astro.url.pathname;
 </html>
 
 <script>
+	import { authClient } from "~/lib/auth-client";
+
 	const setupDrawer = () => {
 		const btn = document.getElementById("mobile-menu-btn");
 		const closeBtn = document.getElementById("close-drawer-btn");
 		const drawer = document.getElementById("mobile-drawer");
 		const panel = document.getElementById("mobile-drawer-panel");
+		const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
+
+		if (mobileLogoutBtn) {
+			const newLogoutBtn = mobileLogoutBtn.cloneNode(true);
+			mobileLogoutBtn.parentNode?.replaceChild(newLogoutBtn, mobileLogoutBtn);
+			newLogoutBtn.addEventListener("click", async () => {
+				await authClient.signOut();
+				window.location.href = "/login";
+			});
+		}
 
 		if (!btn || !closeBtn || !drawer || !panel) return;
 

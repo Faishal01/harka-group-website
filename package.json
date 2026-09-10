@@ -30,6 +30,7 @@
     "prettier-plugin-svelte": "^4.1.1"
   },
   "dependencies": {
-    "@iconify-json/bi": "^1.2.7"
+    "@iconify-json/bi": "^1.2.7",
+    "better-auth": "^1.7.3"
   }
 }
