@@ -1,11 +1,8 @@
 import type { CollectionEntry } from "astro:content";
 import type { colorClasses } from "./components/CardGridAlt.astro";
 import type { pillColors } from "./components/Pill.astro";
-import type { cars } from "@harka/db";
-export type Car = {
-	id: string;
-	data: typeof cars.$inferSelect;
-};
+import type { Car as DbCar } from "@harka/db";
+export type Car = DbCar;
 export type Testimonial = CollectionEntry<"testimonials">;
 
 // Components

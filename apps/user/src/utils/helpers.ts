@@ -41,30 +41,8 @@ export function getPrice(price: number): string {
 
 /**
  * Returns a set of unique makes and models from the given cars collection.
- *
  */
 export async function getMakeModelSet(db: any) {
-	const { cars } = await import("@harka/db");
-	const allCarsDb = await db.select().from(cars);
-	const allCars = allCarsDb.filter((c: any) => !c.misc?.hidden);
-
-	const makesWithModels = allCars.reduce((acc: { [key: string]: Set<string> }, car: any) => {
-		if (car.misc?.hidden) return acc;
-		const make = car.general.make;
-		const model = car.general.model;
-
-		if (!acc[make]) {
-			acc[make] = new Set();
-		}
-		acc[make].add(model);
-
-		return acc;
-	}, {});
-
-	const result = Object.entries(makesWithModels).map(([make, models]) => ({
-		make,
-		models: Array.from(models as Set<string>),
-	}));
-
-	return result;
+	const { getMakeModelSet: getFromDb } = await import("@harka/db");
+	return await getFromDb(db);
 }

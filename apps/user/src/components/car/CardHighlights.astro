@@ -7,10 +7,23 @@ import IconCalendar from "~/assets/images/icons/calendar.svg";
 import IconFuel from "~/assets/images/icons/fuel.svg";
 import IconOdometer from "~/assets/images/icons/odometer.svg";
 import { fuelTypeMap, transmissionMap } from "~/data/constants";
-const { data } = Astro.props as { data: Car["data"] };
 
-const mileage = getMileage(data.history.mileage);
+interface Props {
+	data?: any;
+	car?: Car;
+}
+
+const { data, car: propCar } = Astro.props;
+const car = propCar ?? data;
+
+const rawMileage = car?.mileage ?? car?.history?.mileage ?? 0;
+const mileage = getMileage(rawMileage);
 const mileageUnit = getMileageUnit();
+const transmissionVal = car?.transmission ?? car?.technical?.transmission ?? "";
+const yearVal = car?.year ?? car?.history?.year ?? "";
+const fuelTypeVal = car?.fuelType ?? car?.efficiency?.fuelType ?? "";
+const horsePowerVal = car?.horsePower ?? car?.technical?.horsePower;
+
 const pillClasses =
 	"flex items-center gap-x-1 rounded-full bg-gray-100 px-3 py-1 ring-1 ring-gray-200";
 ---
@@ -25,25 +38,29 @@ const pillClasses =
 	<li class={pillClasses}>
 		<IconTransmission class="size-4 lg:size-5" />
 		<span>
-			{transmissionMap[data.technical.transmission] || data.technical.transmission}
+			{transmissionMap[transmissionVal] || transmissionVal}
 		</span>
 	</li>
 	<li class={pillClasses}>
 		<IconCalendar class="size-4 lg:size-5 -mt-0.5" />
 		<span>
-			{data.history.year}
+			{yearVal}
 		</span>
 	</li>
 	<li class={pillClasses}>
 		<IconFuel class="size-4 lg:size-5 -mt-0.5" />
 		<span>
-			{fuelTypeMap[data.efficiency.fuelType] || data.efficiency.fuelType}
+			{fuelTypeMap[fuelTypeVal] || fuelTypeVal}
 		</span>
 	</li>
-	<li class={pillClasses}>
-		<IconOdometer class="size-4 lg:size-5 -mt-0.5" />
-		<span>
-			{data.technical.horsePower} PS ({(data.technical.horsePower / 1.362).toFixed()} kW)
-		</span>
-	</li>
+	{
+		horsePowerVal && (
+			<li class={pillClasses}>
+				<IconOdometer class="size-4 lg:size-5 -mt-0.5" />
+				<span>
+					{horsePowerVal} PS ({(horsePowerVal / 1.362).toFixed()} kW)
+				</span>
+			</li>
+		)
+	}
 </ul>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { navigate } from "astro:transitions/client";
+	import { ownershipStatuses, ownershipStatusMap } from "@harka/db";
 
 	export let car: any = null;
 
@@ -30,12 +31,57 @@
 		}
 	};
 
-	// Data bindings
+	// Direct Flat Bindings
 	let title = car?.title || "";
 	let excerpt = car?.excerpt || "";
 	let videoTourUrl = car?.videoTourUrl || "";
 
-	// Gallery State (Mixed URLs and Files)
+	let make = car?.make || "";
+	let model = car?.model || "";
+	let price = car?.price || 0;
+	let year = car?.year || new Date().getFullYear();
+	let mileage = car?.mileage ?? 0;
+	let bodyType = car?.bodyType || "SUV";
+	let fuelType = car?.fuelType || "Petrol";
+	let transmission = car?.transmission || "Automatic";
+	let color = car?.color || "";
+
+	let horsePower = car?.horsePower ?? null;
+	let engineSizeCC = car?.engineSizeCC ?? null;
+
+	let ownershipStatus = car?.ownershipStatus || "first_hand";
+	let plateNumber = car?.plateNumber || "";
+	let hasFloodDamage = car?.hasFloodDamage ?? false;
+	let hasAccidentDamage = car?.hasAccidentDamage ?? false;
+
+	const existingTaxDate = car?.taxExpirationDate ? new Date(car.taxExpirationDate) : null;
+	let taxMonth = existingTaxDate ? (existingTaxDate.getMonth() + 1).toString() : "";
+	let taxYear = existingTaxDate ? existingTaxDate.getFullYear().toString() : "";
+
+	let seatingCapacity = car?.seatingCapacity ?? null;
+
+	const months = [
+		{ value: "1", label: "Januari" },
+		{ value: "2", label: "Februari" },
+		{ value: "3", label: "Maret" },
+		{ value: "4", label: "April" },
+		{ value: "5", label: "Mei" },
+		{ value: "6", label: "Juni" },
+		{ value: "7", label: "Juli" },
+		{ value: "8", label: "Agustus" },
+		{ value: "9", label: "September" },
+		{ value: "10", label: "Oktober" },
+		{ value: "11", label: "November" },
+		{ value: "12", label: "Desember" },
+	];
+
+	const currentYear = new Date().getFullYear();
+	const years = Array.from({ length: 15 }, (_, i) => currentYear - 5 + i);
+
+	let hidden = car?.hidden ?? false;
+	let featured = car?.featured ?? false;
+
+	// Gallery State
 	type GalleryItem = { id: string; url?: string; file?: File; alt: string; preview: string };
 	let galleryItems: GalleryItem[] = (car?.gallery || []).map((g: any, i: number) => ({
 		id: `existing-${i}`,
@@ -44,27 +90,13 @@
 		preview: g.image,
 	}));
 
-	let general = car?.general || {
-		make: "",
-		model: "",
-		price: 0,
-		bodyType: "SUV",
-		doors: 4,
-		seatingCapacity: 5,
-	};
-	let history = car?.history || { year: new Date().getFullYear(), mileage: 0 };
-	let technical = car?.technical || { horsePower: 0, engineSizeCC: 0, transmission: "Automatic" };
-	let efficiency = car?.efficiency || { fuelType: "Petrol" };
-	let exterior = car?.exterior || { color: "" };
-	let misc = car?.misc || { hidden: false };
-
 	$: isFormValid =
-		general.make &&
-		general.model &&
-		general.price > 0 &&
-		history.year > 0 &&
-		history.mileage >= 0 &&
-		history.mileage !== "";
+		make.trim() !== "" &&
+		model.trim() !== "" &&
+		price > 0 &&
+		year > 0 &&
+		mileage >= 0 &&
+		mileage !== "";
 
 	const handleFileSelect = (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -78,7 +110,7 @@
 			}));
 			galleryItems = [...galleryItems, ...newItems];
 		}
-		target.value = ""; // reset input
+		target.value = "";
 	};
 
 	const removeGalleryItem = (index: number) => {
@@ -97,13 +129,13 @@
 	};
 
 	const submitForm = async () => {
-		const finalTitle = title.trim() || `${general.make} ${general.model} ${history.year}`;
+		const finalTitle = title.trim() || `${make} ${model} ${year}`;
 		isLoading = true;
 		errorMessage = "";
 		successMessage = "";
 
 		try {
-			// Step 1: Upload new images to /api/images/upload
+			// Step 1: Upload new images if any
 			const newFiles = galleryItems.filter((item) => item.file).map((item) => item.file as File);
 			let uploadedUrls: string[] = [];
 
@@ -116,11 +148,11 @@
 					body: uploadFormData,
 				});
 				const uploadData = (await uploadRes.json()) as any;
-				if (!uploadRes.ok) throw new Error(uploadData.error || "Failed to upload images");
+				if (!uploadRes.ok) throw new Error(uploadData.error || "Gagal mengunggah foto");
 				uploadedUrls = uploadData.urls;
 			}
 
-			// Step 2: Construct final gallery JSON
+			// Step 2: Construct final gallery
 			let newFileIndex = 0;
 			const finalGallery = galleryItems.map((item) => {
 				if (item.file) {
@@ -130,18 +162,37 @@
 				return { image: item.url as string, alt: item.alt };
 			});
 
-			// Step 3: Submit final JSON to /api/cars
+			// Tax Expiration Date calculation
+			let taxExpirationDate: string | null = null;
+			if (taxMonth && taxYear) {
+				taxExpirationDate = new Date(Number(taxYear), Number(taxMonth) - 1, 1).toISOString();
+			}
+
+			// Step 3: Submit flattened payload
 			const payload = {
 				title: finalTitle,
 				excerpt,
 				videoTourUrl,
+				make,
+				model,
+				price,
+				year,
+				mileage,
+				bodyType,
+				fuelType,
+				transmission,
+				color,
+				horsePower,
+				engineSizeCC,
+				ownershipStatus,
+				plateNumber: plateNumber.trim() || null,
+				hasFloodDamage,
+				hasAccidentDamage,
+				taxExpirationDate,
+				seatingCapacity,
 				gallery: finalGallery,
-				general,
-				history,
-				technical,
-				efficiency,
-				exterior,
-				misc,
+				hidden,
+				featured,
 			};
 
 			const url = car?.id ? `/api/cars/${car.id}` : "/api/cars";
@@ -154,11 +205,11 @@
 			});
 
 			const data = (await response.json()) as any;
-			if (!response.ok) throw new Error(data.error || "Failed to save car");
+			if (!response.ok) throw new Error(data.error || "Gagal menyimpan kendaraan");
 
 			const action = car?.id ? "updated" : "created";
-			successMessage = `Vehicle ${action} successfully!`;
-			showPopup("Success!", `Vehicle ${action} successfully! Redirecting...`, "success", action);
+			successMessage = `Kendaraan berhasil ${action === "created" ? "ditambahkan" : "diperbarui"}!`;
+			showPopup("Berhasil!", successMessage, "success", action);
 		} catch (err: any) {
 			errorMessage = err.message;
 			showPopup("Error", err.message, "error");
@@ -179,11 +230,11 @@
 				{car?.id ? "Edit Kendaraan" : "Tambah Kendaraan Baru"}
 			</h2>
 			{#if car?.id}
-				<p class="text-gray-500 text-sm mt-1 font-mono">{car.id}</p>
+				<p class="text-gray-500 text-sm mt-1 font-mono">ID: {car.id}</p>
 			{/if}
 		</div>
 		<div class="flex items-center gap-2">
-			{#if misc.hidden}
+			{#if hidden}
 				<div
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-yellow-100 text-yellow-800 border border-yellow-200"
 				>
@@ -194,6 +245,13 @@
 					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-green-100 text-green-800 border border-green-200"
 				>
 					Publik (Live)
+				</div>
+			{/if}
+			{#if featured}
+				<div
+					class="px-3 py-1 rounded text-xs font-bold uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200"
+				>
+					Unggulan
 				</div>
 			{/if}
 		</div>
@@ -233,40 +291,45 @@
 							type="text"
 							bind:value={title}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 bg-white"
-							placeholder="mis. 2026 Porsche 911"
+							placeholder="mis. Porsche 911 Carrera S"
 						/>
 					</div>
 					<div class="col-span-1 md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-1">Kutipan Singkat</label>
-						<input
-							type="text"
+						<label class="block text-sm font-medium text-gray-700 mb-1"
+							>Kutipan / Deskripsi Singkat</label
+						>
+						<textarea
+							rows="3"
 							bind:value={excerpt}
 							class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 bg-white"
-						/>
+							placeholder="Ringkasan spesifikasi, kondisi istimewa, atau catatan unit..."
+						></textarea>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Merek *</label>
 						<input
 							type="text"
-							bind:value={general.make}
+							bind:value={make}
 							required
 							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. Porsche"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Model *</label>
 						<input
 							type="text"
-							bind:value={general.model}
+							bind:value={model}
 							required
 							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. 911 Carrera"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp) *</label>
 						<input
 							type="number"
-							bind:value={general.price}
+							bind:value={price}
 							required
 							min="1"
 							class="w-full p-2 border border-gray-300 rounded bg-white"
@@ -275,7 +338,7 @@
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Tipe Body</label>
 						<select
-							bind:value={general.bodyType}
+							bind:value={bodyType}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
 						>
 							<option value="SUV">SUV</option>
@@ -284,32 +347,41 @@
 							<option value="Coupe">Coupe</option>
 							<option value="Convertible">Convertible</option>
 							<option value="Pickup">Pickup</option>
+							<option value="MPV">MPV</option>
 						</select>
 					</div>
-					<div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2">
+					<div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-200 mt-2 flex gap-8">
 						<label class="flex items-center gap-3 cursor-pointer w-fit">
 							<input
 								type="checkbox"
-								bind:checked={misc.hidden}
+								bind:checked={hidden}
 								class="w-5 h-5 text-blue-600 border-gray-300 rounded"
 							/>
 							<span class="text-sm font-medium text-gray-900">Sembunyikan (Status Draf)</span>
+						</label>
+						<label class="flex items-center gap-3 cursor-pointer w-fit">
+							<input
+								type="checkbox"
+								bind:checked={featured}
+								class="w-5 h-5 text-blue-600 border-gray-300 rounded"
+							/>
+							<span class="text-sm font-medium text-gray-900">Jadikan Unit Unggulan</span>
 						</label>
 					</div>
 				</div>
 			</div>
 
-			<!-- Performa & Riwayat -->
+			<!-- Performa & Riwayat Mesin -->
 			<div>
 				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performa & Riwayat
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Performa & Spesifikasi Mesin
 				</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Tahun Model *</label>
 						<input
 							type="number"
-							bind:value={history.year}
+							bind:value={year}
 							required
 							class="w-full p-2 border border-gray-300 rounded bg-white"
 						/>
@@ -318,7 +390,7 @@
 						<label class="block text-sm font-medium text-gray-700 mb-1">Jarak Tempuh (km) *</label>
 						<input
 							type="number"
-							bind:value={history.mileage}
+							bind:value={mileage}
 							required
 							class="w-full p-2 border border-gray-300 rounded bg-white"
 						/>
@@ -327,22 +399,24 @@
 						<label class="block text-sm font-medium text-gray-700 mb-1">Tenaga (PS)</label>
 						<input
 							type="number"
-							bind:value={technical.horsePower}
+							bind:value={horsePower}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. 385"
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Mesin</label>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Mesin (cc)</label>
 						<input
 							type="number"
-							bind:value={technical.engineSizeCC}
+							bind:value={engineSizeCC}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. 2981"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Transmisi</label>
 						<select
-							bind:value={technical.transmission}
+							bind:value={transmission}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
 						>
 							<option value="Automatic">Matic</option>
@@ -351,23 +425,14 @@
 							<option value="CVT">CVT</option>
 						</select>
 					</div>
-				</div>
-			</div>
-
-			<!-- Konfigurasi -->
-			<div>
-				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Konfigurasi
-				</h3>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-1">Bahan Bakar</label>
 						<select
-							bind:value={efficiency.fuelType}
+							bind:value={fuelType}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
 						>
 							<option value="Petrol">Bensin</option>
-							<option value="Diesel">Diesel</option>
+							<option value="Diesel">Solar</option>
 							<option value="Hybrid">Hybrid</option>
 							<option value="Electric">Listrik</option>
 						</select>
@@ -376,9 +441,100 @@
 						<label class="block text-sm font-medium text-gray-700 mb-1">Warna Eksterior</label>
 						<input
 							type="text"
-							bind:value={exterior.color}
+							bind:value={color}
 							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. Hitam Metalik"
 						/>
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Kapasitas Penumpang</label>
+						<input
+							type="number"
+							bind:value={seatingCapacity}
+							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. 5 atau 7"
+						/>
+					</div>
+				</div>
+			</div>
+
+			<!-- Provenance & Legalitas -->
+			<div>
+				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Status Kepemilikan & Legalitas
+				</h3>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-1">Status Kepemilikan *</label>
+						<select
+							bind:value={ownershipStatus}
+							class="w-full p-2 border border-gray-300 rounded bg-white"
+						>
+							{#each ownershipStatuses as status}
+								<option value={status}>{ownershipStatusMap[status] || status}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-1">
+							Nomor Polisi / Plat Nomor
+							<span class="text-xs font-normal text-gray-500">(Khusus internal admin)</span>
+						</label>
+						<input
+							type="text"
+							bind:value={plateNumber}
+							class="w-full p-2 border border-gray-300 rounded bg-white"
+							placeholder="mis. B 1234 ABC"
+						/>
+					</div>
+					<div class="col-span-1 md:col-span-2">
+						<label class="block text-sm font-medium text-gray-700 mb-1">
+							Masa Berlaku Pajak (Status Pajak)
+							<span class="text-xs font-normal text-gray-500"
+								>(Kosongkan jika belum diketahui / '-')</span
+							>
+						</label>
+						<div class="grid grid-cols-2 gap-4">
+							<select
+								bind:value={taxMonth}
+								class="w-full p-2 border border-gray-300 rounded bg-white"
+							>
+								<option value="">- Pilih Bulan (-) -</option>
+								{#each months as m}
+									<option value={m.value}>{m.label}</option>
+								{/each}
+							</select>
+							<select
+								bind:value={taxYear}
+								class="w-full p-2 border border-gray-300 rounded bg-white"
+							>
+								<option value="">- Pilih Tahun (-) -</option>
+								{#each years as y}
+									<option value={y.toString()}>{y}</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+					<div
+						class="col-span-1 md:col-span-2 pt-2 border-t border-gray-100 flex flex-col sm:flex-row gap-6"
+					>
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								bind:checked={hasFloodDamage}
+								class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+							/>
+							<span class="text-sm font-medium text-gray-900">Pernah Terendam Banjir</span>
+						</label>
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								bind:checked={hasAccidentDamage}
+								class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+							/>
+							<span class="text-sm font-medium text-gray-900">Pernah Mengalami Tabrakan / Laka</span
+							>
+						</label>
 					</div>
 				</div>
 			</div>
@@ -386,7 +542,7 @@
 			<!-- Media Gallery -->
 			<div>
 				<h3 class="text-lg font-semibold mb-6 text-gray-900 flex items-center border-b pb-2">
-					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Galeri Foto
+					<span class="bg-blue-600 w-1.5 h-5 mr-3 block rounded"></span> Galeri Foto & Media
 				</h3>
 				<div class="space-y-4">
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -402,7 +558,6 @@
 									</div>
 								{/if}
 								<div class="relative h-32 bg-gray-200 flex-shrink-0">
-									<!-- Use object-contain in admin for full preview -->
 									<img src={item.preview} alt="" class="w-full h-full object-contain" />
 
 									<div

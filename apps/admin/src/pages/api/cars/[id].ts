@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
-import { getDb } from "@harka/db";
-import { cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable } from "@harka/db";
 import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 
@@ -11,38 +10,41 @@ export const PUT: APIRoute = async ({ request, params }) => {
 		const db = getDb(env as any);
 
 		const {
-			general = {},
-			history = {},
 			title,
 			excerpt,
 			videoTourUrl,
+			make,
+			model,
+			price,
+			year,
+			mileage,
+			bodyType = "SUV",
+			fuelType = "Petrol",
+			transmission = "Automatic",
+			color = "",
+			horsePower,
+			engineSizeCC,
+			ownershipStatus,
+			hasFloodDamage = false,
+			hasAccidentDamage = false,
+			taxExpirationDate,
+			seatingCapacity,
+			plateNumber,
 			gallery,
-			technical,
-			efficiency,
-			options,
-			security,
-			exterior,
-			interior,
-			misc,
+			hidden = false,
+			featured = false,
 		} = payload;
 
-		if (
-			!general.make ||
-			!general.model ||
-			!general.price ||
-			!history.year ||
-			history.mileage === undefined ||
-			history.mileage === ""
-		) {
+		if (!make || !model || !price || !year || mileage === undefined || mileage === "") {
 			return new Response(
-				JSON.stringify({ error: "Make, Model, Price, Year, and Mileage are required fields." }),
+				JSON.stringify({ error: "Merek, Model, Harga, Tahun, dan Jarak Tempuh wajib diisi." }),
 				{ status: 400 },
 			);
 		}
 
 		let finalTitle = title;
 		if (!finalTitle || finalTitle.trim() === "") {
-			finalTitle = `${general.make} ${general.model} ${history.year}`;
+			finalTitle = `${make} ${model} ${year}`;
 		}
 
 		// Cleanup orphaned images
@@ -64,16 +66,27 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			title: finalTitle,
 			excerpt: excerpt || null,
 			videoTourUrl: videoTourUrl || null,
+			make,
+			model,
+			price: Number(price),
+			year: Number(year),
+			mileage: Number(mileage),
+			bodyType,
+			fuelType,
+			transmission,
+			color: color || "-",
+			horsePower: horsePower ? Number(horsePower) : null,
+			engineSizeCC: engineSizeCC ? Number(engineSizeCC) : null,
+			ownershipStatus: ownershipStatus || null,
+			hasFloodDamage: Boolean(hasFloodDamage),
+			hasAccidentDamage: Boolean(hasAccidentDamage),
+			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
+			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
+			plateNumber: plateNumber || null,
 			gallery: gallery || null,
-			general: general || null,
-			history: history || null,
-			technical: technical || null,
-			efficiency: efficiency || null,
-			options: options || null,
-			security: security || null,
-			exterior: exterior || null,
-			interior: interior || null,
-			misc: misc || null,
+			hidden: Boolean(hidden),
+			featured: Boolean(featured),
+			updatedAt: new Date(),
 		};
 
 		await db.update(carsTable).set(updateData).where(eq(carsTable.id, id));
@@ -83,7 +96,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Failed to update car" }), {
+		return new Response(JSON.stringify({ error: e.message || "Gagal memperbarui kendaraan" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
 		});
@@ -115,6 +128,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 				.set({
 					deletedAt: new Date(),
 					archiveReason: reason,
+					updatedAt: new Date(),
 				})
 				.where(eq(carsTable.id, id));
 		}
@@ -124,7 +138,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Failed to delete car" }), {
+		return new Response(JSON.stringify({ error: e.message || "Gagal menghapus kendaraan" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
 		});

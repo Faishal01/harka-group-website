@@ -1,96 +1,70 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { BodyType, FuelType, OwnershipStatus, Transmission } from "./constants";
 
-export const cars = sqliteTable("cars", {
-	id: text("id").primaryKey(), // The slug
-	title: text("title").notNull(),
-	gallery: text("gallery", { mode: "json" }).$type<{ image: string; alt: string }[]>(),
-	videoTourUrl: text("video_tour_url"),
-	excerpt: text("excerpt"),
-	publishDate: integer("publish_date", { mode: "timestamp" }).notNull(),
-	deletedAt: integer("deleted_at", { mode: "timestamp" }),
-	archiveReason: text("archive_reason", { enum: ["sold", "removed"] }),
+export const cars = sqliteTable(
+	"cars",
+	{
+		// Identification & Listing Meta
+		id: text("id").primaryKey(), // 12-character NanoID
+		title: text("title").notNull(),
+		excerpt: text("excerpt"), // Description & highlights
+		videoTourUrl: text("video_tour_url"),
 
-	general: text("general", { mode: "json" })
-		.$type<{
-			make: string;
-			model: string;
-			type?: string;
-			price: number;
-			bodyType: "SUV" | "Sedan" | "Hatchback" | "Coupe" | "Convertible" | "Pickup";
-			drivetrain?:
-				"Front-Wheel Drive" | "Rear-Wheel Drive" | "All-Wheel Drive" | "Four-Wheel Drive";
-			doors: number;
-			seatingCapacity: number;
-			condition?: "New" | "Used" | "Certified Pre-Owned";
-		}>()
-		.notNull(),
+		// Core Vehicle Specs (Searchable & Filtered)
+		make: text("make").notNull(),
+		model: text("model").notNull(),
+		price: integer("price").notNull(), // IDR
+		year: integer("year").notNull(),
+		mileage: integer("mileage").notNull(), // km
+		bodyType: text("body_type").$type<BodyType>().notNull(),
+		fuelType: text("fuel_type").$type<FuelType>().notNull(),
+		transmission: text("transmission").$type<Transmission>().notNull(),
+		color: text("color").notNull(),
 
-	history: text("history", { mode: "json" })
-		.$type<{
-			mileage: number;
-			year: number;
-			previousOwners?: number;
-			accidentHistory?: "No" | "Yes - Minor Damage" | "Yes - Major Repair";
-		}>()
-		.notNull(),
+		// Performance
+		horsePower: integer("horse_power"),
+		engineSizeCC: integer("engine_size_cc"),
 
-	technical: text("technical", { mode: "json" })
-		.$type<{
-			horsePower: number;
-			transmission: "Automatic" | "Manual" | "CVT" | "Dual-Clutch";
-			engineSizeCC: number;
-			gears?: number;
-			cylinders?: number;
-			weight?: number;
-		}>()
-		.notNull(),
+		// Provenance & Legalitas
+		ownershipStatus: text("ownership_status").$type<OwnershipStatus>(),
+		hasFloodDamage: integer("has_flood_damage", { mode: "boolean" }).notNull().default(false),
+		hasAccidentDamage: integer("has_accident_damage", { mode: "boolean" }).notNull().default(false),
+		taxExpirationDate: integer("tax_expiration_date", { mode: "timestamp" }),
+		seatingCapacity: integer("seating_capacity"),
 
-	efficiency: text("efficiency", { mode: "json" })
-		.$type<{
-			fuelType: "Petrol" | "Diesel" | "Hybrid" | "Electric" | "CNG";
-			fuelEfficiencyMPG?: number;
-			fuelEfficiencyLPer100KM?: number;
-			emissionsCO2?: string;
-			emissionsRating?: string;
-		}>()
-		.notNull(),
+		// Admin-Only Internal Vehicle Data
+		plateNumber: text("plate_number"),
 
-	options: text("options", { mode: "json" }).$type<string[]>(),
+		// Media (Single JSON Column)
+		gallery: text("gallery", { mode: "json" }).$type<{ image: string; alt: string }[]>(),
 
-	security: text("security", { mode: "json" }).$type<{
-		alarm?: boolean;
-		immobilizer?: boolean;
-		airbags?: number;
-		abs?: boolean;
-		esp?: boolean;
-		tireCondition?: "New" | "Good" | "Needs Replacement";
-		safetyRating?: string;
-	}>(),
+		// Flags & Lifecycle
+		hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
+		featured: integer("featured", { mode: "boolean" }).notNull().default(false),
+		archiveReason: text("archive_reason", { enum: ["sold", "removed"] }),
 
-	exterior: text("exterior", { mode: "json" })
-		.$type<{
-			color: string;
-			paintType?: "Metallic" | "Pearl" | "Matte";
-			wheelSize?: number;
-			wheelType?: "Alloy" | "Steel" | "Carbon Fiber";
-		}>()
-		.notNull(),
+		// Timestamps
+		publishDate: integer("publish_date", { mode: "timestamp" }).notNull(),
+		deletedAt: integer("deleted_at", { mode: "timestamp" }),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("cars_make_model_idx").on(table.make, table.model),
+		index("cars_price_idx").on(table.price),
+		index("cars_year_idx").on(table.year),
+		index("cars_mileage_idx").on(table.mileage),
+		index("cars_body_type_idx").on(table.bodyType),
+		index("cars_fuel_type_idx").on(table.fuelType),
+		index("cars_ownership_status_idx").on(table.ownershipStatus),
+		index("cars_deleted_at_idx").on(table.deletedAt),
+		index("cars_publish_date_idx").on(table.publishDate),
+		index("cars_featured_idx").on(table.featured),
+	],
+);
 
-	interior: text("interior", { mode: "json" }).$type<{
-		materialSeats?: string;
-		heatedSeats?: boolean;
-		ventilatedSeats?: boolean;
-	}>(),
-
-	misc: text("misc", { mode: "json" }).$type<{
-		vin?: string;
-		registrationStatus?: "Registered" | "Unregistered" | "Registration Pending";
-		warranty?: string;
-		dealerNotes?: string;
-		hidden?: boolean;
-		featured?: boolean;
-	}>(),
-});
+export type Car = typeof cars.$inferSelect;
+export type InsertCar = typeof cars.$inferInsert;
 
 export const user = sqliteTable("user", {
 	id: text("id").primaryKey(),
@@ -99,44 +73,63 @@ export const user = sqliteTable("user", {
 	emailVerified: integer("emailVerified", { mode: "boolean" }).notNull(),
 	image: text("image"),
 	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull()
-});
-
-export const session = sqliteTable("session", {
-	id: text("id").primaryKey(),
-	expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
-	token: text("token").notNull().unique(),
-	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-	ipAddress: text("ipAddress"),
-	userAgent: text("userAgent"),
-	userId: text("userId").notNull().references(() => user.id)
 });
 
-export const account = sqliteTable("account", {
-	id: text("id").primaryKey(),
-	accountId: text("accountId").notNull(),
-	providerId: text("providerId").notNull(),
-	userId: text("userId").notNull().references(() => user.id),
-	accessToken: text("accessToken"),
-	refreshToken: text("refreshToken"),
-	idToken: text("idToken"),
-	accessTokenExpiresAt: integer("accessTokenExpiresAt", { mode: "timestamp" }),
-	refreshTokenExpiresAt: integer("refreshTokenExpiresAt", { mode: "timestamp" }),
-	scope: text("scope"),
-	password: text("password"),
-	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull()
-});
+export const session = sqliteTable(
+	"session",
+	{
+		id: text("id").primaryKey(),
+		expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
+		token: text("token").notNull().unique(),
+		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+		ipAddress: text("ipAddress"),
+		userAgent: text("userAgent"),
+		userId: text("userId")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+	},
+	(table) => [index("session_user_id_idx").on(table.userId)],
+);
 
-export const verification = sqliteTable("verification", {
-	id: text("id").primaryKey(),
-	identifier: text("identifier").notNull(),
-	value: text("value").notNull(),
-	expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
-	createdAt: integer("createdAt", { mode: "timestamp" }),
-	updatedAt: integer("updatedAt", { mode: "timestamp" })
-});
+export const account = sqliteTable(
+	"account",
+	{
+		id: text("id").primaryKey(),
+		accountId: text("accountId").notNull(),
+		providerId: text("providerId").notNull(),
+		userId: text("userId")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		accessToken: text("accessToken"),
+		refreshToken: text("refreshToken"),
+		idToken: text("idToken"),
+		accessTokenExpiresAt: integer("accessTokenExpiresAt", { mode: "timestamp" }),
+		refreshTokenExpiresAt: integer("refreshTokenExpiresAt", { mode: "timestamp" }),
+		scope: text("scope"),
+		password: text("password"),
+		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("account_user_id_idx").on(table.userId),
+		uniqueIndex("account_provider_account_idx").on(table.providerId, table.accountId),
+	],
+);
+
+export const verification = sqliteTable(
+	"verification",
+	{
+		id: text("id").primaryKey(),
+		identifier: text("identifier").notNull(),
+		value: text("value").notNull(),
+		expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
+		createdAt: integer("createdAt", { mode: "timestamp" }),
+		updatedAt: integer("updatedAt", { mode: "timestamp" }),
+	},
+	(table) => [index("verification_identifier_idx").on(table.identifier)],
+);
 
 export const adminWhitelist = sqliteTable("admin_whitelist", {
 	email: text("email").primaryKey(),

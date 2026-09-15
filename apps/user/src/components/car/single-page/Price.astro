@@ -1,13 +1,18 @@
 ---
-import type { PriceProps as Props } from "~/types";
 import { getPrice } from "~/utils/helpers";
-const { properties } = Astro.props;
 
-const price = getPrice(properties.price);
+interface Props {
+	price?: number;
+	properties?: { price: number };
+}
+
+const { price: propPrice, properties } = Astro.props;
+const rawPrice = propPrice ?? properties?.price ?? 0;
+const formattedPrice = getPrice(rawPrice);
 ---
 
 <div id="single-page-price-wrapper" class="mt-8 space-x-2">
 	<span class="price font-semibold text-2xl">
-		{price}
+		{formattedPrice}
 	</span>
 </div>

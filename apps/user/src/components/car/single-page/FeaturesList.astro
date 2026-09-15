@@ -1,65 +1,101 @@
 ---
 import type { Car } from "~/types";
 import { getMileage, getMileageUnit } from "~/utils/helpers";
-import { labels, categoryLabels } from "~/utils/labels";
+import { fuelTypeMap, transmissionMap, ownershipStatusMap } from "~/data/constants";
 import { viewPage } from "~/data/captions";
-import { fuelTypeMap, transmissionMap } from "~/data/constants";
 
-const { car } = Astro.props as { car: Car };
+interface Props {
+	car: Car;
+}
+
+const { car } = Astro.props;
 
 if (!car) {
 	return;
 }
 
-const excludeFields = ["price", "hidden", "vin", "featured"];
+const mileage = `${getMileage(car.mileage)} ${getMileageUnit()}`;
+const ownershipLabel = car.ownershipStatus
+	? ownershipStatusMap[car.ownershipStatus] || car.ownershipStatus
+	: "-";
+
+const taxFormatted = car.taxExpirationDate
+	? new Date(car.taxExpirationDate) >= new Date()
+		? `Hidup (s/d ${new Date(car.taxExpirationDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })})`
+		: `Mati (${new Date(car.taxExpirationDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })})`
+	: "-";
+
+const sections = [
+	{
+		title: "Spesifikasi Kendaraan",
+		icon: "general",
+		items: [
+			{ label: "Merek", value: car.make },
+			{ label: "Model", value: car.model },
+			{ label: "Tahun", value: car.year },
+			{ label: "Jarak Tempuh", value: mileage },
+			{ label: "Tipe Body", value: car.bodyType },
+			{ label: "Transmisi", value: transmissionMap[car.transmission] || car.transmission },
+			{ label: "Bahan Bakar", value: fuelTypeMap[car.fuelType] || car.fuelType },
+			{ label: "Warna", value: car.color },
+			{
+				label: viewPage.seatingCapacity,
+				value: car.seatingCapacity ? `${car.seatingCapacity} Penumpang` : null,
+			},
+		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
+	},
+	{
+		title: "Performa & Mesin",
+		icon: "technical",
+		items: [
+			{
+				label: "Tenaga",
+				value: car.horsePower ? `${car.horsePower} PS` : null,
+			},
+			{
+				label: "Kapasitas Mesin",
+				value: car.engineSizeCC ? `${car.engineSizeCC} cc` : null,
+			},
+		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
+	},
+	{
+		title: "Riwayat & Legalitas",
+		icon: "history",
+		items: [
+			{
+				label: viewPage.ownershipStatus,
+				value: ownershipLabel,
+			},
+			{
+				label: viewPage.taxStatus,
+				value: taxFormatted,
+			},
+			{
+				label: viewPage.floodHistory,
+				value: car.hasFloodDamage ? "Ada" : "Tidak Ada",
+			},
+			{
+				label: viewPage.accidentHistory,
+				value: car.hasAccidentDamage ? "Ada" : "Tidak Ada",
+			},
+		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
+	},
+].filter((s) => s.items.length > 0);
 ---
 
 {
-	Object.entries(categoryLabels).map(
-		([key, label]) =>
-			(car.data as any)[key] &&
-			Object.keys((car.data as any)[key]).some(
-				(subKey) => !excludeFields.includes(subKey) && (car.data as any)[key][subKey],
-			) && (
-				<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
-					<h2 class={`h6 feature-icon feature-icon-${key}`}>{label}</h2>
+	sections.map((section) => (
+		<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
+			<h2 class={`h6 feature-icon feature-icon-${section.icon}`}>{section.title}</h2>
 
-					{key === "options" ? (
-						<ul class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
-							{(car.data as any)[key].sort().map((option: string) => (
-								<li class="md:whitespace-nowrap">- {option}</li>
-							))}
-						</ul>
-					) : (
-						<dl class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
-							{Object.entries((car.data as any)[key]).map(
-								([subKey, value]) =>
-									!excludeFields.includes(subKey) && (
-										<>
-											<dt>{(labels as any)[key]?.[subKey] || subKey}</dt>
-											<dd class="font-bold md:whitespace-nowrap">
-												{subKey === "mileage"
-													? `${getMileage(value as number)} ${getMileageUnit()}`
-													: subKey === "fuelType"
-														? fuelTypeMap[value as string] || value
-														: subKey === "transmission"
-															? transmissionMap[value as string] || value
-															: subKey === "horsePower" && value
-																? `${value} PS`
-																: subKey === "engineSizeCC" && value
-																	? `${value} cc`
-																	: value === true
-																		? viewPage.yes
-																		: value
-																			? value
-																			: viewPage.na}
-											</dd>
-										</>
-									),
-							)}
-						</dl>
-					)}
-				</div>
-			),
-	)
+			<dl class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
+				{section.items.map((item) => (
+					<>
+						<dt>{item.label}</dt>
+						<dd class="font-bold md:whitespace-nowrap">{item.value}</dd>
+					</>
+				))}
+			</dl>
+		</div>
+	))
 }
