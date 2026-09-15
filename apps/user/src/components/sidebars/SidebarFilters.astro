@@ -3,7 +3,8 @@ import {
 	bodyTypes,
 	fuelTypes,
 	transmission,
-	conditions,
+	ownershipStatuses,
+	ownershipStatusMap,
 	fuelTypeMap,
 	transmissionMap,
 } from "~/data/constants";
@@ -190,15 +191,23 @@ const { data } = Astro.props;
 
 			<div>
 				<div class="flex items-center gap-x-2">
-					<label for="condition">{filterLabels.condition}</label>
-					<button id="clear-input-condition" type="button" class="hidden">
+					<label for="ownershipStatus">{filterLabels.ownershipStatus}</label>
+					<button id="clear-input-ownershipStatus" type="button" class="hidden">
 						<IconReset class="size-3 -mt-px" />
 					</button>
 				</div>
 				<div class="grid grid-cols-1">
-					<select name="condition" id="condition" class="appearance-none col-start-1 row-start-1">
+					<select
+						name="ownershipStatus"
+						id="ownershipStatus"
+						class="appearance-none col-start-1 row-start-1"
+					>
 						<option value="all">{filterLabels.all}</option>
-						{conditions.map((condition) => <option value={condition}>{condition}</option>)}
+						{
+							ownershipStatuses.map((status) => (
+								<option value={status}>{ownershipStatusMap[status] || status}</option>
+							))
+						}
 					</select>
 					<IconChevronDown class="icon-chevron-down" />
 				</div>

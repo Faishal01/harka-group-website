@@ -27,6 +27,7 @@ export const filterLabels = {
 	fuelType: "Jenis bahan bakar",
 	transmission: "Transmisi",
 	condition: "Kondisi",
+	ownershipStatus: "Status Kepemilikan",
 	search: "Cari",
 	all: "Semua",
 };
@@ -60,6 +61,11 @@ export const viewPage = {
 	na: "Tidak tersedia",
 	bhp: "PS",
 	kw: "kW",
+	ownershipStatus: "Status Kepemilikan",
+	floodHistory: "Riwayat Banjir",
+	accidentHistory: "Riwayat Tabrakan / Laka",
+	taxStatus: "Status Pajak",
+	seatingCapacity: "Kapasitas Penumpang",
 };
 
 export const buttonLabels = {

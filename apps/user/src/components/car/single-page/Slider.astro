@@ -3,7 +3,6 @@ import IconChevronLeft from "~/assets/images/icons/chevron-left.svg";
 import IconChevronRight from "~/assets/images/icons/chevron-right.svg";
 import type { SliderProps as Props } from "~/types";
 
-const { image, alt } = Astro.props;
 const gallery = Astro.props.gallery || [];
 ---
 
@@ -12,51 +11,28 @@ const gallery = Astro.props.gallery || [];
 	<div class="embla__viewport overflow-hidden">
 		<div class="embla__container flex touch-pinch-zoom">
 			{
-				image && (
-					<a
-						href={image}
-						target="_blank"
-						aria-label={alt || ""}
-						class="embla__slide select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
-					>
-						<img src={image} alt={alt || ""} class="w-full h-full object-cover aspect-[4/3]" />
-					</a>
-				)
-			}
-			{
 				gallery.map((image: any) => (
 					<a
 						href={image.image}
 						target="_blank"
 						aria-label={image.alt}
-						class="embla__slide select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
+						class="embla__slide relative select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
 					>
+						<div class="absolute inset-0 w-full h-full overflow-hidden">
+							<img
+								src={image.image}
+								alt=""
+								class="w-full h-full object-cover blur-3xl scale-110 opacity-60"
+							/>
+						</div>
 						<img
 							src={image.image}
 							alt={image.alt}
-							class="w-full h-full object-cover aspect-[4/3]"
+							class="relative w-full h-full object-contain aspect-[4/3] z-10"
 						/>
 					</a>
 				))
 			}
-			<!-- {
-				videoTour && (
-					<a
-						href={videoTour}
-						target="_blank"
-						aria-label="Video Tour"
-						class="embla__slide select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
-					>
-						<iframe
-							src={`https://www.youtube-nocookie.com/embed/${new URL(videoTour).searchParams.get("v")}`}
-							title="Video Tour"
-							class="w-full h-full aspect-[16/9] border-none"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowfullscreen
-						></iframe>
-					</a>
-				)
-			} -->
 		</div>
 
 		<button
@@ -83,13 +59,8 @@ const gallery = Astro.props.gallery || [];
 		<div class="embla-thumbs bg-gray-900">
 			<div class="embla-thumbs__viewport overflow-hidden">
 				<div class="embla-thumbs__container flex">
-					<div class="embla-thumbs__slide select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
-						{image && (
-							<img src={image} alt={alt || ""} class="w-full h-full object-cover aspect-[4/3]" />
-						)}
-					</div>
 					{gallery.map((image: any) => (
-						<div class="embla-thumbs__slide select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
+						<div class="embla-thumbs__slide relative overflow-hidden select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
 							<img
 								src={image.image}
 								alt={image.alt}

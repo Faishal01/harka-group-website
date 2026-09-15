@@ -1,8 +1,8 @@
 ---
 export const prerender = false;
 
-import { getDb } from "@harka/db";
-import { cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable } from "@harka/db";
+import { and, isNull, eq, asc } from "drizzle-orm";
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
 import Container from "~/components/Container.astro";
@@ -10,12 +10,13 @@ import Heading from "~/components/Heading.astro";
 import { env } from "cloudflare:workers";
 
 const db = getDb(env);
-const dbCars = await db.select().from(carsTable);
-const allCars = dbCars.filter((c) => !c.misc?.hidden);
-const uniqueMakes = [
-	...new Set(allCars.filter((c) => !c.misc?.hidden).map((car) => car.general.make)),
-];
-uniqueMakes.sort((a, b) => a.localeCompare(b));
+const rows = (await db
+	.selectDistinct({ make: carsTable.make })
+	.from(carsTable)
+	.where(and(isNull(carsTable.deletedAt), eq(carsTable.hidden, false)))
+	.orderBy(asc(carsTable.make))) as { make: string }[];
+
+const uniqueMakes = rows.map((r) => r.make).filter(Boolean);
 
 const groupedMakes: Record<string, string[]> = uniqueMakes.reduce(
 	(acc, make) => {

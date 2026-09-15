@@ -33,8 +33,8 @@ try {
 	// If error, allCars remains empty
 }
 
-const makes = [...new Set(allCars.map((car: Car) => car.data.general.make))].sort();
-const colors = [...new Set(allCars.map((car: Car) => car.data.exterior.color))].sort();
+const makes = [...new Set(allCars.map((car: Car) => car.make))].sort();
+const colors = [...new Set(allCars.map((car: Car) => car.color))].sort();
 const count = allCars.length;
 
 const sideBarData = {

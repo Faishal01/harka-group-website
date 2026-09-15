@@ -23,15 +23,6 @@ export function getMileageUnit(): string {
 }
 
 /**
- * Returns the label for mileage based on the unit system.
- *
- * @returns {string} The label, either "Mileage" for imperial or "Kilometerage" for metric.
- */
-export function getMileageLabel(): string {
-	return (unitSystem as string) === "imperial" ? "Mileage" : "Kilometerage";
-}
-
-/**
  * Formats a given price number into a localized currency string representation.
  *
  * @param price - The price number to be formatted.
@@ -49,48 +40,9 @@ export function getPrice(price: number): string {
 }
 
 /**
- * Returns the currency symbol based on the site language and currency.
- *
- * @returns {string} The currency symbol.
- */
-export function getCurrencySymbol(): string {
-	const formatter = new Intl.NumberFormat(siteLang, {
-		style: "currency",
-		currency: siteCurrency,
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	});
-	const parts = formatter.formatToParts(0);
-	const symbol = parts.find((part) => part.type === "currency")?.value;
-	return symbol || "";
-}
-
-/**
  * Returns a set of unique makes and models from the given cars collection.
- *
  */
 export async function getMakeModelSet(db: any) {
-	const { cars } = await import("@harka/db");
-	const allCarsDb = await db.select().from(cars);
-	const allCars = allCarsDb.filter((c: any) => !c.misc?.hidden);
-
-	const makesWithModels = allCars.reduce((acc: { [key: string]: Set<string> }, car: any) => {
-		if (car.misc?.hidden) return acc;
-		const make = car.general.make;
-		const model = car.general.model;
-
-		if (!acc[make]) {
-			acc[make] = new Set();
-		}
-		acc[make].add(model);
-
-		return acc;
-	}, {});
-
-	const result = Object.entries(makesWithModels).map(([make, models]) => ({
-		make,
-		models: Array.from(models as Set<string>),
-	}));
-
-	return result;
+	const { getMakeModelSet: getFromDb } = await import("@harka/db");
+	return await getFromDb(db);
 }

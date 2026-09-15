@@ -4,7 +4,12 @@ import type { Car } from "~/types";
 import CarHighlights from "~/components/car/CardHighlights.astro";
 import CardPrice from "~/components/car/CardPrice.astro";
 import IconLogo from "~/assets/images/icons/logo.svg";
-const { car } = Astro.props as { car: Car };
+
+interface Props {
+	car: Car;
+}
+
+const { car } = Astro.props;
 ---
 
 <li
@@ -14,10 +19,10 @@ const { car } = Astro.props as { car: Car };
 	<a href={`/view/${car.id}`} class="relative isolate flex flex-col gap-8 h-full">
 		<div class="relative aspect-[4/3] lg:shrink-0 ribbon">
 			{
-				car.data.image ? (
+				car.gallery?.[0]?.image ? (
 					<img
-						src={car.data.image}
-						alt={car.data.imageAlt}
+						src={car.gallery[0].image}
+						alt={car.gallery[0].alt || car.title}
 						class="absolute inset-0 size-full bg-gray-50 object-cover"
 					/>
 				) : (
@@ -32,26 +37,14 @@ const { car } = Astro.props as { car: Car };
 			<div class="relative w-full flex flex-col items-start mb-8">
 				<div class="mb-4 lg:mb-6">
 					<h2 class="h5 line-clamp-2">
-						{car.data.title}
-						{
-							car.data.general.type && (
-								<span class="text-base block font-normal align-middle">
-									{car.data.general.type}
-								</span>
-							)
-						}
+						{car.title}
 					</h2>
-					<p class="text-base mt-2 line-clamp-3">{car.data.excerpt}</p>
-					{
-						car.data.options && car.data.options.length > 0 && (
-							<p class="text-base text-gray-400 mt-3 line-clamp-1">{car.data.options.join(", ")}</p>
-						)
-					}
+					{car.excerpt && <p class="text-base mt-2 line-clamp-3">{car.excerpt}</p>}
 				</div>
-				<CardPrice data={car.data.general} />
+				<CardPrice price={car.price} />
 			</div>
 			<div class="mt-auto lg:mb-4">
-				<CarHighlights data={car.data} />
+				<CarHighlights car={car} />
 			</div>
 		</div>
 	</a>

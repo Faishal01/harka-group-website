@@ -1,96 +1,93 @@
 import type { APIRoute } from "astro";
-import { getDb } from "@harka/db";
-import { cars as carsTable } from "@harka/db";
-import slugify from "slugify";
+import { getDb, cars as carsTable, generateCarId, type InsertCar } from "@harka/db";
 import { env } from "cloudflare:workers";
 
 export const POST: APIRoute = async ({ request }) => {
 	try {
-		const formData = await request.formData();
+		const payload = (await request.json()) as any;
 
-		const generalStr = formData.get("general") as string;
-		const historyStr = formData.get("history") as string;
-		const general = generalStr ? JSON.parse(generalStr) : {};
-		const history = historyStr ? JSON.parse(historyStr) : {};
+		const {
+			title,
+			excerpt,
+			videoTourUrl,
+			make,
+			model,
+			price,
+			year,
+			mileage,
+			bodyType = "SUV",
+			fuelType = "Petrol",
+			transmission = "Automatic",
+			color = "",
+			horsePower,
+			engineSizeCC,
+			ownershipStatus,
+			hasFloodDamage = false,
+			hasAccidentDamage = false,
+			taxExpirationDate,
+			seatingCapacity,
+			plateNumber,
+			gallery,
+			hidden = false,
+			featured = false,
+		} = payload;
 
-		if (
-			!general.make ||
-			!general.model ||
-			!general.price ||
-			!history.year ||
-			history.mileage === undefined ||
-			history.mileage === ""
-		) {
+		if (!make || !model || !price || !year || mileage === undefined || mileage === "") {
 			return new Response(
-				JSON.stringify({ error: "Make, Model, Price, Year, and Mileage are required fields." }),
+				JSON.stringify({ error: "Merek, Model, Harga, Tahun, dan Jarak Tempuh wajib diisi." }),
 				{ status: 400 },
 			);
 		}
 
-		let title = formData.get("title") as string;
-		if (!title || title.trim() === "") {
-			title = `${general.make} ${general.model} ${history.year}`;
+		let finalTitle = title;
+		if (!finalTitle || finalTitle.trim() === "") {
+			finalTitle = `${make} ${model} ${year}`;
 		}
 
-		const slug =
-			slugify(title, { lower: true, strict: true }) + "-" + Math.floor(Math.random() * 1000);
+		const id = generateCarId();
+		const now = new Date();
 
-		let imageUrl = null;
-		const imageFile = formData.get("imageFile") as File | null;
-		if (imageFile && imageFile.size > 0) {
-			const arrayBuffer = await imageFile.arrayBuffer();
-			const ext = imageFile.name.split(".").pop();
-			const filename = `${slug}-${Date.now()}.${ext}`;
-
-			await (env as any).IMAGES_BUCKET.put(filename, arrayBuffer, {
-				httpMetadata: { contentType: imageFile.type },
-			});
-			imageUrl = `/api/images/${filename}`;
-		}
-
-		const insertData: any = {
-			id: slug,
-			title: title,
-			image: imageUrl,
-			imageAlt: (formData.get("imageAlt") as string) || null,
-			videoTourUrl: (formData.get("videoTourUrl") as string) || null,
-			excerpt: (formData.get("excerpt") as string) || null,
-			publishDate: new Date(),
+		const insertData: InsertCar = {
+			id,
+			title: finalTitle,
+			excerpt: excerpt || null,
+			videoTourUrl: videoTourUrl || null,
+			make,
+			model,
+			price: Number(price),
+			year: Number(year),
+			mileage: Number(mileage),
+			bodyType,
+			fuelType,
+			transmission,
+			color: color || "-",
+			horsePower: horsePower ? Number(horsePower) : null,
+			engineSizeCC: engineSizeCC ? Number(engineSizeCC) : null,
+			ownershipStatus: ownershipStatus || null,
+			hasFloodDamage: Boolean(hasFloodDamage),
+			hasAccidentDamage: Boolean(hasAccidentDamage),
+			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
+			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
+			plateNumber: plateNumber || null,
+			gallery: gallery || null,
+			hidden: Boolean(hidden),
+			featured: Boolean(featured),
+			publishDate: now,
+			createdAt: now,
+			updatedAt: now,
 		};
-
-		const jsonFields = [
-			"gallery",
-			"general",
-			"history",
-			"technical",
-			"efficiency",
-			"options",
-			"security",
-			"exterior",
-			"interior",
-			"misc",
-		];
-
-		for (const field of jsonFields) {
-			const val = formData.get(field) as string;
-			if (val && val.trim() !== "") {
-				insertData[field] = JSON.parse(val);
-			} else {
-				insertData[field] = null;
-			}
-		}
 
 		const db = getDb(env as any);
 		await db.insert(carsTable).values(insertData);
 
-		return new Response(JSON.stringify({ success: true, redirect: "/cars" }), {
+		return new Response(JSON.stringify({ success: true, id, redirect: "/cars" }), {
 			status: 200,
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
 	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Failed to create car" }), {
+		return new Response(JSON.stringify({ error: e.message || "Gagal menambahkan kendaraan" }), {
 			status: 500,
 			headers: {
 				"Content-Type": "application/json",

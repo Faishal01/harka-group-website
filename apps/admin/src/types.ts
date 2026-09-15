@@ -1,11 +1,8 @@
 import type { CollectionEntry } from "astro:content";
 import type { colorClasses } from "./components/CardGridAlt.astro";
 import type { pillColors } from "./components/Pill.astro";
-import type { cars } from "@harka/db";
-export type Car = {
-	id: string;
-	data: typeof cars.$inferSelect;
-};
+import type { Car as DbCar } from "@harka/db";
+export type Car = DbCar;
 export type Testimonial = CollectionEntry<"testimonials">;
 
 // Components
@@ -55,7 +52,7 @@ export interface GridProps {
 export interface GridItemProps {
 	span?: number;
 	image?: ImageMetadata;
-	imageAlt?: string;
+	alt?: string;
 	As?: "div" | "a";
 	link?: string;
 	xl?: boolean;
@@ -107,25 +104,7 @@ export interface WideImageProps extends ClassNameProps {
 	alt: string;
 }
 
-export interface LoanCalculatorProps {
-	price: number;
-}
-
-export interface CardPriceProps {
-	data: {
-		price: number;
-	};
-}
-
-export interface PriceProps {
-	properties: {
-		price: number;
-	};
-}
-
 export interface SliderProps {
-	image: string | null;
-	alt: string | null;
 	gallery: { image: string; alt: string }[] | null;
 	videoTour?: string | null;
 }

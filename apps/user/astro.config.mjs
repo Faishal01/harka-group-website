@@ -15,5 +15,8 @@ export default defineConfig({
 	adapter: cloudflare({ persistState: { path: "../../.wrangler/state" } }),
 	vite: {
 		plugins: [tailwindcss()],
+		optimizeDeps: {
+			exclude: ["@astrojs/svelte", "svelte"],
+		},
 	},
 });

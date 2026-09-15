@@ -1,1 +1,0 @@
-ALTER TABLE `cars` ADD `archive_reason` text;
