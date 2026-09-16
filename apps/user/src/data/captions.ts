@@ -96,3 +96,36 @@ export const shareMessages = {
 	emailBodyTop: "Kami menemukan mobil Anda!\n\nCek rincian disini:\n\n",
 	emailBodyBottom: "\n\nSalam kami",
 };
+
+export const contactPage = {
+	title: "Hubungi Kami",
+	headingTitle: "Kirim pesan kepada kami",
+	headingContent:
+		"Kami siap membantu Anda. Isi formulir untuk langsung terhubung via WhatsApp, atau hubungi kontak showroom kami.",
+	addressLabel: "Alamat Showroom",
+	phoneLabel: "WhatsApp",
+	emailLabel: "Email",
+	hoursLabel: "Jam Operasional",
+	openInMaps: "Petunjuk Arah Google Maps",
+	days: {
+		monday: "Senin",
+		tuesday: "Selasa",
+		wednesday: "Rabu",
+		thursday: "Kamis",
+		friday: "Jumat",
+		saturday: "Sabtu",
+		sunday: "Minggu",
+	},
+};
+
+export const contactForm = {
+	title: "Hubungi via WhatsApp",
+	name: "Nama Lengkap",
+	namePlaceholder: "Masukkan nama lengkap Anda",
+	phone: "Nomor WhatsApp",
+	phonePlaceholder: "Contoh: 08123456789",
+	message: "Pesan",
+	messagePlaceholder: "Tuliskan pertanyaan atau unit yang Anda cari...",
+	sendWhatsApp: "Kirim via WhatsApp",
+	waGreeting: "Halo Harka Autocar, saya ingin bertanya:",
+};
