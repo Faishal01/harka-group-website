@@ -1,41 +1,100 @@
 ---
+import { phone } from "~/data/config";
+import { contactForm } from "~/data/captions";
+import IconWhatsApp from "~/assets/images/icons/social-media/whatsapp.svg";
 
+const cleanPhone = phone.href.replace(/[^0-9]/g, "");
 ---
 
-<form action="#" method="POST">
-	<div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-		<div>
-			<label for="first-name" class="block text-sm font-semibold">First name</label>
-			<div>
-				<input type="text" name="first-name" id="first-name" autocomplete="given-name" />
-			</div>
-		</div>
-		<div>
-			<label for="last-name" class="block text-sm font-semibold">Last name</label>
-			<div>
-				<input type="text" name="last-name" id="last-name" autocomplete="family-name" />
-			</div>
-		</div>
-		<div class="sm:col-span-2">
-			<label for="email" class="block text-sm font-semibold">Email</label>
-			<div>
-				<input type="email" name="email" id="email" autocomplete="email" />
-			</div>
-		</div>
-		<div class="sm:col-span-2">
-			<label for="phone-number" class="block text-sm font-semibold">Phone number</label>
-			<div>
-				<input type="tel" name="phone-number" id="phone-number" autocomplete="tel" />
-			</div>
-		</div>
-		<div class="sm:col-span-2">
-			<label for="message" class="block text-sm font-semibold">Message</label>
-			<div>
-				<textarea name="message" id="message" rows="4"></textarea>
-			</div>
-		</div>
+<form
+	id="contact-form"
+	class="space-y-6"
+	data-phone={cleanPhone}
+	data-greeting={contactForm.waGreeting}
+>
+	<div>
+		<label for="contact-name">
+			{contactForm.name}
+		</label>
+		<input
+			type="text"
+			name="name"
+			id="contact-name"
+			required
+			placeholder={contactForm.namePlaceholder}
+			autocomplete="name"
+		/>
 	</div>
-	<div class="mt-8 flex justify-end">
-		<button type="submit" class="button button-primary">Send message</button>
+
+	<div>
+		<label for="contact-phone">
+			{contactForm.phone}
+		</label>
+		<input
+			type="tel"
+			name="phone"
+			id="contact-phone"
+			required
+			placeholder={contactForm.phonePlaceholder}
+			autocomplete="tel"
+		/>
+	</div>
+
+	<div>
+		<label for="contact-message">
+			{contactForm.message}
+		</label>
+		<textarea
+			name="message"
+			id="contact-message"
+			rows="4"
+			required
+			placeholder={contactForm.messagePlaceholder}></textarea>
+	</div>
+
+	<div class="pt-2 flex justify-end">
+		<button
+			type="submit"
+			class="button button-primary gap-2 w-full sm:w-auto inline-flex items-center justify-center cursor-pointer"
+		>
+			<IconWhatsApp class="size-5 fill-current" />
+			<span>{contactForm.sendWhatsApp}</span>
+		</button>
 	</div>
 </form>
+
+<script>
+	function setupContactForm() {
+		const form = document.getElementById("contact-form") as HTMLFormElement | null;
+		if (!form || form.dataset.initialized) return;
+		form.dataset.initialized = "true";
+
+		const cleanPhone = form.dataset.phone || "";
+		const waGreeting = form.dataset.greeting || "";
+
+		form.addEventListener("submit", (e: SubmitEvent) => {
+			e.preventDefault();
+			const formData = new FormData(form);
+			const name = (formData.get("name") || "").toString().trim();
+			const userPhone = (formData.get("phone") || "").toString().trim();
+			const userMessage = (formData.get("message") || "").toString().trim();
+
+			if (!name || !userMessage) return;
+
+			const messageLines = [
+				waGreeting,
+				"",
+				`*Nama:* ${name}`,
+				`*No. HP:* ${userPhone || "-"}`,
+				`*Pesan:* ${userMessage}`,
+			];
+
+			const encodedText = encodeURIComponent(messageLines.join("\n"));
+			const waUrl = `https://wa.me/${cleanPhone}?text=${encodedText}`;
+			window.open(waUrl, "_blank", "noopener,noreferrer");
+		});
+	}
+
+	document.addEventListener("astro:page-load", setupContactForm);
+	setupContactForm();
+</script>

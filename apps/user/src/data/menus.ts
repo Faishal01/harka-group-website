@@ -11,6 +11,11 @@ export const menuMain: MainMenuItem[] = [
 		label: "Stok",
 		url: "/cars",
 	},
+	{
+		id: "contact",
+		label: "Hubungi Kami",
+		url: "/contact",
+	},
 ];
 
 export const menuNavigation: MenuNavigation = {
