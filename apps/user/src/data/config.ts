@@ -11,8 +11,8 @@ export const defaultPaginationSize = 12;
 export const priceSteps = [20000000, 100000000, 300000000, 500000000, 1000000000, 2000000000];
 
 export const phone = {
-	href: "tel:+6281234567890",
-	label: "+62 812-3456-7890",
+	href: "tel:+6281276858079",
+	label: "+62 812-7685-8079",
 };
 
 export const email = {
