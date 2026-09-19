@@ -33,17 +33,17 @@ export const googleMapsUrl =
 
 export const socialMedia = {
 	facebook: {
-		url: "https://facebook.com",
+		url: "https://www.facebook.com/harka.sport/",
 		label: "Facebook",
 		icon: "bi:facebook",
 	},
 	instagram: {
-		url: "https://instagram.com",
+		url: "https://www.instagram.com/harkaautocar.id/?hl=en",
 		label: "Instagram",
 		icon: "bi:instagram",
 	},
 	tiktok: {
-		url: "https://tiktok.com",
+		url: "https://www.tiktok.com/@harkaautocar",
 		label: "TikTok",
 		icon: "bi:tiktok",
 	},
