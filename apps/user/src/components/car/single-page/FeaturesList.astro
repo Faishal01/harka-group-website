@@ -72,11 +72,11 @@ const sections = [
 			},
 			{
 				label: viewPage.floodHistory,
-				value: car.hasFloodDamage ? "Ada" : "Tidak Ada",
+				value: car.isFloodFree ? "Tidak Ada" : "Ada",
 			},
 			{
 				label: viewPage.accidentHistory,
-				value: car.hasAccidentDamage ? "Ada" : "Tidak Ada",
+				value: car.isAccidentFree ? "Tidak Ada" : "Ada",
 			},
 		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
 	},

@@ -356,32 +356,30 @@ const formattedPublishDate = new Date(car.publishDate).toLocaleDateString("id-ID
 					</h3>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<!-- 1. Kondisi Banjir (First) -->
 						<div
-							class={`p-4 rounded-xl border flex items-center justify-between ${car.hasAccidentDamage ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}
-						>
-							<div>
-								<span class="text-xs text-gray-500 block">Riwayat Laka / Tabrakan</span>
-								<span
-									class={`text-sm font-bold mt-0.5 block ${car.hasAccidentDamage ? "text-red-800" : "text-emerald-800"}`}
-								>
-									{
-										car.hasAccidentDamage
-											? "⚠️ Ada Riwayat Tabrakan / Laka"
-											: "🛡️ Bebas Riwayat Tabrakan"
-									}
-								</span>
-							</div>
-						</div>
-
-						<div
-							class={`p-4 rounded-xl border flex items-center justify-between ${car.hasFloodDamage ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}
+							class={`p-4 rounded-xl border flex items-center justify-between ${car.isFloodFree ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}
 						>
 							<div>
 								<span class="text-xs text-gray-500 block">Riwayat Terendam Banjir</span>
 								<span
-									class={`text-sm font-bold mt-0.5 block ${car.hasFloodDamage ? "text-red-800" : "text-emerald-800"}`}
+									class={`text-sm font-bold mt-0.5 block ${car.isFloodFree ? "text-emerald-800" : "text-red-800"}`}
 								>
-									{car.hasFloodDamage ? "⚠️ Ada Riwayat Banjir" : "🌊 Bebas Riwayat Banjir"}
+									{car.isFloodFree ? "🌊 Bukan Bekas Banjir" : "⚠️ Pernah Terendam Banjir"}
+								</span>
+							</div>
+						</div>
+
+						<!-- 2. Kondisi Lakalantas (Second) -->
+						<div
+							class={`p-4 rounded-xl border flex items-center justify-between ${car.isAccidentFree ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}
+						>
+							<div>
+								<span class="text-xs text-gray-500 block">Riwayat Lakalantas</span>
+								<span
+									class={`text-sm font-bold mt-0.5 block ${car.isAccidentFree ? "text-emerald-800" : "text-red-800"}`}
+								>
+									{car.isAccidentFree ? "🛡️ Bebas Lakalantas" : "⚠️ Pernah Mengalami Lakalantas"}
 								</span>
 							</div>
 						</div>

@@ -27,8 +27,8 @@ export const cars = sqliteTable(
 
 		// Provenance & Legalitas
 		ownershipStatus: text("ownership_status").$type<OwnershipStatus>(),
-		hasFloodDamage: integer("has_flood_damage", { mode: "boolean" }).notNull().default(false),
-		hasAccidentDamage: integer("has_accident_damage", { mode: "boolean" }).notNull().default(false),
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(true),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(true),
 		taxExpirationDate: integer("tax_expiration_date", { mode: "timestamp" }),
 		seatingCapacity: integer("seating_capacity"),
 
@@ -172,8 +172,8 @@ export const tradeInSubmissions = sqliteTable(
 		adminNotes: text("admin_notes"),
 
 		// Condition & History
-		hasAccidentDamage: integer("has_accident_damage", { mode: "boolean" }).notNull().default(false),
-		hasFloodDamage: integer("has_flood_damage", { mode: "boolean" }).notNull().default(false),
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(true),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(true),
 		conditionNotes: text("condition_notes"),
 
 		// Media

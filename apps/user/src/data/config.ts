@@ -11,8 +11,8 @@ export const defaultPaginationSize = 12;
 export const priceSteps = [20000000, 100000000, 300000000, 500000000, 1000000000, 2000000000];
 
 export const phone = {
-	href: "tel:+6281234567890",
-	label: "+62 812-3456-7890",
+	href: "tel:+6281276858079",
+	label: "+62 812-7685-8079",
 };
 
 export const email = {
@@ -21,29 +21,28 @@ export const email = {
 };
 
 export const address = {
-	street: "Jl. Sultan Iskandar Muda No. 18, Kebayoran Lama",
-	city: "Jakarta Selatan",
-	zip: "12240",
-	state: "DKI Jakarta",
+	street: "Jl. Prof. Dr. Hamka",
+	city: "Padang Panjang",
+	zip: "27118",
+	state: "Sumatera Barat",
 	country: "Indonesia",
 };
 
-export const googleMapsUrl =
-	"https://maps.google.com/?q=Jl.+Sultan+Iskandar+Muda+No.+18,+Kebayoran+Lama,+Jakarta+Selatan";
+export const googleMapsUrl = "https://maps.app.goo.gl/38gWLaZ3QBoCkX2a9";
 
 export const socialMedia = {
 	facebook: {
-		url: "https://facebook.com",
+		url: "https://www.facebook.com/harka.sport/",
 		label: "Facebook",
 		icon: "bi:facebook",
 	},
 	instagram: {
-		url: "https://instagram.com",
+		url: "https://www.instagram.com/harkaautocar.id/?hl=en",
 		label: "Instagram",
 		icon: "bi:instagram",
 	},
 	tiktok: {
-		url: "https://tiktok.com",
+		url: "https://www.tiktok.com/@harkaautocar",
 		label: "TikTok",
 		icon: "bi:tiktok",
 	},
@@ -55,6 +54,6 @@ export const hours = {
 	wednesday: "09:00 - 18:00",
 	thursday: "09:00 - 18:00",
 	friday: "09:00 - 18:00",
-	saturday: "09:00 - 17:00",
-	sunday: "Tutup",
+	saturday: "09:00 - 18:00",
+	sunday: "09:00 -18:00",
 };

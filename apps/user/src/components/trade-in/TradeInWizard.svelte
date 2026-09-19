@@ -29,8 +29,8 @@
 	let hasServiceBook = false;
 	let hasSpareKey = false;
 	let adminNotes = "";
-	let hasAccidentDamage = false;
-	let hasFloodDamage = false;
+	let isFloodFree = true;
+	let isAccidentFree = true;
 	let conditionNotes = "";
 
 	// Form State: Step 3 (10 Guided Photo Slots)
@@ -204,8 +204,10 @@
 			formData.append("hasSpareKey", String(hasSpareKey));
 			formData.append("adminNotes", adminNotes.trim());
 
-			formData.append("hasAccidentDamage", String(hasAccidentDamage));
-			formData.append("hasFloodDamage", String(hasFloodDamage));
+			formData.append("isFloodFree", String(isFloodFree));
+			formData.append("isAccidentFree", String(isAccidentFree));
+			formData.append("hasFloodDamage", String(!isFloodFree));
+			formData.append("hasAccidentDamage", String(!isAccidentFree));
 			formData.append("conditionNotes", conditionNotes.trim());
 
 			formData.append("customerName", customerName.trim());
@@ -270,8 +272,8 @@
 		hasFaktur = false;
 		hasServiceBook = false;
 		hasSpareKey = false;
-		hasAccidentDamage = false;
-		hasFloodDamage = false;
+		isFloodFree = true;
+		isAccidentFree = true;
 		adminNotes = "";
 		conditionNotes = "";
 		customerName = "";
@@ -747,44 +749,44 @@
 									Riwayat & Kondisi Kendaraan
 								</h4>
 
-								<!-- Simple Checkboxes for Pernah Tabrakan & Pernah Banjir -->
+								<!-- Simple Checkboxes for Bebas Banjir & Bebas Lakalantas -->
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
 									<label
-										class="flex items-start gap-3 p-4 rounded-xl border transition cursor-pointer {hasAccidentDamage
-											? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
+										class="flex items-start gap-3 p-4 rounded-xl border transition cursor-pointer {isFloodFree
+											? 'border-emerald-600 bg-emerald-50/40 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
 											: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
 									>
 										<input
 											type="checkbox"
-											bind:checked={hasAccidentDamage}
-											class="size-4 mt-0.5 rounded text-red-700 accent-red-700 shrink-0"
+											bind:checked={isFloodFree}
+											class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 										/>
 										<div>
 											<span class="text-sm font-bold block text-gray-900"
-												>{tradeInCaptions.form.accidentDamaged}</span
+												>{tradeInCaptions.form.floodFree}</span
 											>
 											<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed"
-												>{tradeInCaptions.form.accidentDamagedDesc}</span
+												>{tradeInCaptions.form.floodFreeDesc}</span
 											>
 										</div>
 									</label>
 
 									<label
-										class="flex items-start gap-3 p-4 rounded-xl border transition cursor-pointer {hasFloodDamage
-											? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
+										class="flex items-start gap-3 p-4 rounded-xl border transition cursor-pointer {isAccidentFree
+											? 'border-emerald-600 bg-emerald-50/40 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
 											: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
 									>
 										<input
 											type="checkbox"
-											bind:checked={hasFloodDamage}
-											class="size-4 mt-0.5 rounded text-red-700 accent-red-700 shrink-0"
+											bind:checked={isAccidentFree}
+											class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 										/>
 										<div>
 											<span class="text-sm font-bold block text-gray-900"
-												>{tradeInCaptions.form.floodDamaged}</span
+												>{tradeInCaptions.form.accidentFree}</span
 											>
 											<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed"
-												>{tradeInCaptions.form.floodDamagedDesc}</span
+												>{tradeInCaptions.form.accidentFreeDesc}</span
 											>
 										</div>
 									</label>

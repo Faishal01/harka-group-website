@@ -54,9 +54,19 @@ export const POST: APIRoute = async ({ request }) => {
 		const hasSpareKey = formData.get("hasSpareKey") === "true";
 		const adminNotes = (formData.get("adminNotes") || "").toString().trim() || null;
 
-		// Condition
-		const hasAccidentDamage = formData.get("hasAccidentDamage") === "true";
-		const hasFloodDamage = formData.get("hasFloodDamage") === "true";
+		// Condition & Certifications (Banjir 1st, Lakalantas 2nd)
+		const isFloodFree =
+			formData.get("isFloodFree") !== null
+				? formData.get("isFloodFree") === "true"
+				: formData.get("hasFloodDamage") !== null
+					? formData.get("hasFloodDamage") !== "true"
+					: true;
+		const isAccidentFree =
+			formData.get("isAccidentFree") !== null
+				? formData.get("isAccidentFree") === "true"
+				: formData.get("hasAccidentDamage") !== null
+					? formData.get("hasAccidentDamage") !== "true"
+					: true;
 		const conditionNotes = (formData.get("conditionNotes") || "").toString().trim() || null;
 
 		// Photos metadata
@@ -127,8 +137,8 @@ export const POST: APIRoute = async ({ request }) => {
 			hasServiceBook,
 			hasSpareKey,
 			adminNotes,
-			hasAccidentDamage,
-			hasFloodDamage,
+			isFloodFree,
+			isAccidentFree,
 			conditionNotes,
 			photos: uploadedPhotos,
 			createdAt: now,

@@ -21,6 +21,8 @@ export const labels: Record<string, any> = {
 	ownershipStatus: "Status Kepemilikan",
 	plateNumber: "Nomor Polisi / Plat Nomor",
 	taxExpirationDate: "Masa Berlaku Pajak",
+	isFloodFree: "Bukan Bekas Banjir",
+	isAccidentFree: "Bebas Lakalantas",
 	hasFloodDamage: "Riwayat Terendam Banjir",
 	hasAccidentDamage: "Riwayat Tabrakan / Laka",
 	seatingCapacity: "Kapasitas Penumpang",

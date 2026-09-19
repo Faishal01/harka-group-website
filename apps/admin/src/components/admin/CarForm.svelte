@@ -53,8 +53,8 @@
 
 	let ownershipStatus = car?.ownershipStatus || "first_hand";
 	let plateNumber = car?.plateNumber || "";
-	let hasFloodDamage = car?.hasFloodDamage ?? false;
-	let hasAccidentDamage = car?.hasAccidentDamage ?? false;
+	let isFloodFree = car?.isFloodFree ?? true;
+	let isAccidentFree = car?.isAccidentFree ?? true;
 
 	const existingTaxDate = car?.taxExpirationDate ? new Date(car.taxExpirationDate) : null;
 	let taxMonth = existingTaxDate ? (existingTaxDate.getMonth() + 1).toString() : "";
@@ -199,8 +199,8 @@
 				engineSizeCC,
 				ownershipStatus,
 				plateNumber: plateNumber.trim() || null,
-				hasFloodDamage,
-				hasAccidentDamage,
+				isFloodFree,
+				isAccidentFree,
 				taxExpirationDate,
 				seatingCapacity,
 				gallery: finalGallery,
@@ -605,43 +605,51 @@
 
 				<div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-100">
 					<span class="block text-sm font-semibold text-gray-700 mb-3">
-						Riwayat & Kondisi Khusus Kendaraan
+						Sertifikasi & Kondisi Khusus Kendaraan
 					</span>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<!-- 1. Kondisi Banjir (First) -->
 						<label
-							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {hasAccidentDamage
-								? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-								: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
+							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {isFloodFree
+								? 'border-emerald-600 bg-emerald-50/50 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
+								: 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'}"
 						>
 							<input
 								type="checkbox"
-								bind:checked={hasAccidentDamage}
-								class="size-4 mt-0.5 rounded text-red-700 accent-red-700 shrink-0"
+								bind:checked={isFloodFree}
+								class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 							/>
 							<div>
-								<span class="text-sm font-bold block text-gray-900"
-									>Pernah Mengalami Tabrakan / Laka</span
-								>
+								<span class="text-sm font-bold block text-gray-900">
+									{isFloodFree ? "Bukan Bekas Banjir" : "⚠️ Pernah Terendam Banjir"}
+								</span>
 								<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed">
-									Centang jika unit pernah mengalami insiden tabrakan atau perbaikan bodi besar
+									{isFloodFree
+										? "Unit terverifikasi aman dan tidak memiliki riwayat terendam banjir"
+										: "Unit terindikasi pernah terkena genangan air tinggi atau terendam banjir"}
 								</span>
 							</div>
 						</label>
 
+						<!-- 2. Kondisi Lakalantas (Second) -->
 						<label
-							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {hasFloodDamage
-								? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-								: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
+							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {isAccidentFree
+								? 'border-emerald-600 bg-emerald-50/50 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
+								: 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'}"
 						>
 							<input
 								type="checkbox"
-								bind:checked={hasFloodDamage}
-								class="size-4 mt-0.5 rounded text-red-700 accent-red-700 shrink-0"
+								bind:checked={isAccidentFree}
+								class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 							/>
 							<div>
-								<span class="text-sm font-bold block text-gray-900">Pernah Terendam Banjir</span>
+								<span class="text-sm font-bold block text-gray-900">
+									{isAccidentFree ? "Bebas Lakalantas" : "⚠️ Pernah Mengalami Lakalantas"}
+								</span>
 								<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed">
-									Centang jika unit pernah terkena genangan air tinggi atau terendam banjir
+									{isAccidentFree
+										? "Struktur rangka dan bodi unit utuh, bebas dari insiden tabrakan besar"
+										: "Unit memiliki riwayat tabrakan atau perbaikan struktur bodi besar"}
 								</span>
 							</div>
 						</label>

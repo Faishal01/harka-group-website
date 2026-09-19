@@ -25,8 +25,8 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			horsePower,
 			engineSizeCC,
 			ownershipStatus,
-			hasFloodDamage = false,
-			hasAccidentDamage = false,
+			isFloodFree = true,
+			isAccidentFree = true,
 			taxExpirationDate,
 			seatingCapacity,
 			plateNumber,
@@ -78,8 +78,12 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			horsePower: horsePower ? Number(horsePower) : null,
 			engineSizeCC: engineSizeCC ? Number(engineSizeCC) : null,
 			ownershipStatus: ownershipStatus || null,
-			hasFloodDamage: Boolean(hasFloodDamage),
-			hasAccidentDamage: Boolean(hasAccidentDamage),
+			isFloodFree:
+				payload.hasFloodDamage !== undefined ? !payload.hasFloodDamage : Boolean(isFloodFree),
+			isAccidentFree:
+				payload.hasAccidentDamage !== undefined
+					? !payload.hasAccidentDamage
+					: Boolean(isAccidentFree),
 			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
 			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
 			plateNumber: plateNumber || null,

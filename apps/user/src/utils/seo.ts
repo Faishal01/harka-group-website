@@ -53,7 +53,7 @@ export function formatCarMetaTitle(car: {
 	const vehicleName = `${yearStr}${car.make} ${car.model}`;
 
 	if (car.archiveReason === "sold") {
-		return `[TERJUAL] ${vehicleName} Bekas | ${siteName} Jakarta`;
+		return `[TERJUAL] ${vehicleName} Bekas | ${siteName}`;
 	}
 
 	const priceStr = formatRupiahCompact(car.price);
@@ -122,15 +122,9 @@ export function generateAutoDealerSchema(origin = SITE_URL) {
 		openingHoursSpecification: [
 			{
 				"@type": "OpeningHoursSpecification",
-				dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+				dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 				opens: "09:00",
 				closes: "18:00",
-			},
-			{
-				"@type": "OpeningHoursSpecification",
-				dayOfWeek: "Saturday",
-				opens: "09:00",
-				closes: "17:00",
 			},
 		],
 	};

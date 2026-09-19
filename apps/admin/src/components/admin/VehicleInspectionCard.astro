@@ -22,6 +22,8 @@ interface Props {
 	adminNotes?: string | null;
 
 	// Condition & History
+	isFloodFree?: boolean;
+	isAccidentFree?: boolean;
 	hasAccidentDamage?: boolean;
 	hasFloodDamage?: boolean;
 	conditionNotes?: string | null;
@@ -46,11 +48,16 @@ const {
 	hasServiceBook = false,
 	hasSpareKey = false,
 	adminNotes,
-	hasAccidentDamage = false,
-	hasFloodDamage = false,
+	isFloodFree,
+	isAccidentFree,
+	hasAccidentDamage,
+	hasFloodDamage,
 	conditionNotes,
 	photos = [],
 } = Astro.props;
+
+const floodFree = isFloodFree !== undefined ? isFloodFree : !hasFloodDamage;
+const accidentFree = isAccidentFree !== undefined ? isAccidentFree : !hasAccidentDamage;
 ---
 
 <div class="space-y-8">
@@ -196,25 +203,23 @@ const {
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
 			<div
-				class={`p-4 rounded-xl border flex items-center justify-between ${hasAccidentDamage ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}
+				class={`p-4 rounded-xl border flex items-center justify-between ${!floodFree ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}
 			>
 				<div>
-					<span class="text-xs text-gray-500 block">Riwayat Laka / Tabrakan</span>
-					<span
-						class={`text-sm font-bold ${hasAccidentDamage ? "text-red-800" : "text-green-800"}`}
-					>
-						{hasAccidentDamage ? "⚠️ Ada Riwayat Tabrakan" : "🛡️ Bebas Riwayat Tabrakan"}
+					<span class="text-xs text-gray-500 block">Riwayat Terendam Banjir</span>
+					<span class={`text-sm font-bold ${!floodFree ? "text-red-800" : "text-green-800"}`}>
+						{floodFree ? "🌊 Bebas Riwayat Banjir" : "⚠️ Pernah Terendam Banjir"}
 					</span>
 				</div>
 			</div>
 
 			<div
-				class={`p-4 rounded-xl border flex items-center justify-between ${hasFloodDamage ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}
+				class={`p-4 rounded-xl border flex items-center justify-between ${!accidentFree ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}
 			>
 				<div>
-					<span class="text-xs text-gray-500 block">Riwayat Terendam Banjir</span>
-					<span class={`text-sm font-bold ${hasFloodDamage ? "text-red-800" : "text-green-800"}`}>
-						{hasFloodDamage ? "⚠️ Ada Riwayat Banjir" : "🌊 Bebas Riwayat Banjir"}
+					<span class="text-xs text-gray-500 block">Riwayat Laka / Tabrakan</span>
+					<span class={`text-sm font-bold ${!accidentFree ? "text-red-800" : "text-green-800"}`}>
+						{accidentFree ? "🛡️ Bebas Lakalantas" : "⚠️ Pernah Mengalami Lakalantas"}
 					</span>
 				</div>
 			</div>

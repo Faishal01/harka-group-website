@@ -123,17 +123,9 @@ const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 												<div class="space-y-1 text-xs">
 													<div class="flex justify-between gap-x-4">
 														<span class="text-gray-600">
-															{contactPage.days.monday} - {contactPage.days.friday}:
+															{contactPage.days.monday} - {contactPage.days.sunday}:
 														</span>
 														<span class="font-semibold text-gray-900">{hours.monday}</span>
-													</div>
-													<div class="flex justify-between gap-x-4">
-														<span class="text-gray-600">{contactPage.days.saturday}:</span>
-														<span class="font-semibold text-gray-900">{hours.saturday}</span>
-													</div>
-													<div class="flex justify-between gap-x-4">
-														<span class="text-gray-600">{contactPage.days.sunday}:</span>
-														<span class="font-semibold text-red-600">{hours.sunday}</span>
 													</div>
 												</div>
 											</dd>
