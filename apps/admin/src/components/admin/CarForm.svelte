@@ -524,7 +524,7 @@
 								bind:checked={hasFloodDamage}
 								class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
 							/>
-							<span class="text-sm font-medium text-gray-900">Pernah Terendam Banjir</span>
+							<span class="text-sm font-medium text-gray-900">Bukan Bekas Banjir</span>
 						</label>
 						<label class="flex items-center gap-3 cursor-pointer">
 							<input
