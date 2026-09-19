@@ -43,6 +43,13 @@
       "when": 1789145609300,
       "tag": "0005_lean_cars_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789576219713,
+      "tag": "0006_add_trade_in_submissions",
+      "breakpoints": true
     }
   ]
 }

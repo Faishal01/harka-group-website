@@ -1,0 +1,31 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Section from "~/components/Section.astro";
+import Container from "~/components/Container.astro";
+import Heading from "~/components/Heading.astro";
+import TradeInWizard from "~/components/trade-in/TradeInWizard.svelte";
+import { tradeInCaptions } from "~/data/captions";
+---
+
+<Layout
+	pageTitle={tradeInCaptions.title}
+	title={tradeInCaptions.title}
+	description={tradeInCaptions.subtitle}
+>
+	<Section class:list={"bg-gray-50 py-10 sm:py-14"}>
+		<Container>
+			<div class="max-w-4xl mx-auto mb-10 text-center">
+				<Heading>
+					<h1 class="h2 font-bold text-gray-900 mb-3" slot="heading-title">
+						{tradeInCaptions.title}
+					</h1>
+					<p slot="heading-content" class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+						{tradeInCaptions.subtitle}
+					</p>
+				</Heading>
+			</div>
+
+			<TradeInWizard client:load />
+		</Container>
+	</Section>
+</Layout>

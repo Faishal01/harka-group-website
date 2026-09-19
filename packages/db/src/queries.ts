@@ -1,5 +1,5 @@
 import { and, eq, gte, isNull, like, lte, or, sql, desc, asc } from "drizzle-orm";
-import { cars, type Car } from "./schema";
+import { cars, type Car, tradeInSubmissions, type TradeInSubmission } from "./schema";
 
 export interface CarFilterParams {
 	make?: string;
@@ -204,3 +204,29 @@ export async function getDistinctColors(db: any): Promise<string[]> {
 
 	return rows.map((r) => r.color).filter(Boolean);
 }
+
+/**
+ * Returns all trade-in submissions sorted by newest first.
+ */
+export async function getTradeInSubmissions(db: any): Promise<TradeInSubmission[]> {
+	return await db
+		.select()
+		.from(tradeInSubmissions)
+		.orderBy(desc(tradeInSubmissions.createdAt));
+}
+
+/**
+ * Returns a specific trade-in submission by ID.
+ */
+export async function getTradeInSubmissionById(
+	db: any,
+	id: string,
+): Promise<TradeInSubmission | undefined> {
+	const results = await db
+		.select()
+		.from(tradeInSubmissions)
+		.where(eq(tradeInSubmissions.id, id))
+		.limit(1);
+	return results[0];
+}
+

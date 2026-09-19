@@ -12,6 +12,11 @@ export const menuMain: MainMenuItem[] = [
 		url: "/cars",
 	},
 	{
+		id: "trade-in",
+		label: "Tukar Tambah",
+		url: "/trade-in",
+	},
+	{
 		id: "contact",
 		label: "Hubungi Kami",
 		url: "/contact",
@@ -28,6 +33,10 @@ export const menuNavigation: MenuNavigation = {
 		{
 			name: "Stok",
 			url: "/cars",
+		},
+		{
+			name: "Tukar Tambah",
+			url: "/trade-in",
 		},
 	],
 };
