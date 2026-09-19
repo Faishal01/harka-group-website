@@ -5,12 +5,20 @@ import Container from "~/components/Container.astro";
 import Heading from "~/components/Heading.astro";
 import TradeInWizard from "~/components/trade-in/TradeInWizard.svelte";
 import { tradeInCaptions } from "~/data/captions";
+import { SITE_URL, generateBreadcrumbSchema } from "~/utils/seo";
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+	{ name: "Beranda", url: "/" },
+	{ name: "Tukar Tambah", url: "/trade-in" },
+]);
 ---
 
 <Layout
-	pageTitle={tradeInCaptions.title}
+	pageTitle={`${tradeInCaptions.title} | Estimasi Instan & Transparan Harka Group`}
 	title={tradeInCaptions.title}
 	description={tradeInCaptions.subtitle}
+	canonicalUrl={`${SITE_URL}/trade-in`}
+	schema={breadcrumbSchema}
 >
 	<Section class:list={"bg-gray-50 py-10 sm:py-14"}>
 		<Container>

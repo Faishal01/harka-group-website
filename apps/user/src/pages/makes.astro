@@ -8,6 +8,8 @@ import Section from "~/components/Section.astro";
 import Container from "~/components/Container.astro";
 import Heading from "~/components/Heading.astro";
 import { env } from "cloudflare:workers";
+import { siteName } from "~/data/config";
+import { SITE_URL, generateBreadcrumbSchema } from "~/utils/seo";
 
 const db = getDb(env);
 const rows = (await db
@@ -29,9 +31,20 @@ const groupedMakes: Record<string, string[]> = uniqueMakes.reduce(
 	},
 	{} as Record<string, string[]>,
 );
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+	{ name: "Beranda", url: "/" },
+	{ name: "Merek Mobil", url: "/makes" },
+]);
 ---
 
-<Layout pageTitle="Makes">
+<Layout
+	pageTitle={`Pilihan Merek Mobil Bekas | ${siteName}`}
+	title="Merek Mobil Bekas"
+	description={`Cari mobil bekas berkualitas berdasarkan merek terpercaya (Toyota, Honda, BMW, Mercedes-Benz, dan lainnya) di ${siteName}.`}
+	canonicalUrl={`${SITE_URL}/makes`}
+	schema={breadcrumbSchema}
+>
 	<Section class:list={"bg-white"}>
 		<Container class:list={"max-w-3xl"}>
 			<Heading>

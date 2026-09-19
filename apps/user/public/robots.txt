@@ -1,0 +1,8 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /api/images/
+Disallow: /api/trade-in
+
+# Sitemaps
+Sitemap: https://harkagroup.id/sitemap.xml
