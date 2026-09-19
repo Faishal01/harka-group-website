@@ -27,187 +27,435 @@ const taxStatus = car.taxExpirationDate
 		? `Hidup (s/d ${new Date(car.taxExpirationDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })})`
 		: `Mati (${new Date(car.taxExpirationDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })})`
 	: "-";
+
+const backTab = car.archiveReason === "sold" ? "sold" : car.deletedAt ? "archived" : "active";
+const backUrl = `/cars?tab=${backTab}`;
+const backLabel =
+	car.archiveReason === "sold"
+		? "Kembali ke Daftar Terjual"
+		: car.deletedAt
+			? "Kembali ke Daftar Arsip"
+			: "Kembali ke Daftar Stok";
+
+const formattedPublishDate = new Date(car.publishDate).toLocaleDateString("id-ID", {
+	day: "numeric",
+	month: "long",
+	year: "numeric",
+});
 ---
 
-<Layout
-	pageTitle={`${car.archiveReason === "sold" ? "Lihat Terjual" : "Lihat Arsip"}: ${car.title}`}
->
-	<Section class="bg-gray-50 min-h-[70vh] py-12">
+<Layout pageTitle={`Detail Unit: ${car.title}`}>
+	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
 		<Container>
-			<div class="flex flex-col mb-6 gap-2">
-				<a
-					href={`/cars?tab=${car.archiveReason === "sold" ? "sold" : "archived"}`}
-					class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium w-fit"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-4 w-4 mr-1"
-						viewBox="0 0 20 20"
-						fill="currentColor"
+			<!-- Top Navigation & Action Header -->
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+				<div>
+					<a
+						href={backUrl}
+						class="text-gray-500 hover:text-gray-900 transition inline-flex items-center text-sm font-medium mb-2"
 					>
-						<path
-							fill-rule="evenodd"
-							d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-							clip-rule="evenodd"></path>
-					</svg>
-					{car.archiveReason === "sold" ? "Kembali ke Terjual" : "Kembali ke Arsip"}
-				</a>
-				<h1 class="text-2xl md:text-3xl font-bold text-gray-900">
-					{car.archiveReason === "sold" ? "Data Terjual" : "Data Arsip"}
-				</h1>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4 mr-1.5"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+								clip-rule="evenodd"></path>
+						</svg>
+						{backLabel}
+					</a>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{car.title}</h1>
+					<p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+						ID Referensi: <span class="font-mono font-bold text-gray-700">{car.id}</span> &bull; Dipublikasikan
+						pada {formattedPublishDate}
+					</p>
+				</div>
+
+				<div class="flex items-center gap-3">
+					<a
+						href={`/cars/edit/${car.id}`}
+						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-700 text-white font-bold hover:bg-red-800 transition shadow-sm text-sm"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="w-4 h-4"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+							></path>
+						</svg>
+						<span>Ubah Data Mobil</span>
+					</a>
+				</div>
 			</div>
 
-			<div
-				class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
-			>
-				<div class="md:flex">
-					<div class="md:shrink-0 bg-gray-100 md:w-1/3">
-						{
-							car.gallery?.[0]?.image ? (
-								<img
-									class="h-48 w-full object-cover md:h-full"
-									src={car.gallery[0].image}
-									alt={car.gallery[0].alt || car.title}
-								/>
-							) : (
-								<div class="h-48 w-full flex items-center justify-center text-gray-500 md:h-full bg-gray-200">
-									Tidak Ada Gambar
-								</div>
-							)
-						}
-					</div>
-					<div class="p-8 w-full">
+			<!-- Status Banner if Sold or Archived -->
+			{
+				car.deletedAt && (
+					<div
+						class={`rounded-2xl p-5 mb-8 border flex items-center gap-4 ${car.archiveReason === "sold" ? "bg-emerald-50 border-emerald-200" : "bg-gray-100 border-gray-300"}`}
+					>
 						<div
-							class="uppercase tracking-wide text-sm font-semibold mb-1 flex items-center justify-between"
+							class={`p-2.5 rounded-xl ${car.archiveReason === "sold" ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-700"}`}
 						>
-							<span class="text-blue-600">
-								{`${car.make} ${car.model}`}
-							</span>
-
-							<span
-								class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
 							>
-								ID: {car.id}
+								{car.archiveReason === "sold" ? (
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								) : (
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								)}
+							</svg>
+						</div>
+						<div>
+							<h3 class="text-sm font-bold text-gray-900">
+								{car.archiveReason === "sold"
+									? "Unit Telah Terjual"
+									: "Unit Telah Diarsipkan / Dihapus dari Daftar Aktif"}
+							</h3>
+							<p class="text-xs text-gray-600 mt-0.5">
+								Diarsipkan pada{" "}
+								{new Date(car.deletedAt).toLocaleDateString("id-ID", {
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</p>
+						</div>
+					</div>
+				)
+			}
+
+			<div class="space-y-8">
+				<!-- Top Specs & Highlights Card -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+					<div
+						class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200"
+					>
+						<div>
+							<div class="flex flex-wrap items-center gap-2 mb-2">
+								<span
+									class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100"
+								>
+									Tahun {car.year}
+								</span>
+								<span
+									class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+								>
+									{car.bodyType}
+								</span>
+								<span
+									class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+								>
+									{car.fuelType}
+								</span>
+								<span
+									class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+								>
+									{transmissionMap[car.transmission] || car.transmission}
+								</span>
+								{
+									car.featured && (
+										<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+											Unggulan
+										</span>
+									)
+								}
+								{
+									car.hidden && (
+										<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+											Draf (Tersembunyi)
+										</span>
+									)
+								}
+							</div>
+							<h2 class="text-2xl sm:text-3xl font-bold text-gray-900">
+								{`${car.make} ${car.model}`}
+							</h2>
+							{
+								car.excerpt && (
+									<p class="text-sm text-gray-500 mt-2 max-w-2xl leading-relaxed">{car.excerpt}</p>
+								)
+							}
+						</div>
+
+						<div
+							class="bg-red-50 rounded-2xl px-6 py-4 border border-red-100 shrink-0 text-left md:text-right"
+						>
+							<span class="text-xs font-bold text-red-600 uppercase tracking-wide block">
+								Harga Jual Showroom
+							</span>
+							<span class="text-2xl sm:text-3xl font-black text-red-700">
+								{getPrice(car.price)}
+							</span>
+						</div>
+					</div>
+
+					<!-- Quick Specs Grid -->
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6">
+						<div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block">Jarak Tempuh (KM)</span>
+							<span class="text-base font-bold text-gray-900 mt-0.5 block">
+								{car.mileage.toLocaleString("id-ID")} KM
 							</span>
 						</div>
 
-						<h2 class="block mt-1 text-2xl leading-tight font-bold text-black mb-2">
-							{car.title}
-						</h2>
+						<div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block">Transmisi</span>
+							<span class="text-base font-bold text-gray-900 mt-0.5 block">
+								{transmissionMap[car.transmission] || car.transmission}
+							</span>
+						</div>
 
-						<p class="text-3xl font-bold text-gray-900 mb-6">
-							{getPrice(car.price)}
-						</p>
+						<div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block">Status Kepemilikan</span>
+							<span class="text-base font-bold text-gray-900 mt-0.5 block">
+								{ownershipLabel}
+							</span>
+						</div>
 
-						<!-- Status Banner -->
-						<div
-							class={`rounded-lg p-4 mb-6 border flex items-center gap-4 ${car.archiveReason === "sold" ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}
-						>
-							<div
-								class={`p-2 rounded-full ${car.archiveReason === "sold" ? "bg-green-100 text-green-600" : "bg-gray-200 text-gray-600"}`}
+						<div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block">Status Pajak STNK</span>
+							<span
+								class={`text-sm font-bold block mt-0.5 ${car.taxExpirationDate && new Date(car.taxExpirationDate) < new Date() ? "text-red-700" : "text-emerald-700"}`}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									class="h-6 w-6"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
+								{taxStatus}
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Detail Spesifikasi Mesin & Teknis -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+					<h3
+						class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2.5 pb-3 border-b border-gray-100"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="w-5 h-5 text-red-700"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 012.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+								clip-rule="evenodd"></path>
+						</svg>
+						Spesifikasi Teknis & Data Internal
+					</h3>
+
+					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Tenaga Mesin</span>
+							<span class="text-base font-bold text-gray-900">
+								{car.horsePower ? `${car.horsePower} PS` : "-"}
+							</span>
+						</div>
+
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Kapasitas Mesin</span>
+							<span class="text-base font-bold text-gray-900">
+								{car.engineSizeCC ? `${car.engineSizeCC.toLocaleString("id-ID")} CC` : "-"}
+							</span>
+						</div>
+
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Warna Eksterior</span>
+							<span class="text-base font-bold text-gray-900">{car.color || "-"}</span>
+						</div>
+
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Kapasitas Penumpang</span>
+							<span class="text-base font-bold text-gray-900">
+								{car.seatingCapacity ? `${car.seatingCapacity} Kursi` : "-"}
+							</span>
+						</div>
+
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Nomor Polisi / Plat (Internal)</span>
+							<span class="text-base font-mono font-bold text-gray-900">
+								{car.plateNumber || "-"}
+							</span>
+						</div>
+
+						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+							<span class="text-xs text-gray-500 block mb-1">Video Tur YouTube</span>
+							{
+								car.videoTourUrl ? (
+									<a
+										href={car.videoTourUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-red-700 font-semibold hover:underline inline-flex items-center gap-1 mt-0.5"
+									>
+										<span>Buka Video Tur</span>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="w-3.5 h-3.5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+											/>
+										</svg>
+									</a>
+								) : (
+									<span class="text-gray-400">-</span>
+								)
+							}
+						</div>
+					</div>
+				</div>
+
+				<!-- Riwayat & Kondisi Fisik -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+					<h3
+						class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2.5 pb-3 border-b border-gray-100"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="w-5 h-5 text-red-700"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+								clip-rule="evenodd"></path>
+						</svg>
+						Riwayat & Integritas Fisik Kendaraan
+					</h3>
+
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<div
+							class={`p-4 rounded-xl border flex items-center justify-between ${car.hasAccidentDamage ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}
+						>
+							<div>
+								<span class="text-xs text-gray-500 block">Riwayat Laka / Tabrakan</span>
+								<span
+									class={`text-sm font-bold mt-0.5 block ${car.hasAccidentDamage ? "text-red-800" : "text-emerald-800"}`}
 								>
 									{
-										car.archiveReason === "sold" ? (
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-											/>
-										) : (
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-											/>
-										)
+										car.hasAccidentDamage
+											? "⚠️ Ada Riwayat Tabrakan / Laka"
+											: "🛡️ Bebas Riwayat Tabrakan"
 									}
-								</svg>
-							</div>
-							<div>
-								<p class="text-sm font-medium text-gray-900">
-									{car.archiveReason === "sold" ? "Terjual" : "Dihapus dari Daftar Aktif"}
-								</p>
-								<p class="text-sm text-gray-500">
-									Diarsipkan pada {
-										car.deletedAt
-											? car.deletedAt.toLocaleDateString("id-ID", {
-													year: "numeric",
-													month: "long",
-													day: "numeric",
-												})
-											: "Tanggal tidak diketahui"
-									}
-								</p>
+								</span>
 							</div>
 						</div>
 
-						<!-- Basic Specs -->
-						<div class="grid grid-cols-2 gap-4 text-sm">
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Nomor Polisi / Plat</span>
-								<span class="font-medium font-mono text-gray-900">{car.plateNumber || "-"}</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Tahun Model</span>
-								<span class="font-medium text-gray-900">{car.year}</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Jarak Tempuh</span>
-								<span class="font-medium text-gray-900"
-									>{car.mileage.toLocaleString("id-ID")} km</span
-								>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Transmisi</span>
-								<span class="font-medium text-gray-900"
-									>{transmissionMap[car.transmission] || car.transmission}</span
-								>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Warna Eksterior</span>
-								<span class="font-medium text-gray-900">{car.color}</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Kapasitas Penumpang</span>
-								<span class="font-medium text-gray-900"
-									>{car.seatingCapacity ? `${car.seatingCapacity} Kursi` : "-"}</span
-								>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Status Kepemilikan</span>
-								<span class="font-medium text-blue-700">{ownershipLabel}</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Status Pajak</span>
-								<span class="font-medium text-gray-900">{taxStatus}</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Riwayat Banjir</span>
+						<div
+							class={`p-4 rounded-xl border flex items-center justify-between ${car.hasFloodDamage ? "bg-red-50 border-red-200" : "bg-emerald-50 border-emerald-200"}`}
+						>
+							<div>
+								<span class="text-xs text-gray-500 block">Riwayat Terendam Banjir</span>
 								<span
-									class={`font-medium ${car.hasFloodDamage ? "text-red-600" : "text-green-600"}`}
+									class={`text-sm font-bold mt-0.5 block ${car.hasFloodDamage ? "text-red-800" : "text-emerald-800"}`}
 								>
-									{car.hasFloodDamage ? "Pernah Terendam Banjir" : "Bebas Banjir (Aman)"}
-								</span>
-							</div>
-							<div class="border-t pt-2">
-								<span class="text-gray-500 block mb-1">Riwayat Tabrakan / Laka</span>
-								<span
-									class={`font-medium ${car.hasAccidentDamage ? "text-red-600" : "text-green-600"}`}
-								>
-									{car.hasAccidentDamage ? "Pernah Tabrakan" : "Bebas Tabrakan (Aman)"}
+									{car.hasFloodDamage ? "⚠️ Ada Riwayat Banjir" : "🌊 Bebas Riwayat Banjir"}
 								</span>
 							</div>
 						</div>
 					</div>
+				</div>
+
+				<!-- Galeri Foto Media Grid -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+					<div class="flex items-center justify-between mb-6 pb-3 border-b border-gray-100">
+						<h3 class="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="w-5 h-5 text-red-700"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+									clip-rule="evenodd"></path>
+							</svg>
+							Galeri Foto Kendaraan
+						</h3>
+						<span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+							{car.gallery?.length || 0} Foto Dokumentasi
+						</span>
+					</div>
+
+					{
+						car.gallery && car.gallery.length > 0 ? (
+							<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+								{car.gallery.map((photo, idx) => (
+									<a
+										href={photo.image}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="group relative bg-gray-100 rounded-xl overflow-hidden border border-gray-200 aspect-4/3 flex items-center justify-center hover:shadow-md transition"
+									>
+										<img
+											src={photo.image}
+											alt={photo.alt || car.title}
+											class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+											loading="lazy"
+										/>
+										{idx === 0 && (
+											<span class="absolute top-2 left-2 px-2 py-0.5 bg-red-700 text-white font-bold text-[10px] uppercase rounded-md shadow-xs z-10">
+												Cover
+											</span>
+										)}
+										<div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="w-6 h-6"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
+												/>
+											</svg>
+										</div>
+									</a>
+								))}
+							</div>
+						) : (
+							<div class="text-center py-12 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+								<p class="text-sm">Belum ada foto yang diunggah untuk unit ini.</p>
+							</div>
+						)
+					}
 				</div>
 			</div>
 		</Container>
