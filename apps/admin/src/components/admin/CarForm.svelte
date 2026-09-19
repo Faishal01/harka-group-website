@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { navigate } from "astro:transitions/client";
 	import { ownershipStatuses, ownershipStatusMap } from "@harka/db";
+	import { compressCarImages } from "~/utils/imageCompression";
 
 	export let car: any = null;
 
 	let isLoading = false;
+	let statusMessage = "";
 	let errorMessage = "";
 	let successMessage = "";
 
@@ -131,6 +133,7 @@
 	const submitForm = async () => {
 		const finalTitle = title.trim() || `${make} ${model} ${year}`;
 		isLoading = true;
+		statusMessage = "";
 		errorMessage = "";
 		successMessage = "";
 
@@ -140,8 +143,16 @@
 			let uploadedUrls: string[] = [];
 
 			if (newFiles.length > 0) {
+				statusMessage = `Mengompresi foto (0/${newFiles.length})...`;
+				const { compressed, totalBytes } = await compressCarImages(newFiles, (current, total) => {
+					statusMessage = `Mengompresi foto (${current}/${total})...`;
+				});
+
+				const mbFormatted = (totalBytes / (1024 * 1024)).toFixed(1);
+				statusMessage = `Mengunggah ${compressed.length} foto (${mbFormatted} MB)...`;
+
 				const uploadFormData = new FormData();
-				newFiles.forEach((f) => uploadFormData.append("file", f));
+				compressed.forEach((f) => uploadFormData.append("file", f));
 
 				const uploadRes = await fetch("/api/images/upload", {
 					method: "POST",
@@ -167,6 +178,8 @@
 			if (taxMonth && taxYear) {
 				taxExpirationDate = new Date(Number(taxYear), Number(taxMonth) - 1, 1).toISOString();
 			}
+
+			statusMessage = "Menyimpan data mobil...";
 
 			// Step 3: Submit flattened payload
 			const payload = {
@@ -214,6 +227,7 @@
 			errorMessage = err.message;
 			showPopup("Error", err.message, "error");
 			isLoading = false;
+			statusMessage = "";
 		}
 	};
 </script>
@@ -785,8 +799,32 @@
 		<div
 			class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
 		>
-			<div class="text-xs text-gray-500">
-				{#if !isFormValid}
+			<div class="text-xs sm:text-sm text-gray-500">
+				{#if isLoading && statusMessage}
+					<span class="text-red-700 font-semibold flex items-center gap-1.5 animate-pulse">
+						<svg
+							class="animate-spin w-4 h-4 text-red-700"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							></circle>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							></path>
+						</svg>
+						{statusMessage}
+					</span>
+				{:else if !isFormValid}
 					<span class="text-amber-700 font-medium flex items-center gap-1.5">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -870,7 +908,7 @@
 								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 							></path>
 						</svg>
-						<span>Menyimpan...</span>
+						<span>{statusMessage || "Menyimpan..."}</span>
 					{:else}
 						<span>{car?.id ? "Simpan Perubahan" : "Simpan Kendaraan"}</span>
 					{/if}
