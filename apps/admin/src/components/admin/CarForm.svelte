@@ -532,7 +532,7 @@
 								bind:checked={hasAccidentDamage}
 								class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
 							/>
-							<span class="text-sm font-medium text-gray-900">Pernah Mengalami Tabrakan / Laka</span
+							<span class="text-sm font-medium text-gray-900">Bebas Lakalantas</span
 							>
 						</label>
 					</div>
