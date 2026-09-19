@@ -135,3 +135,60 @@ export const adminWhitelist = sqliteTable("admin_whitelist", {
 	email: text("email").primaryKey(),
 	createdAt: integer("created_at", { mode: "timestamp" }),
 });
+
+export interface TradeInPhoto {
+	slot: string;
+	label: string;
+	url: string;
+}
+
+export const tradeInSubmissions = sqliteTable(
+	"trade_in_submissions",
+	{
+		id: text("id").primaryKey(), // 12-character NanoID
+
+		// Customer Contact
+		customerName: text("customer_name").notNull(),
+		customerPhone: text("customer_phone").notNull(),
+		customerCity: text("customer_city").notNull(),
+		customerEmail: text("customer_email"),
+
+		// Vehicle Specs
+		make: text("make").notNull(),
+		model: text("model").notNull(),
+		year: integer("year").notNull(),
+		mileage: integer("mileage").notNull(), // km
+		transmission: text("transmission").notNull(),
+		fuelType: text("fuel_type"),
+		sellingPrice: integer("selling_price").notNull(), // IDR
+
+		// Administration & Legalitas
+		bpkbStatus: text("bpkb_status", { enum: ["on_hand", "leasing"] }).notNull(),
+		stnkStatus: text("stnk_status", { enum: ["active", "expired"] }).notNull(),
+		stnkTaxExpiry: text("stnk_tax_expiry"), // e.g. "10/2026"
+		hasFaktur: integer("has_faktur", { mode: "boolean" }).notNull().default(false),
+		hasServiceBook: integer("has_service_book", { mode: "boolean" }).notNull().default(false),
+		hasSpareKey: integer("has_spare_key", { mode: "boolean" }).notNull().default(false),
+		adminNotes: text("admin_notes"),
+
+		// Condition & History
+		hasAccidentDamage: integer("has_accident_damage", { mode: "boolean" }).notNull().default(false),
+		hasFloodDamage: integer("has_flood_damage", { mode: "boolean" }).notNull().default(false),
+		conditionNotes: text("condition_notes"),
+
+		// Media
+		photos: text("photos", { mode: "json" }).$type<TradeInPhoto[]>().notNull(),
+
+		// Timestamps
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("trade_in_created_at_idx").on(table.createdAt),
+		index("trade_in_customer_phone_idx").on(table.customerPhone),
+	],
+);
+
+export type TradeInSubmission = typeof tradeInSubmissions.$inferSelect;
+export type InsertTradeInSubmission = typeof tradeInSubmissions.$inferInsert;
+

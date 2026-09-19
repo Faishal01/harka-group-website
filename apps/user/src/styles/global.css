@@ -21,14 +21,19 @@
 }
 
 @layer base {
-	input,
+	input:not([type="checkbox"]):not([type="radio"]),
 	textarea,
 	select {
 		@apply mt-1 bg-white block transition w-full rounded-md px-3 py-2 text-base outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-gray-900;
 	}
 
+	input[type="checkbox"],
+	input[type="radio"] {
+		@apply cursor-pointer accent-red-700;
+	}
+
 	label {
-		@apply block text-sm/6 font-semibold;
+		@apply text-sm/6 font-semibold;
 	}
 }
 

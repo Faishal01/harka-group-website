@@ -15,6 +15,12 @@ export const adminMenus: AdminMenuItem[] = [
 		icon: "lucide:car-front",
 	},
 	{
+		id: "trade-in",
+		label: "Tukar Tambah",
+		url: "/trade-in",
+		icon: "lucide:arrow-left-right",
+	},
+	{
 		id: "team",
 		label: "Tim",
 		url: "#",
