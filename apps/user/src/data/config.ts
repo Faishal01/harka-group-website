@@ -21,15 +21,15 @@ export const email = {
 };
 
 export const address = {
-	street: "Jl. Sultan Iskandar Muda No. 18, Kebayoran Lama",
-	city: "Jakarta Selatan",
-	zip: "12240",
-	state: "DKI Jakarta",
+	street: "Jl. Prof. Dr. Hamka",
+	city: "Padang Panjang",
+	zip: "27118",
+	state: "Sumatera Barat",
 	country: "Indonesia",
 };
 
 export const googleMapsUrl =
-	"https://maps.google.com/?q=Jl.+Sultan+Iskandar+Muda+No.+18,+Kebayoran+Lama,+Jakarta+Selatan";
+	"https://maps.app.goo.gl/38gWLaZ3QBoCkX2a9";
 
 export const socialMedia = {
 	facebook: {
@@ -55,6 +55,6 @@ export const hours = {
 	wednesday: "09:00 - 18:00",
 	thursday: "09:00 - 18:00",
 	friday: "09:00 - 18:00",
-	saturday: "09:00 - 17:00",
-	sunday: "Tutup",
+	saturday: "09:00 - 18:00",
+	sunday: "09:00 -18:00",
 };
