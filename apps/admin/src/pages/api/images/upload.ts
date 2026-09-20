@@ -19,7 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
 				const uniqueId = Math.random().toString(36).substring(2, 15);
 				const filename = `gallery-${Date.now()}-${uniqueId}.${ext}`;
 
-				await (env as any).IMAGES_BUCKET.put(filename, arrayBuffer, {
+				await env.IMAGES_BUCKET.put(filename, arrayBuffer, {
 					httpMetadata: { contentType: file.type },
 				});
 				urls.push(`/api/images/${filename}`);
@@ -32,8 +32,9 @@ export const POST: APIRoute = async ({ request }) => {
 				"Content-Type": "application/json",
 			},
 		});
-	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Failed to upload images" }), {
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : "Failed to upload images";
+		return new Response(JSON.stringify({ error: message }), {
 			status: 500,
 			headers: {
 				"Content-Type": "application/json",

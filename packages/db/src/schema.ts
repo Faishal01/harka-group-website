@@ -161,6 +161,7 @@ export const tradeInSubmissions = sqliteTable(
 		sellingPrice: integer("selling_price").notNull(), // IDR
 
 		// Administration & Legalitas
+		plateNumber: text("plate_number"),
 		bpkbStatus: text("bpkb_status", { enum: ["on_hand", "leasing"] }).notNull(),
 		stnkStatus: text("stnk_status", { enum: ["active", "expired"] }).notNull(),
 		stnkTaxExpiry: text("stnk_tax_expiry"), // e.g. "10/2026"

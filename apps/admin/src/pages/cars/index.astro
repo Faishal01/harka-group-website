@@ -593,7 +593,10 @@ const allCars = await db.query.cars.findMany({
 			document.querySelectorAll(".quick-archive-btn").forEach((btn) => {
 				btn.addEventListener("click", (e) => {
 					const target = e.currentTarget as HTMLElement;
-					openModal(target.dataset.id!, target.dataset.reason as any);
+					openModal(
+						target.dataset.id!,
+						target.dataset.reason as "restore" | "sold" | "removed" | "delete",
+					);
 				});
 			});
 		});

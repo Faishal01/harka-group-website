@@ -9,20 +9,18 @@ import IconOdometer from "~/assets/images/icons/odometer.svg";
 import { fuelTypeMap, transmissionMap } from "~/data/constants";
 
 interface Props {
-	data?: any;
 	car?: Car;
 }
 
-const { data, car: propCar } = Astro.props;
-const car = propCar ?? data;
+const { car } = Astro.props;
 
-const rawMileage = car?.mileage ?? car?.history?.mileage ?? 0;
+const rawMileage = car?.mileage ?? 0;
 const mileage = getMileage(rawMileage);
 const mileageUnit = getMileageUnit();
-const transmissionVal = car?.transmission ?? car?.technical?.transmission ?? "";
-const yearVal = car?.year ?? car?.history?.year ?? "";
-const fuelTypeVal = car?.fuelType ?? car?.efficiency?.fuelType ?? "";
-const horsePowerVal = car?.horsePower ?? car?.technical?.horsePower;
+const transmissionVal = car?.transmission ?? "";
+const yearVal = car?.year ?? "";
+const fuelTypeVal = car?.fuelType ?? "";
+const horsePowerVal = car?.horsePower;
 
 const pillClasses =
 	"flex items-center gap-x-1 rounded-full bg-gray-100 px-3 py-1 ring-1 ring-gray-200";

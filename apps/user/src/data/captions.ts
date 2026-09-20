@@ -62,6 +62,7 @@ export const viewPage = {
 	bhp: "PS",
 	kw: "kW",
 	ownershipStatus: "Status Kepemilikan",
+	plateNumber: "Plat Nomor",
 	floodHistory: "Riwayat Banjir",
 	accidentHistory: "Riwayat Tabrakan / Laka",
 	taxStatus: "Status Pajak",

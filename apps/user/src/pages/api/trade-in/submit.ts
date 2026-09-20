@@ -9,6 +9,8 @@ import {
 	type TradeInPhoto,
 	type InsertTradeInSubmission,
 	type TradeInSubmission,
+	validatePlateNumber,
+	formatPlateNumber,
 } from "@harka/db";
 import { notifyTradeInSubmission } from "~/utils/notifications";
 
@@ -46,6 +48,18 @@ export const POST: APIRoute = async ({ request }) => {
 		}
 
 		// Administration checklist
+		const plateNumberRaw = (formData.get("plateNumber") || "").toString().trim();
+		if (!plateNumberRaw || !validatePlateNumber(plateNumberRaw)) {
+			return new Response(
+				JSON.stringify({
+					error:
+						"Nomor Polisi / Plat Nomor wajib diisi dengan format yang valid (mis. B 1234 ABC).",
+				}),
+				{ status: 400, headers: { "Content-Type": "application/json" } },
+			);
+		}
+		const plateNumber = formatPlateNumber(plateNumberRaw);
+
 		const bpkbStatus = (formData.get("bpkbStatus") || "on_hand").toString();
 		const stnkStatus = (formData.get("stnkStatus") || "active").toString();
 		const stnkTaxExpiry = (formData.get("stnkTaxExpiry") || "").toString().trim() || null;
@@ -130,6 +144,7 @@ export const POST: APIRoute = async ({ request }) => {
 			transmission,
 			fuelType,
 			sellingPrice,
+			plateNumber,
 			bpkbStatus: bpkbStatus === "leasing" ? "leasing" : "on_hand",
 			stnkStatus: stnkStatus === "expired" ? "expired" : "active",
 			stnkTaxExpiry,

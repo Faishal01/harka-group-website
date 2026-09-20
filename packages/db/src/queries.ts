@@ -1,5 +1,8 @@
 import { and, eq, gte, isNull, like, lte, or, sql, desc, asc } from "drizzle-orm";
 import { cars, type Car, tradeInSubmissions, type TradeInSubmission } from "./schema";
+import { maskPlateNumber } from "./plate";
+import type { Database } from "./client";
+import type { FuelType, Transmission, BodyType, OwnershipStatus } from "./constants";
 
 export interface CarFilterParams {
 	make?: string;
@@ -9,11 +12,11 @@ export interface CarFilterParams {
 	price?: string;
 	mileageFrom?: string | number;
 	mileageTo?: string | number;
-	fuelType?: string;
-	bodyType?: string;
-	transmission?: string;
+	fuelType?: FuelType | "all" | string;
+	bodyType?: BodyType | "all" | string;
+	transmission?: Transmission | "all" | string;
 	color?: string;
-	ownershipStatus?: string;
+	ownershipStatus?: OwnershipStatus | "all" | string;
 	search?: string;
 	sort?: "price-asc" | "price-desc" | "mileage-asc" | "mileage-desc" | "year-asc" | "year-desc";
 	page?: number;
@@ -27,7 +30,7 @@ export interface QueryOptions {
 }
 
 export async function getFilteredCars(
-	db: any,
+	db: Database,
 	params: CarFilterParams = {},
 	options: QueryOptions = {},
 ): Promise<Car[]> {
@@ -84,15 +87,15 @@ export async function getFilteredCars(
 	}
 
 	if (params.fuelType && params.fuelType !== "all") {
-		conditions.push(eq(cars.fuelType, params.fuelType as any));
+		conditions.push(eq(cars.fuelType, params.fuelType as FuelType));
 	}
 
 	if (params.bodyType && params.bodyType !== "all") {
-		conditions.push(eq(cars.bodyType, params.bodyType as any));
+		conditions.push(eq(cars.bodyType, params.bodyType as BodyType));
 	}
 
 	if (params.transmission && params.transmission !== "all") {
-		conditions.push(eq(cars.transmission, params.transmission as any));
+		conditions.push(eq(cars.transmission, params.transmission as Transmission));
 	}
 
 	if (params.color && params.color !== "all") {
@@ -100,7 +103,7 @@ export async function getFilteredCars(
 	}
 
 	if (params.ownershipStatus && params.ownershipStatus !== "all") {
-		conditions.push(eq(cars.ownershipStatus, params.ownershipStatus as any));
+		conditions.push(eq(cars.ownershipStatus, params.ownershipStatus as OwnershipStatus));
 	}
 
 	if (params.search) {
@@ -165,13 +168,22 @@ export async function getFilteredCars(
 		.where(conditions.length > 0 ? and(...conditions) : undefined)
 		.orderBy(...orderClauses);
 
-	return await query;
+	const results: Car[] = await query;
+
+	if (!options.adminView) {
+		return results.map((car) => ({
+			...car,
+			plateNumber: maskPlateNumber(car.plateNumber),
+		}));
+	}
+
+	return results;
 }
 
 /**
  * Returns distinct makes and their respective models for filters.
  */
-export async function getMakeModelSet(db: any): Promise<{ make: string; models: string[] }[]> {
+export async function getMakeModelSet(db: Database): Promise<{ make: string; models: string[] }[]> {
 	const rows = (await db
 		.selectDistinct({ make: cars.make, model: cars.model })
 		.from(cars)
@@ -195,7 +207,7 @@ export async function getMakeModelSet(db: any): Promise<{ make: string; models: 
 /**
  * Returns all distinct colors currently in stock.
  */
-export async function getDistinctColors(db: any): Promise<string[]> {
+export async function getDistinctColors(db: Database): Promise<string[]> {
 	const rows = (await db
 		.selectDistinct({ color: cars.color })
 		.from(cars)
@@ -208,7 +220,7 @@ export async function getDistinctColors(db: any): Promise<string[]> {
 /**
  * Returns all trade-in submissions sorted by newest first.
  */
-export async function getTradeInSubmissions(db: any): Promise<TradeInSubmission[]> {
+export async function getTradeInSubmissions(db: Database): Promise<TradeInSubmission[]> {
 	return await db
 		.select()
 		.from(tradeInSubmissions)
@@ -219,7 +231,7 @@ export async function getTradeInSubmissions(db: any): Promise<TradeInSubmission[
  * Returns a specific trade-in submission by ID.
  */
 export async function getTradeInSubmissionById(
-	db: any,
+	db: Database,
 	id: string,
 ): Promise<TradeInSubmission | undefined> {
 	const results = await db

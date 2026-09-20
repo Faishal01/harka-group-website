@@ -1,4 +1,4 @@
-export const labels: Record<string, any> = {
+export const labels: Record<string, string> = {
 	id: "ID",
 	title: "Judul",
 	gallery: "Galeri",

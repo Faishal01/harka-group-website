@@ -30,7 +30,7 @@ const searchParamsRecord = Object.fromEntries(searchParamsValue.entries());
 let allCars: Car[] = [];
 try {
 	allCars = await getFilteredCars(searchParamsRecord, env);
-} catch (error) {
+} catch {
 	// If error, allCars remains empty
 }
 

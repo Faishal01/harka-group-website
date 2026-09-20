@@ -9,7 +9,7 @@ import { env } from "cloudflare:workers";
 const { recent = false, slugs = [], ui = "list" } = Astro.props;
 const db = getDb(env);
 
-let dbCars = [];
+let dbCars: (typeof carsTable.$inferSelect)[];
 
 if (recent) {
 	dbCars = await db

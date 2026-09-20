@@ -1,5 +1,5 @@
 ---
-import { getDb, cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable, maskPlateNumber } from "@harka/db";
 import { eq } from "drizzle-orm";
 
 import Layout from "~/layouts/Layout.astro";
@@ -43,13 +43,19 @@ if (!id) {
 }
 
 const db = getDb(env);
-const car = await db.query.cars.findFirst({
+const rawCar = await db.query.cars.findFirst({
 	where: eq(carsTable.id, id),
 });
 
-if (!car || car.hidden || car.archiveReason === "removed") {
+if (!rawCar || rawCar.hidden || rawCar.archiveReason === "removed") {
 	return Astro.redirect("/404");
 }
+
+// Server-side masking: raw plate number never enters user context
+const car = {
+	...rawCar,
+	plateNumber: maskPlateNumber(rawCar.plateNumber),
+};
 
 const isSold = car.archiveReason === "sold";
 const pageTitle = formatCarMetaTitle(car);

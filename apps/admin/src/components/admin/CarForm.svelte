@@ -5,10 +5,11 @@
 		ownershipStatusMap,
 		validatePlateNumber,
 		formatPlateNumber,
+		type Car,
 	} from "@harka/db";
 	import { compressCarImages } from "~/utils/imageCompression";
 
-	export let car: any = null;
+	export let car: Car | null = null;
 
 	let isLoading = false;
 	let statusMessage = "";
@@ -41,7 +42,7 @@
 	// Direct Flat Bindings
 	let title = car?.title || "";
 	let excerpt = car?.excerpt || "";
-	let relatedUrl = car?.relatedUrl || (car as any)?.videoTourUrl || "";
+	let relatedUrl = car?.relatedUrl || "";
 
 	let make = car?.make || "";
 	let model = car?.model || "";
@@ -111,7 +112,7 @@
 
 	// Gallery State
 	type GalleryItem = { id: string; url?: string; file?: File; alt: string; preview: string };
-	let galleryItems: GalleryItem[] = (car?.gallery || []).map((g: any, i: number) => ({
+	let galleryItems: GalleryItem[] = (car?.gallery || []).map((g, i) => ({
 		id: `existing-${i}`,
 		url: g.image,
 		alt: g.alt,
@@ -184,9 +185,10 @@
 					method: "POST",
 					body: uploadFormData,
 				});
-				const uploadData = (await uploadRes.json()) as any;
+				const uploadData = (await uploadRes.json()) as { error?: string; urls?: string[] };
 				if (!uploadRes.ok) throw new Error(uploadData.error || "Gagal mengunggah foto");
-				uploadedUrls = uploadData.urls;
+
+				uploadedUrls = uploadData.urls || [];
 			}
 
 			// Step 2: Construct final gallery
@@ -249,15 +251,16 @@
 				body: JSON.stringify(payload),
 			});
 
-			const data = (await response.json()) as any;
+			const data = (await response.json()) as { error?: string };
 			if (!response.ok) throw new Error(data.error || "Gagal menyimpan kendaraan");
 
 			const action = car?.id ? "updated" : "created";
 			successMessage = `Kendaraan berhasil ${action === "created" ? "ditambahkan" : "diperbarui"}!`;
 			showPopup("Berhasil!", successMessage, "success", action);
-		} catch (err: any) {
-			errorMessage = err.message;
-			showPopup("Error", err.message, "error");
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : "Gagal menyimpan kendaraan";
+			errorMessage = message;
+			showPopup("Error", message, "error");
 			isLoading = false;
 			statusMessage = "";
 		}
@@ -569,7 +572,7 @@
 						bind:value={ownershipStatus}
 						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
 					>
-						{#each ownershipStatuses as status}
+						{#each ownershipStatuses as status (status)}
 							<option value={status}>{ownershipStatusMap[status] || status}</option>
 						{/each}
 					</select>
@@ -603,7 +606,7 @@
 							class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
 						>
 							<option value="">- Pilih Bulan (-) -</option>
-							{#each months as m}
+							{#each months as m (m.value)}
 								<option value={m.value}>{m.label}</option>
 							{/each}
 						</select>
@@ -612,7 +615,7 @@
 							class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
 						>
 							<option value="">- Pilih Tahun (-) -</option>
-							{#each years as y}
+							{#each years as y (y)}
 								<option value={y.toString()}>{y}</option>
 							{/each}
 						</select>

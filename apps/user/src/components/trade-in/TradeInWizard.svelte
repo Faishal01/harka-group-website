@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tradeInCaptions } from "~/data/captions";
 	import { compressImagesBatch, type ImageSlotItem } from "~/utils/imageCompression";
+	import { validatePlateNumber, formatPlateNumber } from "@harka/db";
 
 	// Current wizard step (1 to 4)
 	let currentStep = 1;
@@ -22,6 +23,29 @@
 	let sellingPrice: number | "" = "";
 
 	// Form State: Step 2 (Documents & Condition)
+	let plateNumber = "";
+	let plateError = "";
+
+	function handlePlateBlur() {
+		const trimmed = plateNumber.trim();
+		if (!trimmed) {
+			plateError = "Nomor Polisi / Plat Nomor wajib diisi.";
+			return;
+		}
+		if (validatePlateNumber(trimmed)) {
+			plateError = "";
+			plateNumber = formatPlateNumber(trimmed) || trimmed;
+		} else {
+			plateError = "Format plat nomor tidak valid (mis. B 1234 ABC)";
+		}
+	}
+
+	function handlePlateInput() {
+		if (plateError && validatePlateNumber(plateNumber.trim())) {
+			plateError = "";
+		}
+	}
+
 	let bpkbStatus: "on_hand" | "leasing" = "on_hand";
 	let stnkStatus: "active" | "expired" = "active";
 	let stnkTaxExpiry = "";
@@ -130,7 +154,7 @@
 		typeof sellingPrice === "number" &&
 		sellingPrice > 0;
 
-	const isStep2Valid = true; // All fields have defaults or are optional
+	$: isStep2Valid = validatePlateNumber(plateNumber.trim());
 
 	$: isStep4Valid =
 		customerName.trim().length > 0 &&
@@ -140,7 +164,10 @@
 	function goToStep(step: number) {
 		if (step > currentStep) {
 			if (currentStep === 1 && !isStep1Valid) return;
-			if (currentStep === 2 && !isStep2Valid) return;
+			if (currentStep === 2) {
+				handlePlateBlur();
+				if (!isStep2Valid) return;
+			}
 			if (currentStep === 3 && !isStep3Valid) return;
 		}
 		currentStep = step;
@@ -149,7 +176,7 @@
 
 	// Final Submit
 	async function handleSubmit() {
-		if (!isStep1Valid || !isStep3Valid || !isStep4Valid) {
+		if (!isStep1Valid || !isStep2Valid || !isStep3Valid || !isStep4Valid) {
 			submitError = "Harap periksa kembali semua data yang diperlukan.";
 			return;
 		}
@@ -196,6 +223,7 @@
 			formData.append("fuelType", fuelType);
 			formData.append("sellingPrice", String(sellingPrice));
 
+			formData.append("plateNumber", formatPlateNumber(plateNumber.trim()) || plateNumber.trim());
 			formData.append("bpkbStatus", bpkbStatus);
 			formData.append("stnkStatus", stnkStatus);
 			formData.append("stnkTaxExpiry", stnkTaxExpiry.trim());
@@ -355,7 +383,7 @@
 			<!-- Stepper Progress Bar -->
 			<div class="bg-gray-50 border-b border-gray-200 px-2 py-3 sm:px-6 sm:py-4">
 				<div class="grid grid-cols-4 gap-1.5 sm:gap-3 text-center text-xs sm:text-sm font-semibold">
-					{#each stepItems as step}
+					{#each stepItems as step (step.num)}
 						{@const isActive = currentStep === step.num}
 						{@const isCompleted = currentStep > step.num}
 						{@const isUpcoming = currentStep < step.num}
@@ -584,6 +612,33 @@
 								</h4>
 
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+									<div class="sm:col-span-2">
+										<label
+											for="tradeInPlateNumber"
+											class="block text-sm font-semibold text-gray-700 mb-1"
+										>
+											Nomor Polisi / Plat Nomor <span class="text-red-600">*</span>
+										</label>
+										<input
+											type="text"
+											id="tradeInPlateNumber"
+											bind:value={plateNumber}
+											on:blur={handlePlateBlur}
+											on:input={handlePlateInput}
+											placeholder="mis. B 1234 ABC"
+											class="w-full px-4 py-2.5 rounded-xl border {plateError
+												? 'border-red-500 ring-1 ring-red-500'
+												: 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-red-600 bg-white text-sm transition uppercase font-medium"
+										/>
+										{#if plateError}
+											<p class="mt-1.5 text-xs text-red-600 font-medium">{plateError}</p>
+										{:else}
+											<p class="mt-1 text-xs text-gray-400">
+												Format plat nomor kendaraan Indonesia (mis. B 1234 ABC).
+											</p>
+										{/if}
+									</div>
+
 									<div>
 										<span class="block text-sm font-semibold text-gray-700 mb-2">
 											{tradeInCaptions.form.bpkbStatus}

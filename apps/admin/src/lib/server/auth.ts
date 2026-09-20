@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import * as schema from "@harka/db";
 import { getDb } from "@harka/db";
 
-export const createAuth = (env: any) =>
+export const createAuth = (env: Env) =>
 	betterAuth({
 		baseURL: env.BETTER_AUTH_URL,
 		secret: env.BETTER_AUTH_SECRET,
