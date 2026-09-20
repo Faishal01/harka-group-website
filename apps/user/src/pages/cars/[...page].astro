@@ -21,7 +21,7 @@ import { carsPage } from "~/data/captions";
 
 import { getFilteredCars } from "~/utils/getFilteredCars";
 import { env } from "cloudflare:workers";
-import { SITE_URL, generateBreadcrumbSchema } from "~/utils/seo";
+import { SITE_URL, generateBreadcrumbSchema, DEALER_LOCATION } from "~/utils/seo";
 
 const searchParamsValue = Astro.url.searchParams;
 const searchParamsArray = Array.from(searchParamsValue);
@@ -56,11 +56,11 @@ const breadcrumbSchema = generateBreadcrumbSchema([
 	{ name: "Beranda", url: "/" },
 	{ name: "Daftar Mobil", url: "/cars" },
 ]);
-const catalogDescription = `Lihat katalog lengkap mobil bekas berkualitas bergaransi di ${siteName} Jakarta. Pilihan unit prima, inspeksi menyeluruh, harga transparan & simulasi kredit mudah.`;
+const catalogDescription = `Lihat katalog lengkap mobil bekas berkualitas bergaransi di ${siteName} ${DEALER_LOCATION}. Pilihan unit prima, inspeksi menyeluruh, harga transparan & simulasi kredit mudah.`;
 ---
 
 <Layout
-	pageTitle={`Daftar Mobil Bekas Berkualitas Jakarta | ${siteName}`}
+	pageTitle={`Daftar Mobil Bekas Berkualitas ${DEALER_LOCATION} | ${siteName}`}
 	title="Katalog Mobil Bekas"
 	description={catalogDescription}
 	canonicalUrl={`${SITE_URL}/cars`}
