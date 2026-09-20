@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getDb, cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable, validatePlateNumber, formatPlateNumber } from "@harka/db";
 import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 
@@ -40,6 +40,20 @@ export const PUT: APIRoute = async ({ request, params }) => {
 				JSON.stringify({ error: "Merek, Model, Harga, Tahun, dan Jarak Tempuh wajib diisi." }),
 				{ status: 400 },
 			);
+		}
+
+		let formattedPlate: string | null = null;
+		if (plateNumber && typeof plateNumber === "string" && plateNumber.trim() !== "") {
+			const trimmed = plateNumber.trim();
+			if (!validatePlateNumber(trimmed)) {
+				return new Response(
+					JSON.stringify({
+						error: "Format nomor polisi / plat nomor tidak valid (mis. B 1234 ABC).",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+			formattedPlate = formatPlateNumber(trimmed);
 		}
 
 		let finalTitle = title;
@@ -86,7 +100,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
 					: Boolean(isAccidentFree),
 			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
 			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
-			plateNumber: plateNumber || null,
+			plateNumber: formattedPlate,
 			gallery: gallery || null,
 			hidden: Boolean(hidden),
 			updatedAt: new Date(),

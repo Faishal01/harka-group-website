@@ -1,5 +1,12 @@
 import type { APIRoute } from "astro";
-import { getDb, cars as carsTable, generateCarId, type InsertCar } from "@harka/db";
+import {
+	getDb,
+	cars as carsTable,
+	generateCarId,
+	type InsertCar,
+	validatePlateNumber,
+	formatPlateNumber,
+} from "@harka/db";
 import { env } from "cloudflare:workers";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -39,6 +46,20 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		}
 
+		let formattedPlate: string | null = null;
+		if (plateNumber && typeof plateNumber === "string" && plateNumber.trim() !== "") {
+			const trimmed = plateNumber.trim();
+			if (!validatePlateNumber(trimmed)) {
+				return new Response(
+					JSON.stringify({
+						error: "Format nomor polisi / plat nomor tidak valid (mis. B 1234 ABC).",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+			formattedPlate = formatPlateNumber(trimmed);
+		}
+
 		let finalTitle = title;
 		if (!finalTitle || finalTitle.trim() === "") {
 			finalTitle = `${make} ${model} ${year}`;
@@ -72,7 +93,7 @@ export const POST: APIRoute = async ({ request }) => {
 					: Boolean(isAccidentFree),
 			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
 			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
-			plateNumber: plateNumber || null,
+			plateNumber: formattedPlate,
 			gallery: gallery || null,
 			hidden: Boolean(hidden),
 			publishDate: now,

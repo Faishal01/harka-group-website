@@ -120,8 +120,15 @@ const submissions = await getTradeInSubmissions(db);
 												</td>
 
 												<td class="py-4 px-4 sm:px-6">
-													<div class="font-bold text-gray-900">
-														{sub.year} {sub.make} {sub.model}
+													<div class="font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+														<span>
+															{sub.year} {sub.make} {sub.model}
+														</span>
+														{sub.plateNumber && (
+															<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 text-gray-700 border border-gray-200">
+																{sub.plateNumber}
+															</span>
+														)}
 													</div>
 													<div class="text-xs text-gray-500">
 														{sub.mileage.toLocaleString("id-ID")} KM &bull; {sub.transmission}
