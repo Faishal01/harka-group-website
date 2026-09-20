@@ -43,9 +43,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		return context.redirect("/unauthorized");
 	}
 
-	// Make session available in locals for Astro pages
+	// Make session and role available in locals for Astro pages
 	context.locals.user = session.user;
 	context.locals.session = session.session;
+	context.locals.userRole = whitelistEntry.role;
 
 	return next();
 });

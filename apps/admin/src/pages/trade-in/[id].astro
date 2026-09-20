@@ -1,0 +1,135 @@
+---
+export const prerender = false;
+
+import Layout from "~/layouts/Layout.astro";
+import Container from "~/components/Container.astro";
+import Section from "~/components/Section.astro";
+import VehicleInspectionCard from "~/components/admin/VehicleInspectionCard.astro";
+import { getDb, getTradeInSubmissionById } from "@harka/db";
+import { env } from "cloudflare:workers";
+
+const { id } = Astro.params;
+
+if (!id) {
+	return Astro.redirect("/trade-in");
+}
+
+const db = getDb(env);
+const sub = await getTradeInSubmissionById(db, id);
+
+if (!sub) {
+	return Astro.redirect("/trade-in");
+}
+
+const formattedDate = new Date(sub.createdAt).toLocaleDateString("id-ID", {
+	day: "numeric",
+	month: "long",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+});
+
+const cleanPhone = sub.customerPhone.replace(/[^0-9]/g, "");
+const waMessage = encodeURIComponent(
+	`Halo Bapak/Ibu ${sub.customerName}, kami dari Harka Autocar menindaklanjuti pengajuan tukar tambah untuk unit ${sub.year} ${sub.make} ${sub.model}. Apakah unit masih tersedia untuk dijadwalkan inspeksi fisik?`,
+);
+const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
+---
+
+<Layout pageTitle={`Inspeksi Unit: ${sub.year} ${sub.make} ${sub.model}`}>
+	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
+		<Container>
+			<!-- Top Navigation & Title -->
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+				<div>
+					<a
+						href="/trade-in"
+						class="text-gray-500 hover:text-gray-700 transition flex items-center font-medium text-sm mb-2 w-fit"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4 mr-1"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+								clip-rule="evenodd"></path>
+						</svg>
+						Kembali ke Daftar Pengajuan
+					</a>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Lembar Inspeksi Tukar Tambah</h1>
+					<p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+						ID Referensi: <span class="font-mono font-bold text-gray-700">{sub.id}</span> &bull; Diajukan
+						pada {formattedDate}
+					</p>
+				</div>
+
+				<div class="flex items-center gap-3">
+					<a
+						href={waUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition shadow-sm text-sm"
+					>
+						<svg class="size-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path
+								d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.301-.778.98-.954 1.18-.175.201-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.895-.798-1.5-1.784-1.676-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.15-.175.2-.301.301-.502.1-.201.05-.376-.025-.527-.075-.15-.678-1.634-.929-2.237-.245-.588-.493-.508-.678-.517-.175-.01-.376-.01-.577-.01s-.527.075-.803.376c-.276.301-1.054 1.03-1.054 2.512s1.079 2.914 1.23 3.115c.15.201 2.124 3.243 5.145 4.549.719.311 1.281.497 1.719.636.723.23 1.381.197 1.901.12.579-.087 1.78-.728 2.031-1.431.251-.703.251-1.306.175-1.431-.075-.125-.276-.2-.577-.35zM12.042 21.908h-.008C10.288 21.907 8.57 21.436 7.07 20.543l-.507-.301-3.754.985 1.002-3.66-.33-.526C2.518 15.485 2 13.805 2 12.046c0-5.541 4.508-10.048 10.051-10.048 2.686 0 5.21 1.047 7.108 2.946 1.899 1.899 2.945 4.423 2.945 7.109 0 5.542-4.509 10.055-10.062 10.055z"
+							></path>
+						</svg>
+						<span>Hubungi via WhatsApp</span>
+					</a>
+				</div>
+			</div>
+
+			<!-- Customer Profile Info Bar -->
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+				<h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+					Informasi Kontak Pelanggan
+				</h3>
+				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+					<div>
+						<span class="text-gray-400 block text-xs">Nama Lengkap</span>
+						<span class="font-bold text-gray-900">{sub.customerName}</span>
+					</div>
+					<div>
+						<span class="text-gray-400 block text-xs">Nomor WhatsApp</span>
+						<span class="font-bold text-gray-900">{sub.customerPhone}</span>
+					</div>
+					<div>
+						<span class="text-gray-400 block text-xs">Kota Domisili</span>
+						<span class="font-bold text-gray-900">{sub.customerCity}</span>
+					</div>
+					<div>
+						<span class="text-gray-400 block text-xs">Email</span>
+						<span class="font-medium text-gray-700">{sub.customerEmail || "-"}</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Reusable Vehicle Inspection Card -->
+			<VehicleInspectionCard
+				make={sub.make}
+				model={sub.model}
+				year={sub.year}
+				mileage={sub.mileage}
+				transmission={sub.transmission}
+				fuelType={sub.fuelType}
+				sellingPrice={sub.sellingPrice}
+				plateNumber={sub.plateNumber}
+				bpkbStatus={sub.bpkbStatus}
+				stnkStatus={sub.stnkStatus}
+				stnkTaxExpiry={sub.stnkTaxExpiry}
+				hasFaktur={sub.hasFaktur}
+				hasServiceBook={sub.hasServiceBook}
+				hasSpareKey={sub.hasSpareKey}
+				adminNotes={sub.adminNotes}
+				isFloodFree={sub.isFloodFree}
+				isAccidentFree={sub.isAccidentFree}
+				conditionNotes={sub.conditionNotes}
+				photos={sub.photos}
+			/>
+		</Container>
+	</Section>
+</Layout>

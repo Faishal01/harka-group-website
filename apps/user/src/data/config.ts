@@ -28,8 +28,7 @@ export const address = {
 	country: "Indonesia",
 };
 
-export const googleMapsUrl =
-	"https://maps.app.goo.gl/38gWLaZ3QBoCkX2a9";
+export const googleMapsUrl = "https://maps.app.goo.gl/38gWLaZ3QBoCkX2a9";
 
 export const socialMedia = {
 	facebook: {

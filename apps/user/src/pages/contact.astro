@@ -7,12 +7,17 @@ import Container from "~/components/Container.astro";
 import Heading from "~/components/Heading.astro";
 import FormContact from "~/components/forms/Contact.astro";
 import DynamicIcon from "~/components/DynamicIcon.astro";
+import { SITE_URL, generateAutoDealerSchema } from "~/utils/seo";
+
+const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 ---
 
 <Layout
-	pageTitle={contactPage.title}
+	pageTitle={`${contactPage.title} | Showroom & Layanan Harka Group`}
 	title={contactPage.title}
 	description={contactPage.headingContent}
+	canonicalUrl={`${SITE_URL}/contact`}
+	schema={autoDealerSchema}
 >
 	<Section class:list={"bg-gray-50"}>
 		<Container>

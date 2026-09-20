@@ -1,5 +1,5 @@
 ---
-import { getDb, cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable, maskPlateNumber } from "@harka/db";
 import { eq } from "drizzle-orm";
 
 import Layout from "~/layouts/Layout.astro";
@@ -23,129 +23,261 @@ import ButtonCall from "~/components/buttons/ButtonCall.astro";
 import ButtonInquire from "~/components/buttons/ButtonInquire.astro";
 import { env } from "cloudflare:workers";
 import { viewPage } from "~/data/captions";
+import { getPrice } from "~/utils/helpers";
+
+import {
+	SITE_URL,
+	formatCarMetaTitle,
+	formatCarMetaDesc,
+	generateCarSchema,
+	generateAutoDealerSchema,
+	generateBreadcrumbSchema,
+	resolveImageUrl,
+} from "~/utils/seo";
 
 export const prerender = false;
 
 const { id } = Astro.params;
 
-if (!id) {
-	return Astro.redirect("/404");
-}
-
 const db = getDb(env);
-const car = await db.query.cars.findFirst({
-	where: eq(carsTable.id, id),
-});
+const rawCar = id
+	? await db.query.cars.findFirst({
+			where: eq(carsTable.id, id),
+		})
+	: null;
 
-if (!car || car.hidden || car.archiveReason === "removed") {
-	return Astro.redirect("/404");
+const notFound = !rawCar || rawCar.hidden || rawCar.archiveReason === "removed";
+if (notFound) {
+	Astro.response.status = 404;
 }
 
-const isSold = car.archiveReason === "sold";
+// Server-side masking: raw plate number never enters user context
+const car = rawCar
+	? {
+			...rawCar,
+			plateNumber: maskPlateNumber(rawCar.plateNumber),
+		}
+	: null;
+
+const isSold = car?.archiveReason === "sold";
+const pageTitle = car ? formatCarMetaTitle(car) : "404 - Mobil Tidak Ditemukan";
+const pageDescription = car ? formatCarMetaDesc(car) : "Unit mobil tidak ditemukan";
+const coverImageKey = car?.gallery?.[0]?.image;
+const ogImage = resolveImageUrl(coverImageKey, SITE_URL);
+const vehicleName = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}` : "";
+
+const breadcrumbSchema = car
+	? generateBreadcrumbSchema([
+			{ name: "Beranda", url: "/" },
+			{ name: "Daftar Mobil", url: "/cars" },
+			{ name: car.make, url: `/cars?make=${encodeURIComponent(car.make)}` },
+			{ name: vehicleName, url: `/view/${car.id}` },
+		])
+	: undefined;
+
+const carSchema = car ? generateCarSchema(car, SITE_URL) : undefined;
+const dealerSchema = generateAutoDealerSchema(SITE_URL);
+const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) as Record<
+	string,
+	unknown
+>[];
 ---
 
-<Layout
-	pageTitle={`${car.make} ${car.model}`}
-	title={`${car.make} ${car.model}`}
-	description={car.excerpt || undefined}
->
-	<Section class:list={"bg-gray-50"}>
-		<Container class:list={"pb-0 lg:pb-0 max-sm:pt-8 print:hidden"}>
-			<ButtonGoBack />
-		</Container>
-
-		<Container class:list={"pt-0 lg:pt-0 max-md:max-w-full max-md:px-0"}>
-			<div class="bg-white shadow-md">
-				<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-					<div id="gallery-wrapper" class="relative">
-						{
-							car.gallery && car.gallery.length > 0 ? (
-								<Slider gallery={car.gallery} videoTour={car.videoTourUrl} />
-							) : (
-								<div class="lg:absolute inset-0 text-gray-200 size-full bg-gray-50 flex flex-col gap-4 items-center justify-center">
-									<IconLogo class="h-24" />
-									<span class="text-gray-400 select-none font-bold italic">
-										{viewPage.comingSoon}
-									</span>
-								</div>
-							)
-						}
+{
+	notFound || !car ? (
+		<Layout pageTitle="404 - Mobil Tidak Ditemukan" noindex>
+			<Section class:list={"bg-gray-50 min-h-[60vh] flex items-center"}>
+				<Container>
+					<div class="mx-auto flex w-full max-w-2xl flex-col items-center justify-center text-center px-6 py-20">
+						<p class="text-sm font-bold tracking-widest text-red-600 uppercase">404 - Not Found</p>
+						<h1 class="h3 font-bold text-gray-900 mt-3">Mobil Tidak Ditemukan</h1>
+						<p class="mt-4 text-base text-gray-600">
+							Maaf, unit mobil yang Anda cari tidak tersedia, sedang disembunyikan, atau telah
+							dihapus dari inventaris kami.
+						</p>
+						<div class="mt-8 flex flex-wrap justify-center gap-4">
+							<a
+								href="/cars"
+								class="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white bg-gray-900 rounded-lg shadow hover:bg-gray-800 transition gap-2"
+							>
+								<span>←</span>
+								<span>Lihat Stok Tersedia</span>
+							</a>
+							<a
+								href="/"
+								class="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition"
+							>
+								Kembali ke Beranda
+							</a>
+						</div>
 					</div>
+				</Container>
+			</Section>
+		</Layout>
+	) : (
+		<Layout
+			pageTitle={pageTitle}
+			title={vehicleName}
+			description={pageDescription}
+			image={ogImage}
+			imageAlt={`Foto mobil bekas ${vehicleName} di Harka Group`}
+			ogType="product"
+			canonicalUrl={`${SITE_URL}/view/${car.id}`}
+			schema={pageSchemas}
+		>
+			<Section class:list={"bg-gray-50 max-lg:pb-20"}>
+				<Container class:list={"pb-2 lg:pb-3 max-sm:pt-6 print:hidden"}>
+					<nav
+						aria-label="Breadcrumb"
+						class="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-4 overflow-x-auto whitespace-nowrap"
+					>
+						<a href="/" class="hover:text-gray-900 transition">
+							Beranda
+						</a>
+						<span class="text-gray-400">/</span>
+						<a href="/cars" class="hover:text-gray-900 transition">
+							Daftar Mobil
+						</a>
+						<span class="text-gray-400">/</span>
+						<a
+							href={`/cars?make=${encodeURIComponent(car.make)}`}
+							class="hover:text-gray-900 transition"
+						>
+							{car.make}
+						</a>
+						<span class="text-gray-400">/</span>
+						<span class="text-gray-900 font-medium truncate" aria-current="page">
+							{vehicleName}
+						</span>
+					</nav>
+					<ButtonGoBack />
+				</Container>
 
-					<div>
-						<div class="p-4 lg:p-8 flex flex-col items-start h-full">
-							<div class="mb-4 lg:mb-6">
-								<h1 class="h4">{car.title}</h1>
-								{car.excerpt && <p class="mt-8">{car.excerpt}</p>}
-							</div>
-
-							<hr class="w-full border-gray-200" />
-
-							{
-								isSold ? (
-									<div class="mt-8 mb-6">
-										<span class="inline-block bg-red-600 text-white font-black text-4xl px-8 py-3 uppercase tracking-widest rounded shadow-sm transform -skew-x-6">
-											SOLD
+				<Container class:list={"pt-0 lg:pt-0 max-md:max-w-full max-md:px-0"}>
+					<div class="bg-white shadow-md">
+						<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+							<div id="gallery-wrapper" class="relative">
+								{car.gallery && car.gallery.length > 0 ? (
+									<Slider gallery={car.gallery} />
+								) : (
+									<div class="lg:absolute inset-0 text-gray-200 size-full bg-gray-50 flex flex-col gap-4 items-center justify-center">
+										<IconLogo class="h-24" />
+										<span class="text-gray-400 select-none font-bold italic">
+											{viewPage.comingSoon}
 										</span>
 									</div>
-								) : (
-									<Price price={car.price} />
-								)
-							}
+								)}
+							</div>
 
-							<FeatureBox car={car} />
+							<div>
+								<div class="p-4 lg:p-8 flex flex-col items-start h-full">
+									<div class="mb-4 lg:mb-6">
+										<h1 class="h4">{car.title}</h1>
+									</div>
 
-							<hr class="w-full mt-auto border-gray-200" />
+									<hr class="w-full border-gray-200" />
 
-							<div
-								class="flex flex-col sm:flex-row sm:items-center gap-x-4 mt-8 w-full max-sm:gap-y-8 print:hidden"
-							>
-								<div class="flex items-center max-sm:justify-center gap-x-4 w-full">
-									<ButtonCall />
-									{!isSold && <ButtonInquire />}
-								</div>
+									{isSold ? (
+										<div class="mt-8 mb-6">
+											<span class="inline-block bg-red-600 text-white font-black text-4xl px-8 py-3 uppercase tracking-widest rounded shadow-sm transform -skew-x-6">
+												SOLD
+											</span>
+										</div>
+									) : (
+										<Price price={car.price} />
+									)}
 
-								<div class="sm:ml-auto flex items-center max-sm:justify-center gap-x-4 shrink-0">
-									<ButtonShare />
-									<ButtonPrint />
+									<FeatureBox car={car} />
+
+									<hr class="w-full mt-auto border-gray-200" />
+
+									<div class="flex flex-col sm:flex-row sm:items-center gap-x-4 mt-8 w-full max-sm:gap-y-8 print:hidden">
+										<div class="flex items-center flex-wrap max-sm:justify-center gap-4 w-full">
+											{!isSold && (
+												<>
+													<ButtonCall car={car} url={`${SITE_URL}/view/${car.id}`} />
+													<ButtonInquire />
+												</>
+											)}
+											{car.relatedUrl && (
+												<a
+													href={car.relatedUrl}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="not-prose inline-flex items-center justify-center px-4 py-3 text-base font-bold transition duration-300 rounded shadow-sm border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-400 gap-1.5"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-4 shrink-0 -mt-0.5 text-gray-600"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+														/>
+													</svg>
+													<span>Tautan Terkait</span>
+												</a>
+											)}
+										</div>
+
+										<div class="sm:ml-auto flex items-center max-sm:justify-center gap-x-4 shrink-0">
+											<ButtonShare />
+											<ButtonPrint />
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
 
-				<div class="p-4 lg:p-8">
-					<h2 class="h6 feature-icon feature-icon-description">{viewPage.description}</h2>
-					<div class="prose max-w-none mt-8">
-						<p>
-							{car.excerpt || viewPage.noDescription}
-						</p>
-					</div>
-				</div>
-
-				<div
-					id="features-list"
-					class="p-4 lg:p-8 divide-y divide-gray-200 max-w-5xl grid grid-cols-1 gap-y-12 feature-list"
-				>
-					<FeaturesList car={car} />
-				</div>
-
-				<hr class="border-gray-200" />
-
-				<!-- Form -->
-				{
-					!isSold && (
-						<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
-							<FormInquire />
+						<div class="p-4 lg:p-8">
+							<h2 class="h6 feature-icon feature-icon-description">{viewPage.description}</h2>
+							<div class="prose max-w-none mt-8">
+								<p>{car.excerpt || viewPage.noDescription}</p>
+							</div>
 						</div>
-					)
-				}
-			</div>
-		</Container>
-	</Section>
 
-	<ModalSlider />
-</Layout>
+						<div
+							id="features-list"
+							class="p-4 lg:p-8 divide-y divide-gray-200 max-w-5xl grid grid-cols-1 gap-y-12 feature-list"
+						>
+							<FeaturesList car={car} />
+						</div>
+
+						<hr class="border-gray-200" />
+
+						{/* Form */}
+						{!isSold && (
+							<div id="ask-a-question" class="p-8 max-w-3xl pt-12 prose print:hidden">
+								<FormInquire car={car} url={`${SITE_URL}/view/${car.id}`} />
+							</div>
+						)}
+					</div>
+				</Container>
+			</Section>
+
+			<ModalSlider />
+
+			{!isSold && (
+				<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-3 shadow-lg flex items-center justify-between gap-3 print:hidden">
+					<div class="min-w-0">
+						<span class="text-xs text-gray-500 block truncate">{vehicleName}</span>
+						<span class="text-base font-extrabold text-gray-900 block">{getPrice(car.price)}</span>
+					</div>
+					<ButtonCall
+						car={car}
+						url={`${SITE_URL}/view/${car.id}`}
+						class="shrink-0 text-sm py-2 px-3.5"
+					/>
+				</div>
+			)}
+		</Layout>
+	)
+}
 
 <script>
 	import GLightbox from "glightbox";

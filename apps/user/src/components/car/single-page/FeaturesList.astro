@@ -67,16 +67,28 @@ const sections = [
 				value: ownershipLabel,
 			},
 			{
+				label: viewPage.plateNumber,
+				value: car.plateNumber || null,
+			},
+			{
 				label: viewPage.taxStatus,
 				value: taxFormatted,
 			},
 			{
 				label: viewPage.floodHistory,
+<<<<<<< HEAD
 				value: car.hasFloodDamage ? "Ada" : "Tidak Ada",
 			},
 			{
 				label: viewPage.accidentHistory,
 				value: car.hasAccidentDamage ? "Ada" : "Tidak Ada",
+=======
+				value: car.isFloodFree ? "Tidak Ada" : "Ada",
+			},
+			{
+				label: viewPage.accidentHistory,
+				value: car.isAccidentFree ? "Tidak Ada" : "Ada",
+>>>>>>> 052d489d45fcf65174cbb567ffb6d5b6fa2e7d4d
 			},
 		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
 	},

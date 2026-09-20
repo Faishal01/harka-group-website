@@ -8,7 +8,7 @@ export const cars = sqliteTable(
 		id: text("id").primaryKey(), // 12-character NanoID
 		title: text("title").notNull(),
 		excerpt: text("excerpt"), // Description & highlights
-		videoTourUrl: text("video_tour_url"),
+		relatedUrl: text("related_url"),
 
 		// Core Vehicle Specs (Searchable & Filtered)
 		make: text("make").notNull(),
@@ -27,8 +27,8 @@ export const cars = sqliteTable(
 
 		// Provenance & Legalitas
 		ownershipStatus: text("ownership_status").$type<OwnershipStatus>(),
-		hasFloodDamage: integer("has_flood_damage", { mode: "boolean" }).notNull().default(false),
-		hasAccidentDamage: integer("has_accident_damage", { mode: "boolean" }).notNull().default(false),
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(false),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
 		taxExpirationDate: integer("tax_expiration_date", { mode: "timestamp" }),
 		seatingCapacity: integer("seating_capacity"),
 
@@ -40,7 +40,6 @@ export const cars = sqliteTable(
 
 		// Flags & Lifecycle
 		hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
-		featured: integer("featured", { mode: "boolean" }).notNull().default(false),
 		archiveReason: text("archive_reason", { enum: ["sold", "removed"] }),
 
 		// Timestamps
@@ -59,7 +58,6 @@ export const cars = sqliteTable(
 		index("cars_ownership_status_idx").on(table.ownershipStatus),
 		index("cars_deleted_at_idx").on(table.deletedAt),
 		index("cars_publish_date_idx").on(table.publishDate),
-		index("cars_featured_idx").on(table.featured),
 	],
 );
 
@@ -131,7 +129,73 @@ export const verification = sqliteTable(
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const adminWhitelistRoleEnum = ["superadmin", "admin"] as const;
+export type AdminWhitelistRole = (typeof adminWhitelistRoleEnum)[number];
+
 export const adminWhitelist = sqliteTable("admin_whitelist", {
 	email: text("email").primaryKey(),
+	role: text("role", { enum: adminWhitelistRoleEnum }).notNull().default("admin"),
+	createdBy: text("created_by"),
 	createdAt: integer("created_at", { mode: "timestamp" }),
 });
+
+export type AdminWhitelist = typeof adminWhitelist.$inferSelect;
+export type InsertAdminWhitelist = typeof adminWhitelist.$inferInsert;
+
+export interface TradeInPhoto {
+	slot: string;
+	label: string;
+	url: string;
+}
+
+export const tradeInSubmissions = sqliteTable(
+	"trade_in_submissions",
+	{
+		id: text("id").primaryKey(), // 12-character NanoID
+
+		// Customer Contact
+		customerName: text("customer_name").notNull(),
+		customerPhone: text("customer_phone").notNull(),
+		customerCity: text("customer_city").notNull(),
+		customerEmail: text("customer_email"),
+
+		// Vehicle Specs
+		make: text("make").notNull(),
+		model: text("model").notNull(),
+		year: integer("year").notNull(),
+		mileage: integer("mileage").notNull(), // km
+		transmission: text("transmission").notNull(),
+		fuelType: text("fuel_type"),
+		sellingPrice: integer("selling_price").notNull(), // IDR
+
+		// Administration & Legalitas
+		plateNumber: text("plate_number"),
+		bpkbStatus: text("bpkb_status", { enum: ["on_hand", "leasing"] }).notNull(),
+		stnkStatus: text("stnk_status", { enum: ["active", "expired"] }).notNull(),
+		stnkTaxExpiry: text("stnk_tax_expiry"), // e.g. "10/2026"
+		hasFaktur: integer("has_faktur", { mode: "boolean" }).notNull().default(false),
+		hasServiceBook: integer("has_service_book", { mode: "boolean" }).notNull().default(false),
+		hasSpareKey: integer("has_spare_key", { mode: "boolean" }).notNull().default(false),
+		adminNotes: text("admin_notes"),
+
+		// Condition & History
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(false),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
+		conditionNotes: text("condition_notes"),
+
+		// Media
+		photos: text("photos", { mode: "json" }).$type<TradeInPhoto[]>().notNull(),
+
+		// Timestamps
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("trade_in_created_at_idx").on(table.createdAt),
+		index("trade_in_customer_phone_idx").on(table.customerPhone),
+	],
+);
+
+export type TradeInSubmission = typeof tradeInSubmissions.$inferSelect;
+export type InsertTradeInSubmission = typeof tradeInSubmissions.$inferInsert;
+

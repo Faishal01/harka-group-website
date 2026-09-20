@@ -3,17 +3,58 @@ import "~/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import Header from "~/components/Header.astro";
 import Footer from "~/components/Footer.astro";
-import { siteName, siteLang, themeColor } from "~/data/config";
-
-const baseUrl = `${Astro.url.protocol}//${Astro.url.host}`;
-const { pageTitle, title, description, noindex = false } = Astro.props;
+import { siteName, siteLang, themeColor, siteSlogan } from "~/data/config";
+import { SITE_URL, getCanonicalUrl } from "~/utils/seo";
 
 interface Props {
 	pageTitle?: string;
 	title?: string;
 	description?: string;
 	noindex?: boolean;
+	image?: string;
+	imageAlt?: string;
+	ogType?: "website" | "article" | "product";
+	canonicalUrl?: string;
+	schema?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
+
+const {
+	pageTitle,
+	title,
+	description = siteSlogan,
+	noindex = false,
+	image,
+	imageAlt = `${siteName} - Showroom Mobil Bekas`,
+	ogType = "website",
+	canonicalUrl,
+	schema,
+} = Astro.props;
+
+// Compute clean canonical URL
+const canonical = canonicalUrl || getCanonicalUrl(Astro.url.pathname, SITE_URL);
+
+// Resolve preview image URL to an absolute URL
+const defaultImage = `${SITE_URL}/images/og-image.jpg`;
+let ogImageUrl = defaultImage;
+
+if (image) {
+	if (image.startsWith("http://") || image.startsWith("https://")) {
+		ogImageUrl = image;
+	} else {
+		ogImageUrl = `${SITE_URL}${image.startsWith("/") ? "" : "/"}${image}`;
+	}
+}
+
+// Compute clean page title
+const rawTitle = pageTitle || title;
+const displayPageTitle = rawTitle
+	? rawTitle.includes(siteName)
+		? rawTitle
+		: `${rawTitle} | ${siteName}`
+	: `${siteName} | ${siteSlogan}`;
+
+// Flatten schemas if passed
+const schemasToRender = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
 ---
 
 <!doctype html>
@@ -24,29 +65,43 @@ interface Props {
 		<meta name="theme-color" content={themeColor} />
 		<meta name="description" content={description} />
 		{noindex && <meta name="robots" content="noindex,nofollow" />}
-		<link rel="author" href="humans.txt" />
+		<link rel="canonical" href={canonical} />
+		<link rel="author" href="/humans.txt" />
 
+		<!-- Favicons -->
 		<link rel="icon" type="image/webp" href="/favicon.webp" />
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<meta name="apple-mobile-web-app-title" content={siteName} />
-		<!-- <link rel="manifest" href="/site.webmanifest" /> -->
 
-		<meta property="og:url" content={Astro.url} />
-		<meta property="og:type" content="website" />
-		<meta property="og:title" content={`${title} | ${siteName}`} />
-		<meta property="og:image" content={`${baseUrl}/images/og-image.jpg`} />
+		<!-- OpenGraph / Facebook / WhatsApp -->
+		<meta property="og:url" content={canonical} />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:title" content={displayPageTitle} />
 		<meta property="og:description" content={description} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:alt" content={imageAlt} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
 		<meta property="og:site_name" content={siteName} />
-		<meta property="og:locale" content={siteLang} />
+		<meta property="og:locale" content={siteLang.replace("-", "_")} />
 
-		<meta name="twitter:card" content="summary" />
-		<meta name="twitter:url" content={Astro.url} />
-		<meta name="twitter:title" content={`${title} | ${siteName}`} />
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:url" content={canonical} />
+		<meta name="twitter:title" content={displayPageTitle} />
 		<meta name="twitter:description" content={description} />
-		<!-- <meta name="twitter:image" content={`${baseUrl}/images/og-image.jpg`} /> -->
+		<meta name="twitter:image" content={ogImageUrl} />
+		<meta name="twitter:image:alt" content={imageAlt} />
 
-		<title>{pageTitle}</title>
+		<!-- Schema.org JSON-LD -->
+		{
+			schemasToRender.map((schemaItem) => (
+				<script is:inline type="application/ld+json" set:html={JSON.stringify(schemaItem)} />
+			))
+		}
+
+		<title>{displayPageTitle}</title>
 		<ClientRouter />
 	</head>
 	<body>

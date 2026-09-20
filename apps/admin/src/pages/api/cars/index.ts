@@ -1,42 +1,107 @@
 import type { APIRoute } from "astro";
-import { getDb, cars as carsTable, generateCarId, type InsertCar } from "@harka/db";
+import { z } from "astro/zod";
+import {
+	getDb,
+	cars as carsTable,
+	generateCarId,
+	type InsertCar,
+	validatePlateNumber,
+	formatPlateNumber,
+	bodyTypes,
+	fuelTypes,
+	transmissions,
+	ownershipStatuses,
+} from "@harka/db";
 import { env } from "cloudflare:workers";
+
+const createCarSchema = z.object({
+	title: z.string().optional(),
+	excerpt: z.string().optional().nullable(),
+	relatedUrl: z.string().optional().nullable(),
+	videoTourUrl: z.string().optional().nullable(),
+	make: z.string().min(1, "Merek wajib diisi"),
+	model: z.string().min(1, "Model wajib diisi"),
+	price: z.coerce.number().min(0, "Harga wajib diisi"),
+	year: z.coerce.number().min(1900, "Tahun tidak valid"),
+	mileage: z.coerce.number().min(0, "Jarak tempuh wajib diisi"),
+	bodyType: z.enum(bodyTypes).default("SUV"),
+	fuelType: z.enum(fuelTypes).default("Petrol"),
+	transmission: z.enum(transmissions).default("Automatic"),
+	color: z.string().default(""),
+	horsePower: z.coerce.number().optional().nullable(),
+	engineSizeCC: z.coerce.number().optional().nullable(),
+	ownershipStatus: z.enum(ownershipStatuses).optional().nullable(),
+	isFloodFree: z.boolean().default(false),
+	isAccidentFree: z.boolean().default(false),
+	hasFloodDamage: z.boolean().optional(),
+	hasAccidentDamage: z.boolean().optional(),
+	taxExpirationDate: z.string().optional().nullable(),
+	seatingCapacity: z.coerce.number().optional().nullable(),
+	plateNumber: z.string().optional().nullable(),
+	gallery: z
+		.array(
+			z.object({
+				image: z.string(),
+				alt: z.string().default(""),
+			}),
+		)
+		.optional()
+		.nullable(),
+	hidden: z.boolean().default(false),
+});
 
 export const POST: APIRoute = async ({ request }) => {
 	try {
-		const payload = (await request.json()) as any;
+		const rawJson = await request.json();
+		const result = createCarSchema.safeParse(rawJson);
 
+		if (!result.success) {
+			const errorMsg = result.error.issues.map((i) => i.message).join(", ");
+			return new Response(JSON.stringify({ error: errorMsg || "Data mobil tidak valid" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
+
+		const payload = result.data;
 		const {
 			title,
 			excerpt,
+			relatedUrl,
 			videoTourUrl,
 			make,
 			model,
 			price,
 			year,
 			mileage,
-			bodyType = "SUV",
-			fuelType = "Petrol",
-			transmission = "Automatic",
-			color = "",
+			bodyType,
+			fuelType,
+			transmission,
+			color,
 			horsePower,
 			engineSizeCC,
 			ownershipStatus,
-			hasFloodDamage = false,
-			hasAccidentDamage = false,
+			isFloodFree,
+			isAccidentFree,
 			taxExpirationDate,
 			seatingCapacity,
 			plateNumber,
 			gallery,
-			hidden = false,
-			featured = false,
+			hidden,
 		} = payload;
 
-		if (!make || !model || !price || !year || mileage === undefined || mileage === "") {
-			return new Response(
-				JSON.stringify({ error: "Merek, Model, Harga, Tahun, dan Jarak Tempuh wajib diisi." }),
-				{ status: 400 },
-			);
+		let formattedPlate: string | null = null;
+		if (plateNumber && plateNumber.trim() !== "") {
+			const trimmed = plateNumber.trim();
+			if (!validatePlateNumber(trimmed)) {
+				return new Response(
+					JSON.stringify({
+						error: "Format nomor polisi / plat nomor tidak valid (mis. B 1234 ABC).",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+			formattedPlate = formatPlateNumber(trimmed);
 		}
 
 		let finalTitle = title;
@@ -51,7 +116,7 @@ export const POST: APIRoute = async ({ request }) => {
 			id,
 			title: finalTitle,
 			excerpt: excerpt || null,
-			videoTourUrl: videoTourUrl || null,
+			relatedUrl: relatedUrl || videoTourUrl || null,
 			make,
 			model,
 			price: Number(price),
@@ -64,20 +129,23 @@ export const POST: APIRoute = async ({ request }) => {
 			horsePower: horsePower ? Number(horsePower) : null,
 			engineSizeCC: engineSizeCC ? Number(engineSizeCC) : null,
 			ownershipStatus: ownershipStatus || null,
-			hasFloodDamage: Boolean(hasFloodDamage),
-			hasAccidentDamage: Boolean(hasAccidentDamage),
+			isFloodFree:
+				payload.hasFloodDamage !== undefined ? !payload.hasFloodDamage : Boolean(isFloodFree),
+			isAccidentFree:
+				payload.hasAccidentDamage !== undefined
+					? !payload.hasAccidentDamage
+					: Boolean(isAccidentFree),
 			taxExpirationDate: taxExpirationDate ? new Date(taxExpirationDate) : null,
 			seatingCapacity: seatingCapacity ? Number(seatingCapacity) : null,
-			plateNumber: plateNumber || null,
+			plateNumber: formattedPlate,
 			gallery: gallery || null,
 			hidden: Boolean(hidden),
-			featured: Boolean(featured),
 			publishDate: now,
 			createdAt: now,
 			updatedAt: now,
 		};
 
-		const db = getDb(env as any);
+		const db = getDb(env);
 		await db.insert(carsTable).values(insertData);
 
 		return new Response(JSON.stringify({ success: true, id, redirect: "/cars" }), {
@@ -86,8 +154,9 @@ export const POST: APIRoute = async ({ request }) => {
 				"Content-Type": "application/json",
 			},
 		});
-	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Gagal menambahkan kendaraan" }), {
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : "Gagal menambahkan kendaraan";
+		return new Response(JSON.stringify({ error: message }), {
 			status: 500,
 			headers: {
 				"Content-Type": "application/json",
