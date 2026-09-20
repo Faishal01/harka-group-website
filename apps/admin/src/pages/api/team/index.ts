@@ -85,11 +85,22 @@ export const POST: APIRoute = async (context) => {
 
 export const DELETE: APIRoute = async (context) => {
 	const currentUser = context.locals.user;
+	const currentUserRole = context.locals.userRole;
 	if (!currentUser || !currentUser.email) {
 		return new Response(JSON.stringify({ error: "Unauthorized" }), {
 			status: 401,
 			headers: { "Content-Type": "application/json" },
 		});
+	}
+
+	if (currentUserRole !== "superadmin") {
+		return new Response(
+			JSON.stringify({ error: "Hanya akun superadmin yang berhak menghapus anggota admin." }),
+			{
+				status: 403,
+				headers: { "Content-Type": "application/json" },
+			},
+		);
 	}
 
 	try {

@@ -270,11 +270,10 @@
 	<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 		<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 			<div class="flex items-center gap-2">
-				<h3 class="font-bold text-gray-900">Daftar Akun Terdaftar ({members.length})</h3>
+				<h3 class="font-bold text-gray-900">Admin</h3>
 			</div>
 			<span class="text-xs text-gray-500">
-				Peran Anda: <strong class="text-gray-700 capitalize">{currentUserRole}</strong>
-				({currentUserEmail})
+				Total {members.length} admin
 			</span>
 		</div>
 
@@ -285,16 +284,20 @@
 				>
 					<tr>
 						<th class="px-6 py-3.5">Email Pengguna</th>
-						<th class="px-6 py-3.5">Peran</th>
 						<th class="px-6 py-3.5">Ditambahkan Oleh</th>
 						<th class="px-6 py-3.5">Tanggal Didaftarkan</th>
-						<th class="px-6 py-3.5 text-right">Aksi</th>
+						{#if currentUserRole === "superadmin"}
+							<th class="px-6 py-3.5 text-right">Aksi</th>
+						{/if}
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-gray-200">
 					{#if members.length === 0}
 						<tr>
-							<td colspan="5" class="px-6 py-12 text-center text-gray-400">
+							<td
+								colspan={currentUserRole === "superadmin" ? 4 : 3}
+								class="px-6 py-12 text-center text-gray-400"
+							>
 								<svg
 									class="mx-auto h-10 w-10 text-gray-300 mb-2"
 									fill="none"
@@ -315,32 +318,17 @@
 						{#each members as member (member.email)}
 							{@const isSelf = member.email.toLowerCase() === currentUserEmail.toLowerCase()}
 							{@const isSuperadmin = member.role === "superadmin"}
-							{@const isSelfAdmin = isSelf && !isSuperadmin}
 
-							<tr
-								class={isSuperadmin
-									? "bg-gray-50/80 hover:bg-gray-100/70 transition"
-									: isSelfAdmin
-										? "bg-amber-50/40 hover:bg-amber-50/60 transition"
-										: "hover:bg-gray-50/75 transition"}
-							>
+							<tr class="hover:bg-gray-50/75 transition">
 								<td class="px-6 py-4">
 									<div class="flex items-center gap-3">
 										<div
-											class={`flex h-9 w-9 items-center justify-center rounded-full font-semibold text-xs uppercase border ${
-												isSuperadmin
-													? "bg-gray-200/70 text-gray-500 border-gray-200"
-													: isSelfAdmin
-														? "bg-amber-100 text-amber-800 border-amber-200"
-														: "bg-gray-100 text-gray-700 border-gray-200"
-											}`}
+											class="flex h-9 w-9 items-center justify-center rounded-full font-semibold text-xs uppercase border bg-gray-100 text-gray-700 border-gray-200"
 										>
 											{member.email.charAt(0)}
 										</div>
 										<div class="flex items-center gap-2 flex-wrap">
-											<span
-												class={`font-medium ${isSuperadmin ? "text-gray-600" : "text-gray-900"}`}
-											>
+											<span class="font-medium text-gray-900">
 												{member.email}
 											</span>
 											{#if isSelf}
@@ -353,92 +341,23 @@
 										</div>
 									</div>
 								</td>
-								<td class="px-6 py-4">
-									{#if member.role === "superadmin"}
-										<span
-											class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100/80 text-purple-800 border border-purple-200"
-										>
-											<svg class="h-3 w-3 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-												<path
-													fill-rule="evenodd"
-													d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-											Superadmin
-										</span>
-									{:else}
-										<span
-											class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
-										>
-											<svg class="h-3 w-3 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-												<path
-													d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z"
-												/>
-											</svg>
-											Admin
-										</span>
-									{/if}
-								</td>
 								<td class="px-6 py-4 text-xs text-gray-500">
 									{member.createdBy || "Sistem (Migrasi Awal)"}
 								</td>
 								<td class="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
 									{formatDate(member.createdAt)}
 								</td>
-								<td class="px-6 py-4 text-right">
-									{#if isSuperadmin}
-										<button
-											type="button"
-											disabled
-											title="Akun superadmin tidak dapat dihapus melalui antarmuka"
-											class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed opacity-60"
-										>
-											<svg
-												class="h-3.5 w-3.5 text-gray-400"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
+								{#if currentUserRole === "superadmin"}
+									<td class="px-6 py-4 text-right">
+										{#if isSuperadmin}
+											<button
+												type="button"
+												disabled
+												title="Akun superadmin tidak dapat dihapus melalui antarmuka"
+												class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed opacity-60"
 											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-												/>
-											</svg>
-											Hapus
-										</button>
-									{:else}
-										<button
-											onclick={() => (confirmDeleteEmail = member.email)}
-											disabled={deletingEmail === member.email}
-											class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition disabled:opacity-50"
-										>
-											{#if deletingEmail === member.email}
 												<svg
-													class="animate-spin h-3 w-3 text-red-600"
-													viewBox="0 0 24 24"
-													fill="none"
-												>
-													<circle
-														class="opacity-25"
-														cx="12"
-														cy="12"
-														r="10"
-														stroke="currentColor"
-														stroke-width="4"
-													></circle>
-													<path
-														class="opacity-75"
-														fill="currentColor"
-														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-													></path>
-												</svg>
-												Menghapus...
-											{:else}
-												<svg
-													class="h-3.5 w-3.5"
+													class="h-3.5 w-3.5 text-gray-400"
 													fill="none"
 													viewBox="0 0 24 24"
 													stroke="currentColor"
@@ -451,10 +370,54 @@
 													/>
 												</svg>
 												Hapus
-											{/if}
-										</button>
-									{/if}
-								</td>
+											</button>
+										{:else}
+											<button
+												onclick={() => (confirmDeleteEmail = member.email)}
+												disabled={deletingEmail === member.email}
+												class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition disabled:opacity-50"
+											>
+												{#if deletingEmail === member.email}
+													<svg
+														class="animate-spin h-3 w-3 text-red-600"
+														viewBox="0 0 24 24"
+														fill="none"
+													>
+														<circle
+															class="opacity-25"
+															cx="12"
+															cy="12"
+															r="10"
+															stroke="currentColor"
+															stroke-width="4"
+														></circle>
+														<path
+															class="opacity-75"
+															fill="currentColor"
+															d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+														></path>
+													</svg>
+													Menghapus...
+												{:else}
+													<svg
+														class="h-3.5 w-3.5"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+														/>
+													</svg>
+													Hapus
+												{/if}
+											</button>
+										{/if}
+									</td>
+								{/if}
 							</tr>
 						{/each}
 					{/if}
