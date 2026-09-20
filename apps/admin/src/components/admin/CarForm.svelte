@@ -307,7 +307,7 @@
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div class="col-span-1 md:col-span-2">
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Judul Tampilan</label>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama</label>
 					<input
 						type="text"
 						bind:value={title}
@@ -316,9 +316,7 @@
 					/>
 				</div>
 				<div class="col-span-1 md:col-span-2">
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
-						>Kutipan / Deskripsi Singkat</label
-					>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Deskripsi Singkat</label>
 					<textarea
 						rows="3"
 						bind:value={excerpt}
@@ -326,7 +324,9 @@
 						placeholder="Ringkasan spesifikasi, kondisi istimewa, atau catatan unit..."></textarea>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Merek *</label>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Merek <span class="text-red-600">*</span></label
+					>
 					<input
 						type="text"
 						bind:value={make}
@@ -336,7 +336,9 @@
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Model *</label>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Model <span class="text-red-600">*</span></label
+					>
 					<input
 						type="text"
 						bind:value={model}
@@ -346,7 +348,9 @@
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Harga (Rp) *</label>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Harga (Rp) <span class="text-red-600">*</span></label
+					>
 					<input
 						type="number"
 						bind:value={price}
@@ -415,7 +419,9 @@
 
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Tahun Model *</label>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Tahun Model <span class="text-red-600">*</span></label
+					>
 					<input
 						type="number"
 						bind:value={year}
@@ -424,7 +430,8 @@
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Jarak Tempuh (km) *</label
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Jarak Tempuh (km) <span class="text-red-600">*</span></label
 					>
 					<input
 						type="number"
@@ -522,7 +529,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div>
 					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
-						>Status Kepemilikan *</label
+						>Status Kepemilikan <span class="text-red-600">*</span></label
 					>
 					<select
 						bind:value={ownershipStatus}
