@@ -39,6 +39,28 @@ export function formatRupiahCompact(price: number | null | undefined): string {
 	return `Rp ${price.toLocaleString("id-ID")}`;
 }
 
+export const DEALER_LOCATION = `${address.city}, ${address.state}`;
+
+/**
+ * Safely resolves an image path or key to a fully qualified absolute URL.
+ * Handles existing absolute URLs, already-prefixed `/api/images/` paths,
+ * relative keys, or missing images.
+ */
+export function resolveImageUrl(imagePath?: string | null, origin = SITE_URL): string {
+	if (!imagePath || !imagePath.trim()) {
+		return `${origin}/images/og-image.jpg`;
+	}
+	const trimmed = imagePath.trim();
+	if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+		return trimmed;
+	}
+	const clean = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+	if (clean.startsWith("/api/images/")) {
+		return `${origin}${clean}`;
+	}
+	return `${origin}/api/images${clean}`;
+}
+
 /**
  * Produces high-intent, Indonesian SEO title optimized for Google search and WhatsApp previews.
  */
@@ -53,15 +75,15 @@ export function formatCarMetaTitle(car: {
 	const vehicleName = `${yearStr}${car.make} ${car.model}`;
 
 	if (car.archiveReason === "sold") {
-		return `[TERJUAL] ${vehicleName} Bekas | ${siteName}`;
+		return `[TERJUAL] ${vehicleName} Bekas | ${siteName} ${DEALER_LOCATION}`;
 	}
 
 	const priceStr = formatRupiahCompact(car.price);
 	if (priceStr) {
-		return `${vehicleName} Bekas - ${priceStr} | ${siteName} Jakarta`;
+		return `${vehicleName} Bekas - ${priceStr} | ${siteName} ${DEALER_LOCATION}`;
 	}
 
-	return `${vehicleName} Bekas Berkualitas | ${siteName} Jakarta`;
+	return `${vehicleName} Bekas Berkualitas | ${siteName} ${DEALER_LOCATION}`;
 }
 
 /**
@@ -77,20 +99,26 @@ export function formatCarMetaDesc(car: {
 	fuelType?: string | null;
 	fuel?: string | null;
 	excerpt?: string | null;
+	archiveReason?: string | null;
 }): string {
+	const yearStr = car.year ? `${car.year} ` : "";
+	const vehicleName = `${yearStr}${car.make} ${car.model}`;
+
+	if (car.archiveReason === "sold") {
+		return `Unit mobil bekas ${vehicleName} telah terjual di ${siteName} ${DEALER_LOCATION}. Hubungi showroom kami untuk info ketersediaan unit serupa atau konsultasi mobil impian Anda.`;
+	}
+
 	if (car.excerpt && car.excerpt.trim().length >= 40) {
 		return car.excerpt.trim();
 	}
 
-	const yearStr = car.year ? `${car.year} ` : "";
-	const vehicleName = `${yearStr}${car.make} ${car.model}`;
 	const transmissionStr = car.transmission ? `transmisi ${car.transmission}` : "kondisi prima";
 	const kmVal = car.mileage ?? car.odometer;
 	const kmStr = kmVal ? `, jarak tempuh ${kmVal.toLocaleString("id-ID")} km` : "";
 	const fuelVal = car.fuelType ?? car.fuel;
 	const fuelStr = fuelVal ? ` berbahan bakar ${fuelVal}` : "";
 
-	return `Beli mobil bekas ${vehicleName} ${transmissionStr}${kmStr}${fuelStr}. Unit siap pakai dengan garansi bebas tabrak & banjir di ${siteName} Jakarta Selatan.`;
+	return `Beli mobil bekas ${vehicleName} ${transmissionStr}${kmStr}${fuelStr}. Unit siap pakai dengan garansi bebas tabrak & banjir di ${siteName} ${DEALER_LOCATION}.`;
 }
 
 /**
@@ -142,11 +170,11 @@ export function generateCarSchema(
 		price?: number | null;
 		mileage?: number | null;
 		odometer?: number | null;
+		bodyType?: string | null;
 		transmission?: string | null;
 		fuelType?: string | null;
 		fuel?: string | null;
 		color?: string | null;
-		doors?: number | null;
 		seatingCapacity?: number | null;
 		coverImage?: string | null;
 		gallery?: { image: string; alt?: string }[] | null;
@@ -158,19 +186,25 @@ export function generateCarSchema(
 ) {
 	const carUrl = `${origin}/view/${car.id}`;
 	const cover = car.coverImage || car.gallery?.[0]?.image;
-	const imageUrl = cover ? `${origin}/api/images/${cover}` : `${origin}/images/og-image.jpg`;
+	const imageUrl = resolveImageUrl(cover, origin);
 
 	const schemaImages = [imageUrl];
 	if (Array.isArray(car.gallery)) {
 		for (const item of car.gallery) {
-			if (item?.image && item.image !== cover) {
-				schemaImages.push(`${origin}/api/images/${item.image}`);
+			if (item?.image) {
+				const resolved = resolveImageUrl(item.image, origin);
+				if (!schemaImages.includes(resolved)) {
+					schemaImages.push(resolved);
+				}
 			}
 		}
 	} else if (Array.isArray(car.images)) {
 		for (const img of car.images) {
-			if (img && img !== cover) {
-				schemaImages.push(`${origin}/api/images/${img}`);
+			if (img) {
+				const resolved = resolveImageUrl(img, origin);
+				if (!schemaImages.includes(resolved)) {
+					schemaImages.push(resolved);
+				}
 			}
 		}
 	}
@@ -195,10 +229,10 @@ export function generateCarSchema(
 			name: car.make,
 		},
 		model: car.model,
+		...(car.bodyType ? { bodyType: car.bodyType } : {}),
 		...(car.transmission ? { vehicleTransmission: car.transmission } : {}),
 		...(fuelVal ? { fuelType: fuelVal } : {}),
 		...(car.color ? { color: car.color } : {}),
-		...(car.doors ? { numberOfDoors: car.doors } : {}),
 		...(car.seatingCapacity ? { seatingCapacity: car.seatingCapacity } : {}),
 		...(kmVal
 			? {
@@ -219,6 +253,7 @@ export function generateCarSchema(
 			itemCondition: "https://schema.org/UsedCondition",
 			seller: {
 				"@type": "AutoDealer",
+				"@id": `${origin}/#autodealer`,
 				name: siteName,
 				url: origin,
 			},
