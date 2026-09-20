@@ -27,8 +27,8 @@ export const cars = sqliteTable(
 
 		// Provenance & Legalitas
 		ownershipStatus: text("ownership_status").$type<OwnershipStatus>(),
-		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(true),
-		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(true),
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(false),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
 		taxExpirationDate: integer("tax_expiration_date", { mode: "timestamp" }),
 		seatingCapacity: integer("seating_capacity"),
 
@@ -40,7 +40,6 @@ export const cars = sqliteTable(
 
 		// Flags & Lifecycle
 		hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
-		featured: integer("featured", { mode: "boolean" }).notNull().default(false),
 		archiveReason: text("archive_reason", { enum: ["sold", "removed"] }),
 
 		// Timestamps
@@ -59,7 +58,6 @@ export const cars = sqliteTable(
 		index("cars_ownership_status_idx").on(table.ownershipStatus),
 		index("cars_deleted_at_idx").on(table.deletedAt),
 		index("cars_publish_date_idx").on(table.publishDate),
-		index("cars_featured_idx").on(table.featured),
 	],
 );
 
@@ -172,8 +170,8 @@ export const tradeInSubmissions = sqliteTable(
 		adminNotes: text("admin_notes"),
 
 		// Condition & History
-		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(true),
-		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(true),
+		isFloodFree: integer("is_flood_free", { mode: "boolean" }).notNull().default(false),
+		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
 		conditionNotes: text("condition_notes"),
 
 		// Media

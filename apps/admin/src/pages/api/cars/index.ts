@@ -22,14 +22,13 @@ export const POST: APIRoute = async ({ request }) => {
 			horsePower,
 			engineSizeCC,
 			ownershipStatus,
-			isFloodFree = true,
-			isAccidentFree = true,
+			isFloodFree = false,
+			isAccidentFree = false,
 			taxExpirationDate,
 			seatingCapacity,
 			plateNumber,
 			gallery,
 			hidden = false,
-			featured = false,
 		} = payload;
 
 		if (!make || !model || !price || !year || mileage === undefined || mileage === "") {
@@ -75,7 +74,6 @@ export const POST: APIRoute = async ({ request }) => {
 			plateNumber: plateNumber || null,
 			gallery: gallery || null,
 			hidden: Boolean(hidden),
-			featured: Boolean(featured),
 			publishDate: now,
 			createdAt: now,
 			updatedAt: now,

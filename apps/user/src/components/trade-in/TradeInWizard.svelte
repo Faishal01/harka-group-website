@@ -29,8 +29,8 @@
 	let hasServiceBook = false;
 	let hasSpareKey = false;
 	let adminNotes = "";
-	let isFloodFree = true;
-	let isAccidentFree = true;
+	let isFloodFree = false;
+	let isAccidentFree = false;
 	let conditionNotes = "";
 
 	// Form State: Step 3 (10 Guided Photo Slots)
@@ -272,8 +272,8 @@
 		hasFaktur = false;
 		hasServiceBook = false;
 		hasSpareKey = false;
-		isFloodFree = true;
-		isAccidentFree = true;
+		isFloodFree = false;
+		isAccidentFree = false;
 		adminNotes = "";
 		conditionNotes = "";
 		customerName = "";

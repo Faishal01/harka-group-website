@@ -6,7 +6,7 @@ import { getDb, cars as carsTable } from "@harka/db";
 import { inArray, desc, isNull, and, eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 
-const { recent = false, featured = false, slugs = [], ui = "list" } = Astro.props;
+const { recent = false, slugs = [], ui = "list" } = Astro.props;
 const db = getDb(env);
 
 let dbCars = [];
@@ -16,15 +16,6 @@ if (recent) {
 		.select()
 		.from(carsTable)
 		.where(and(isNull(carsTable.deletedAt), eq(carsTable.hidden, false)))
-		.orderBy(desc(carsTable.publishDate))
-		.limit(3);
-} else if (featured) {
-	dbCars = await db
-		.select()
-		.from(carsTable)
-		.where(
-			and(isNull(carsTable.deletedAt), eq(carsTable.featured, true), eq(carsTable.hidden, false)),
-		)
 		.orderBy(desc(carsTable.publishDate))
 		.limit(3);
 } else if (slugs.length > 0) {

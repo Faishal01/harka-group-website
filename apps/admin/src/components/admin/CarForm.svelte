@@ -53,8 +53,8 @@
 
 	let ownershipStatus = car?.ownershipStatus || "first_hand";
 	let plateNumber = car?.plateNumber || "";
-	let isFloodFree = car?.isFloodFree ?? true;
-	let isAccidentFree = car?.isAccidentFree ?? true;
+	let isFloodFree = car?.isFloodFree ?? false;
+	let isAccidentFree = car?.isAccidentFree ?? false;
 
 	const existingTaxDate = car?.taxExpirationDate ? new Date(car.taxExpirationDate) : null;
 	let taxMonth = existingTaxDate ? (existingTaxDate.getMonth() + 1).toString() : "";
@@ -81,7 +81,6 @@
 	const years = Array.from({ length: 15 }, (_, i) => currentYear - 5 + i);
 
 	let hidden = car?.hidden ?? false;
-	let featured = car?.featured ?? false;
 
 	// Gallery State
 	type GalleryItem = { id: string; url?: string; file?: File; alt: string; preview: string };
@@ -205,7 +204,6 @@
 				seatingCapacity,
 				gallery: finalGallery,
 				hidden,
-				featured,
 			};
 
 			const url = car?.id ? `/api/cars/${car.id}` : "/api/cars";
@@ -261,13 +259,6 @@
 					class="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200"
 				>
 					Publik (Live)
-				</div>
-			{/if}
-			{#if featured}
-				<div
-					class="px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-red-50 text-red-800 border border-red-200"
-				>
-					Unggulan
 				</div>
 			{/if}
 		</div>
@@ -380,9 +371,7 @@
 					</select>
 				</div>
 
-				<div
-					class="col-span-1 md:col-span-2 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4"
-				>
+				<div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-100">
 					<label
 						class="flex items-center gap-3.5 p-4 rounded-xl border transition cursor-pointer {hidden
 							? 'border-amber-500 bg-amber-50/60 text-amber-950 font-semibold ring-1 ring-amber-500 shadow-sm'
@@ -397,24 +386,6 @@
 							<span class="text-sm font-bold block text-gray-900">Sembunyikan dari Publik</span>
 							<span class="text-xs text-gray-500 block mt-0.5"
 								>Status draf internal, tidak tampil di katalog publik</span
-							>
-						</div>
-					</label>
-
-					<label
-						class="flex items-center gap-3.5 p-4 rounded-xl border transition cursor-pointer {featured
-							? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-							: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
-					>
-						<input
-							type="checkbox"
-							bind:checked={featured}
-							class="size-4 rounded accent-red-700 text-red-700 shrink-0"
-						/>
-						<div>
-							<span class="text-sm font-bold block text-gray-900">Jadikan Unit Unggulan</span>
-							<span class="text-xs text-gray-500 block mt-0.5"
-								>Disorot di banner beranda dan rekomendasi utama</span
 							>
 						</div>
 					</label>
@@ -612,7 +583,7 @@
 						<label
 							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {isFloodFree
 								? 'border-emerald-600 bg-emerald-50/50 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
-								: 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'}"
+								: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
 						>
 							<input
 								type="checkbox"
@@ -620,13 +591,11 @@
 								class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 							/>
 							<div>
-								<span class="text-sm font-bold block text-gray-900">
-									{isFloodFree ? "Bukan Bekas Banjir" : "⚠️ Pernah Terendam Banjir"}
-								</span>
+								<span class="text-sm font-bold block text-gray-900">Bukan Bekas Banjir</span>
 								<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed">
 									{isFloodFree
 										? "Unit terverifikasi aman dan tidak memiliki riwayat terendam banjir"
-										: "Unit terindikasi pernah terkena genangan air tinggi atau terendam banjir"}
+										: "Centang jika unit terverifikasi aman dan bebas dari riwayat terendam banjir"}
 								</span>
 							</div>
 						</label>
@@ -635,7 +604,7 @@
 						<label
 							class="flex items-start gap-3.5 p-4 rounded-xl border transition cursor-pointer {isAccidentFree
 								? 'border-emerald-600 bg-emerald-50/50 text-emerald-950 font-semibold ring-1 ring-emerald-600 shadow-sm'
-								: 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'}"
+								: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
 						>
 							<input
 								type="checkbox"
@@ -643,13 +612,11 @@
 								class="size-4 mt-0.5 rounded text-emerald-700 accent-emerald-700 shrink-0"
 							/>
 							<div>
-								<span class="text-sm font-bold block text-gray-900">
-									{isAccidentFree ? "Bebas Lakalantas" : "⚠️ Pernah Mengalami Lakalantas"}
-								</span>
+								<span class="text-sm font-bold block text-gray-900">Bebas Lakalantas</span>
 								<span class="text-xs text-gray-500 block mt-0.5 leading-relaxed">
 									{isAccidentFree
 										? "Struktur rangka dan bodi unit utuh, bebas dari insiden tabrakan besar"
-										: "Unit memiliki riwayat tabrakan atau perbaikan struktur bodi besar"}
+										: "Centang jika rangka dan bodi unit bebas dari riwayat tabrakan atau insiden besar"}
 								</span>
 							</div>
 						</label>

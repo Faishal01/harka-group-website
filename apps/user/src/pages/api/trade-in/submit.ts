@@ -60,13 +60,13 @@ export const POST: APIRoute = async ({ request }) => {
 				? formData.get("isFloodFree") === "true"
 				: formData.get("hasFloodDamage") !== null
 					? formData.get("hasFloodDamage") !== "true"
-					: true;
+					: false;
 		const isAccidentFree =
 			formData.get("isAccidentFree") !== null
 				? formData.get("isAccidentFree") === "true"
 				: formData.get("hasAccidentDamage") !== null
 					? formData.get("hasAccidentDamage") !== "true"
-					: true;
+					: false;
 		const conditionNotes = (formData.get("conditionNotes") || "").toString().trim() || null;
 
 		// Photos metadata

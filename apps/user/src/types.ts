@@ -83,7 +83,6 @@ export interface SectionProps extends ClassNameProps {
 
 export interface ShowCarsProps {
 	recent?: boolean;
-	featured?: boolean;
 	slugs?: string[];
 	ui?: "list" | "grid";
 }

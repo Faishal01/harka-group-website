@@ -32,7 +32,6 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			plateNumber,
 			gallery,
 			hidden = false,
-			featured = false,
 		} = payload;
 
 		if (!make || !model || !price || !year || mileage === undefined || mileage === "") {
@@ -89,7 +88,6 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			plateNumber: plateNumber || null,
 			gallery: gallery || null,
 			hidden: Boolean(hidden),
-			featured: Boolean(featured),
 			updatedAt: new Date(),
 		};
 

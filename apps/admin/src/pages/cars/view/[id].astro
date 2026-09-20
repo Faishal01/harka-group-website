@@ -179,13 +179,6 @@ const formattedPublishDate = new Date(car.publishDate).toLocaleDateString("id-ID
 									{transmissionMap[car.transmission] || car.transmission}
 								</span>
 								{
-									car.featured && (
-										<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-											Unggulan
-										</span>
-									)
-								}
-								{
 									car.hidden && (
 										<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
 											Draf (Tersembunyi)
