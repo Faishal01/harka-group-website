@@ -78,6 +78,13 @@
       "when": 1789576219750,
       "tag": "0010_add_trade_in_plate_number",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1789576219760,
+      "tag": "0011_add_admin_whitelist_role_and_created_by",
+      "breakpoints": true
     }
   ]
 }

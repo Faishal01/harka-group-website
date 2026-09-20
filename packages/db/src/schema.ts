@@ -129,10 +129,18 @@ export const verification = sqliteTable(
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const adminWhitelistRoleEnum = ["superadmin", "admin"] as const;
+export type AdminWhitelistRole = (typeof adminWhitelistRoleEnum)[number];
+
 export const adminWhitelist = sqliteTable("admin_whitelist", {
 	email: text("email").primaryKey(),
+	role: text("role", { enum: adminWhitelistRoleEnum }).notNull().default("admin"),
+	createdBy: text("created_by"),
 	createdAt: integer("created_at", { mode: "timestamp" }),
 });
+
+export type AdminWhitelist = typeof adminWhitelist.$inferSelect;
+export type InsertAdminWhitelist = typeof adminWhitelist.$inferInsert;
 
 export interface TradeInPhoto {
 	slot: string;

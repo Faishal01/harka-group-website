@@ -23,9 +23,7 @@ export const adminMenus: AdminMenuItem[] = [
 	{
 		id: "team",
 		label: "Tim",
-		url: "#",
-		disabled: true,
-		badge: "Segera",
+		url: "/team",
 		icon: "lucide:users",
 	},
 	{
