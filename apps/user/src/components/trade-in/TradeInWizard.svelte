@@ -4,7 +4,7 @@
 	import { validatePlateNumber, formatPlateNumber } from "@harka/db";
 
 	// Current wizard step (1 to 4)
-	let currentStep = 1;
+	let currentStep = $state(1);
 
 	const stepItems = [
 		{ num: 1, shortLabel: "Spesifikasi", label: "Spesifikasi" },
@@ -14,17 +14,17 @@
 	];
 
 	// Form State: Step 1 (Vehicle Specs & Price)
-	let make = "";
-	let model = "";
-	let year: number | "" = "";
-	let mileage: number | "" = "";
-	let transmission = "Automatic";
-	let fuelType = "Petrol";
-	let sellingPrice: number | "" = "";
+	let make = $state("");
+	let model = $state("");
+	let year = $state<number | "">("");
+	let mileage = $state<number | "">("");
+	let transmission = $state("Automatic");
+	let fuelType = $state("Petrol");
+	let sellingPrice = $state<number | "">("");
 
 	// Form State: Step 2 (Documents & Condition)
-	let plateNumber = "";
-	let plateError = "";
+	let plateNumber = $state("");
+	let plateError = $state("");
 
 	function handlePlateBlur() {
 		const trimmed = plateNumber.trim();
@@ -46,38 +46,38 @@
 		}
 	}
 
-	let bpkbStatus: "on_hand" | "leasing" = "on_hand";
-	let stnkStatus: "active" | "expired" = "active";
-	let stnkTaxExpiry = "";
-	let hasFaktur = false;
-	let hasServiceBook = false;
-	let hasSpareKey = false;
-	let adminNotes = "";
-	let isFloodFree = false;
-	let isAccidentFree = false;
-	let conditionNotes = "";
+	let bpkbStatus = $state<"on_hand" | "leasing">("on_hand");
+	let stnkStatus = $state<"active" | "expired">("active");
+	let stnkTaxExpiry = $state("");
+	let hasFaktur = $state(false);
+	let hasServiceBook = $state(false);
+	let hasSpareKey = $state(false);
+	let adminNotes = $state("");
+	let isFloodFree = $state(false);
+	let isAccidentFree = $state(false);
+	let conditionNotes = $state("");
 
 	// Form State: Step 3 (10 Guided Photo Slots)
 	const slots = tradeInCaptions.photoSlots;
 
 	// Map of slotId -> { file: File, previewUrl: string }
-	let photoMap: Record<string, { file: File; previewUrl: string }> = {};
+	let photoMap = $state<Record<string, { file: File; previewUrl: string }>>({});
 
 	// Extra optional photos
-	let extraPhotos: { id: string; file: File; previewUrl: string }[] = [];
+	let extraPhotos = $state<{ id: string; file: File; previewUrl: string }[]>([]);
 
 	// Form State: Step 4 (Contact Details)
-	let customerName = "";
-	let customerPhone = "";
-	let customerCity = "";
-	let customerEmail = "";
+	let customerName = $state("");
+	let customerPhone = $state("");
+	let customerCity = $state("");
+	let customerEmail = $state("");
 
 	// Submission state
-	let isSubmitting = false;
-	let submitProgressText = "";
-	let submitError = "";
-	let isSubmitted = false;
-	let submissionId = "";
+	let isSubmitting = $state(false);
+	let submitProgressText = $state("");
+	let submitError = $state("");
+	let isSubmitted = $state(false);
+	let submissionId = $state("");
 
 	// Helper for IDR formatting
 	function formatRupiah(val: number | ""): string {
@@ -139,27 +139,29 @@
 		extraPhotos = extraPhotos.filter((p) => p.id !== id);
 	}
 
-	$: completedSlotsCount = slots.filter((s) => Boolean(photoMap[s.id])).length;
-	$: isStep3Valid = completedSlotsCount >= slots.length;
+	const completedSlotsCount = $derived(slots.filter((s) => Boolean(photoMap[s.id])).length);
+	const isStep3Valid = $derived(completedSlotsCount >= slots.length);
 
 	// Step validation
-	$: isStep1Valid =
+	const isStep1Valid = $derived(
 		make.trim().length > 0 &&
-		model.trim().length > 0 &&
-		typeof year === "number" &&
-		year >= 1990 &&
-		year <= new Date().getFullYear() + 1 &&
-		typeof mileage === "number" &&
-		mileage >= 0 &&
-		typeof sellingPrice === "number" &&
-		sellingPrice > 0;
+			model.trim().length > 0 &&
+			typeof year === "number" &&
+			year >= 1990 &&
+			year <= new Date().getFullYear() + 1 &&
+			typeof mileage === "number" &&
+			mileage >= 0 &&
+			typeof sellingPrice === "number" &&
+			sellingPrice > 0,
+	);
 
-	$: isStep2Valid = validatePlateNumber(plateNumber.trim());
+	const isStep2Valid = $derived(validatePlateNumber(plateNumber.trim()));
 
-	$: isStep4Valid =
+	const isStep4Valid = $derived(
 		customerName.trim().length > 0 &&
-		customerPhone.trim().length >= 8 &&
-		customerCity.trim().length > 0;
+			customerPhone.trim().length >= 8 &&
+			customerCity.trim().length > 0,
+	);
 
 	function goToStep(step: number) {
 		if (step > currentStep) {
@@ -364,7 +366,7 @@
 			<div class="flex flex-col sm:flex-row gap-4 justify-center">
 				<button
 					type="button"
-					on:click={resetForm}
+					onclick={resetForm}
 					class="px-6 py-3 rounded-lg border border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 transition"
 				>
 					{tradeInCaptions.form.submitAnother}
@@ -389,7 +391,7 @@
 						{@const isUpcoming = currentStep < step.num}
 						<button
 							type="button"
-							on:click={() => goToStep(step.num)}
+							onclick={() => goToStep(step.num)}
 							disabled={isUpcoming}
 							class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1 sm:px-3 rounded-xl transition-all duration-200 {isActive
 								? 'bg-red-700 text-white font-bold shadow-sm'
@@ -562,7 +564,7 @@
 						<div class="mt-8 flex justify-end">
 							<button
 								type="button"
-								on:click={() => goToStep(2)}
+								onclick={() => goToStep(2)}
 								disabled={!isStep1Valid}
 								class="px-8 py-3 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
 							>
@@ -623,8 +625,8 @@
 											type="text"
 											id="tradeInPlateNumber"
 											bind:value={plateNumber}
-											on:blur={handlePlateBlur}
-											on:input={handlePlateInput}
+											onblur={handlePlateBlur}
+											oninput={handlePlateInput}
 											placeholder="mis. B 1234 ABC"
 											class="w-full px-4 py-2.5 rounded-xl border {plateError
 												? 'border-red-500 ring-1 ring-red-500'
@@ -868,7 +870,7 @@
 						<div class="mt-8 flex justify-between">
 							<button
 								type="button"
-								on:click={() => goToStep(1)}
+								onclick={() => goToStep(1)}
 								class="px-6 py-3 rounded-lg border border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 transition"
 							>
 								{tradeInCaptions.form.back}
@@ -876,7 +878,7 @@
 
 							<button
 								type="button"
-								on:click={() => goToStep(3)}
+								onclick={() => goToStep(3)}
 								class="px-8 py-3 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-800 transition flex items-center gap-2"
 							>
 								<span>{tradeInCaptions.form.next}</span>
@@ -955,7 +957,7 @@
 											/>
 											<button
 												type="button"
-												on:click={() => removeSlotFile(slot.id)}
+												onclick={() => removeSlotFile(slot.id)}
 												class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
 												title="Hapus foto"
 											>
@@ -998,7 +1000,7 @@
 												type="file"
 												accept="image/*"
 												class="hidden"
-												on:change={(e) => handleSlotFileSelect(slot.id, e)}
+												onchange={(e) => handleSlotFileSelect(slot.id, e)}
 											/>
 										</label>
 									{/if}
@@ -1025,7 +1027,7 @@
 										/>
 										<button
 											type="button"
-											on:click={() => removeExtraPhoto(extra.id)}
+											onclick={() => removeExtraPhoto(extra.id)}
 											class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition"
 										>
 											<svg
@@ -1067,7 +1069,7 @@
 										accept="image/*"
 										multiple
 										class="hidden"
-										on:change={handleExtraFileSelect}
+										onchange={handleExtraFileSelect}
 									/>
 								</label>
 							</div>
@@ -1076,7 +1078,7 @@
 						<div class="mt-8 flex justify-between">
 							<button
 								type="button"
-								on:click={() => goToStep(2)}
+								onclick={() => goToStep(2)}
 								class="px-6 py-3 rounded-lg border border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 transition"
 							>
 								{tradeInCaptions.form.back}
@@ -1084,7 +1086,7 @@
 
 							<button
 								type="button"
-								on:click={() => goToStep(4)}
+								onclick={() => goToStep(4)}
 								disabled={!isStep3Valid}
 								class="px-8 py-3 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
 							>
@@ -1205,7 +1207,7 @@
 						<div class="flex flex-col sm:flex-row items-center justify-between gap-4">
 							<button
 								type="button"
-								on:click={() => goToStep(3)}
+								onclick={() => goToStep(3)}
 								disabled={isSubmitting}
 								class="w-full sm:w-auto px-6 py-3 rounded-lg border border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 transition"
 							>
@@ -1214,7 +1216,7 @@
 
 							<button
 								type="button"
-								on:click={handleSubmit}
+								onclick={handleSubmit}
 								disabled={!isStep4Valid || isSubmitting}
 								class="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-red-700 text-white font-bold hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md flex items-center justify-center gap-2"
 							>

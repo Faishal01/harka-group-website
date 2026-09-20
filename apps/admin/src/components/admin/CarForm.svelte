@@ -9,19 +9,23 @@
 	} from "@harka/db";
 	import { compressCarImages } from "~/utils/imageCompression";
 
-	export let car: Car | null = null;
+	interface Props {
+		car?: Car | null;
+	}
 
-	let isLoading = false;
-	let statusMessage = "";
-	let errorMessage = "";
-	let successMessage = "";
+	let { car = null }: Props = $props();
 
-	let popup = {
+	let isLoading = $state(false);
+	let statusMessage = $state("");
+	let errorMessage = $state("");
+	let successMessage = $state("");
+
+	let popup = $state({
 		show: false,
 		title: "",
 		message: "",
-		type: "success",
-	};
+		type: "success" as "success" | "error",
+	});
 
 	const showPopup = (
 		title: string,
@@ -40,26 +44,26 @@
 	};
 
 	// Direct Flat Bindings
-	let title = car?.title || "";
-	let excerpt = car?.excerpt || "";
-	let relatedUrl = car?.relatedUrl || "";
+	let title = $state(car?.title || "");
+	let excerpt = $state(car?.excerpt || "");
+	let relatedUrl = $state(car?.relatedUrl || "");
 
-	let make = car?.make || "";
-	let model = car?.model || "";
-	let price = car?.price || 0;
-	let year = car?.year || new Date().getFullYear();
-	let mileage = car?.mileage ?? 0;
-	let bodyType = car?.bodyType || "SUV";
-	let fuelType = car?.fuelType || "Petrol";
-	let transmission = car?.transmission || "Automatic";
-	let color = car?.color || "";
+	let make = $state(car?.make || "");
+	let model = $state(car?.model || "");
+	let price = $state(car?.price || 0);
+	let year = $state(car?.year || new Date().getFullYear());
+	let mileage = $state(car?.mileage ?? 0);
+	let bodyType = $state(car?.bodyType || "SUV");
+	let fuelType = $state(car?.fuelType || "Petrol");
+	let transmission = $state(car?.transmission || "Automatic");
+	let color = $state(car?.color || "");
 
-	let horsePower = car?.horsePower ?? null;
-	let engineSizeCC = car?.engineSizeCC ?? null;
+	let horsePower = $state(car?.horsePower ?? null);
+	let engineSizeCC = $state(car?.engineSizeCC ?? null);
 
-	let ownershipStatus = car?.ownershipStatus || "first_hand";
-	let plateNumber = car?.plateNumber || "";
-	let plateError = "";
+	let ownershipStatus = $state(car?.ownershipStatus || "first_hand");
+	let plateNumber = $state(car?.plateNumber || "");
+	let plateError = $state("");
 
 	function handlePlateBlur() {
 		const trimmed = plateNumber.trim();
@@ -81,14 +85,14 @@
 			plateError = "";
 		}
 	}
-	let isFloodFree = car?.isFloodFree ?? false;
-	let isAccidentFree = car?.isAccidentFree ?? false;
+	let isFloodFree = $state(car?.isFloodFree ?? false);
+	let isAccidentFree = $state(car?.isAccidentFree ?? false);
 
 	const existingTaxDate = car?.taxExpirationDate ? new Date(car.taxExpirationDate) : null;
-	let taxMonth = existingTaxDate ? (existingTaxDate.getMonth() + 1).toString() : "";
-	let taxYear = existingTaxDate ? existingTaxDate.getFullYear().toString() : "";
+	let taxMonth = $state(existingTaxDate ? (existingTaxDate.getMonth() + 1).toString() : "");
+	let taxYear = $state(existingTaxDate ? existingTaxDate.getFullYear().toString() : "");
 
-	let seatingCapacity = car?.seatingCapacity ?? null;
+	let seatingCapacity = $state(car?.seatingCapacity ?? null);
 
 	const months = [
 		{ value: "1", label: "Januari" },
@@ -108,24 +112,22 @@
 	const currentYear = new Date().getFullYear();
 	const years = Array.from({ length: 15 }, (_, i) => currentYear - 5 + i);
 
-	let hidden = car?.hidden ?? false;
+	let hidden = $state(car?.hidden ?? false);
 
 	// Gallery State
 	type GalleryItem = { id: string; url?: string; file?: File; alt: string; preview: string };
-	let galleryItems: GalleryItem[] = (car?.gallery || []).map((g, i) => ({
-		id: `existing-${i}`,
-		url: g.image,
-		alt: g.alt,
-		preview: g.image,
-	}));
+	let galleryItems = $state<GalleryItem[]>(
+		(car?.gallery || []).map((g, i) => ({
+			id: `existing-${i}`,
+			url: g.image,
+			alt: g.alt,
+			preview: g.image,
+		})),
+	);
 
-	$: isFormValid =
-		make.trim() !== "" &&
-		model.trim() !== "" &&
-		price > 0 &&
-		year > 0 &&
-		mileage >= 0 &&
-		mileage !== "";
+	const isFormValid = $derived(
+		make.trim() !== "" && model.trim() !== "" && price > 0 && year > 0 && mileage >= 0,
+	);
 
 	const handleFileSelect = (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -157,7 +159,8 @@
 		galleryItems = items;
 	};
 
-	const submitForm = async () => {
+	const submitForm = async (e?: SubmitEvent) => {
+		e?.preventDefault();
 		const finalTitle = title.trim() || `${make} ${model} ${year}`;
 		isLoading = true;
 		statusMessage = "";
@@ -321,7 +324,7 @@
 		</div>
 	{/if}
 
-	<form on:submit|preventDefault={submitForm} class="space-y-8">
+	<form onsubmit={submitForm} class="space-y-8">
 		<!-- 1. Informasi Umum & Identitas -->
 		<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
 			<h3
@@ -582,8 +585,8 @@
 					<input
 						type="text"
 						bind:value={plateNumber}
-						on:blur={handlePlateBlur}
-						on:input={handlePlateInput}
+						onblur={handlePlateBlur}
+						oninput={handlePlateInput}
 						class="w-full px-4 py-2.5 border {plateError
 							? 'border-red-500 ring-1 ring-red-500'
 							: 'border-gray-300'} rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition uppercase"
@@ -715,7 +718,7 @@
 									<button
 										type="button"
 										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
-										on:click={() => moveItem(idx, -1)}
+										onclick={() => moveItem(idx, -1)}
 										disabled={idx === 0}
 										title="Pindah ke kiri"
 									>
@@ -731,7 +734,7 @@
 									<button
 										type="button"
 										class="bg-red-600/95 p-2 rounded-lg hover:bg-red-700 text-white transition shadow-sm"
-										on:click={() => removeGalleryItem(idx)}
+										onclick={() => removeGalleryItem(idx)}
 										title="Hapus foto"
 									>
 										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -746,7 +749,7 @@
 									<button
 										type="button"
 										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
-										on:click={() => moveItem(idx, 1)}
+										onclick={() => moveItem(idx, 1)}
 										disabled={idx === galleryItems.length - 1}
 										title="Pindah ke kanan"
 									>
@@ -780,7 +783,7 @@
 							type="file"
 							accept="image/*"
 							multiple
-							on:change={handleFileSelect}
+							onchange={handleFileSelect}
 							class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
 						/>
 						<svg
@@ -956,9 +959,8 @@
 				<h4 class="font-bold text-gray-900">{popup.title}</h4>
 				<p class="text-sm text-gray-600 mt-1">{popup.message}</p>
 			</div>
-			<button
-				class="ml-auto text-gray-400 hover:text-gray-600"
-				on:click={() => (popup.show = false)}>✕</button
+			<button class="ml-auto text-gray-400 hover:text-gray-600" onclick={() => (popup.show = false)}
+				>✕</button
 			>
 		</div>
 	</div>
