@@ -1,29 +1,113 @@
 ---
-import IconPaperAirplane from "~/assets/images/icons/paper-airplane.svg";
+import IconWhatsApp from "~/assets/images/icons/social-media/whatsapp.svg";
+import { phone } from "~/data/config";
 import { inquireForm } from "~/data/captions";
+import { getPrice } from "~/utils/helpers";
+import type { Car } from "~/types";
+
+interface Props {
+	car: Car;
+	url?: string;
+}
+
+const { car, url = "" } = Astro.props;
+const cleanPhone = phone.href.replace(/[^0-9]/g, "");
+const vehicleTitle = `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}`;
+const priceFormatted = getPrice(car.price);
 ---
 
 <h2 class="h4">{inquireForm.title}</h2>
 <p>{inquireForm.description}</p>
-<form>
+
+<form
+	id="inquire-form"
+	data-phone={cleanPhone}
+	data-car-title={vehicleTitle}
+	data-car-price={priceFormatted}
+	data-car-url={url}
+	data-greeting={inquireForm.waGreeting}
+>
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 		<div>
-			<label for="name">{inquireForm.name}</label>
-			<input type="text" id="name" name="name" />
+			<label for="inquire-name">{inquireForm.name}</label>
+			<input
+				type="text"
+				id="inquire-name"
+				name="name"
+				required
+				placeholder={inquireForm.namePlaceholder}
+				autocomplete="name"
+			/>
 		</div>
 		<div>
-			<label for="email">{inquireForm.email}</label>
-			<input type="email" id="email" name="email" />
+			<label for="inquire-phone">{inquireForm.phone}</label>
+			<input
+				type="tel"
+				id="inquire-phone"
+				name="phone"
+				required
+				placeholder={inquireForm.phonePlaceholder}
+				autocomplete="tel"
+			/>
 		</div>
 		<div class="lg:col-span-2">
-			<label for="message">{inquireForm.message}</label>
-			<textarea id="message" name="message" rows="4"></textarea>
+			<label for="inquire-message">{inquireForm.message}</label>
+			<textarea
+				id="inquire-message"
+				name="message"
+				rows="4"
+				required
+				placeholder={inquireForm.messagePlaceholder}></textarea>
 		</div>
 	</div>
 	<div class="mt-8">
-		<button type="submit" class="button button-primary gap-1">
-			<IconPaperAirplane class="size-5 inline-block -mt-1 -rotate-45" />
+		<button
+			type="submit"
+			class="button bg-emerald-600 hover:bg-emerald-700 text-white focus-visible:outline-emerald-600 gap-2 cursor-pointer"
+		>
+			<IconWhatsApp class="size-5 fill-current shrink-0 -mt-0.5" />
 			<span class="text-lg">{inquireForm.send}</span>
 		</button>
 	</div>
 </form>
+
+<script>
+	function setupInquireForm() {
+		const form = document.getElementById("inquire-form") as HTMLFormElement | null;
+		if (!form || form.dataset.initialized) return;
+		form.dataset.initialized = "true";
+
+		const cleanPhone = form.dataset.phone || "";
+		const carTitle = form.dataset.carTitle || "";
+		const carPrice = form.dataset.carPrice || "";
+		const carUrl = form.dataset.carUrl || window.location.href;
+		const waGreeting = form.dataset.greeting || "";
+
+		form.addEventListener("submit", (e: SubmitEvent) => {
+			e.preventDefault();
+			const formData = new FormData(form);
+			const name = (formData.get("name") || "").toString().trim();
+			const userPhone = (formData.get("phone") || "").toString().trim();
+			const userMessage = (formData.get("message") || "").toString().trim();
+
+			if (!name || !userPhone || !userMessage) return;
+
+			const messageLines = [
+				waGreeting,
+				`*Unit:* ${carTitle} (${carPrice})`,
+				`*Link:* ${carUrl}`,
+				"",
+				`*Nama:* ${name}`,
+				`*No. HP:* ${userPhone}`,
+				`*Pesan:* ${userMessage}`,
+			];
+
+			const encodedText = encodeURIComponent(messageLines.join("\n"));
+			const waUrl = `https://wa.me/${cleanPhone}?text=${encodedText}`;
+			window.open(waUrl, "_blank", "noopener,noreferrer");
+		});
+	}
+
+	document.addEventListener("astro:page-load", setupInquireForm);
+	setupInquireForm();
+</script>

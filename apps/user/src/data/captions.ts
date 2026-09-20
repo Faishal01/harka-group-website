@@ -71,6 +71,7 @@ export const viewPage = {
 export const buttonLabels = {
 	returnToCars: "Kembali ke Stok",
 	callUs: "Hubungi kami",
+	chatWhatsApp: "Chat WhatsApp",
 	askAQuestion: "Tanya Kami",
 	share: "Bagikan",
 	copyLink: "Salin tautan",
@@ -84,11 +85,15 @@ export const loanLabels = {
 export const inquireForm = {
 	title: "Tanya Kami",
 	description:
-		"Tertarik dengan unit ini? Isi formulir dibawah beserta pertanyaan Anda dan Kami akan merespon secepat mungkin.",
-	name: "Nama",
-	email: "E-mail",
-	message: "Pesan",
-	send: "Kirim",
+		"Tertarik dengan unit ini? Isi formulir di bawah untuk langsung terhubung ke WhatsApp showroom kami.",
+	name: "Nama Lengkap",
+	namePlaceholder: "Masukkan nama lengkap Anda",
+	phone: "Nomor WhatsApp",
+	phonePlaceholder: "Contoh: 081234567890",
+	message: "Pesan / Pertanyaan",
+	messagePlaceholder: "Tuliskan pertanyaan atau penawaran Anda mengenai unit ini...",
+	send: "Kirim via WhatsApp",
+	waGreeting: "Halo Harka Group, saya ingin menanyakan unit berikut:",
 };
 
 export const shareMessages = {
