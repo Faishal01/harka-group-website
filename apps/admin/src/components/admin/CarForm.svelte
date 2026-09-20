@@ -36,7 +36,7 @@
 	// Direct Flat Bindings
 	let title = car?.title || "";
 	let excerpt = car?.excerpt || "";
-	let videoTourUrl = car?.videoTourUrl || "";
+	let relatedUrl = car?.relatedUrl || (car as any)?.videoTourUrl || "";
 
 	let make = car?.make || "";
 	let model = car?.model || "";
@@ -184,7 +184,7 @@
 			const payload = {
 				title: finalTitle,
 				excerpt,
-				videoTourUrl,
+				relatedUrl,
 				make,
 				model,
 				price,
@@ -758,14 +758,17 @@
 
 				<div class="pt-4 border-t border-gray-100">
 					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
-						>URL Tur Video (YouTube)</label
+						>Tautan Terkait (Instagram / Media Sosial)</label
 					>
 					<input
 						type="url"
-						bind:value={videoTourUrl}
+						bind:value={relatedUrl}
 						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-						placeholder="https://youtube.com/watch?v=..."
+						placeholder="https://www.instagram.com/p/... atau tautan lainnya"
 					/>
+					<p class="text-xs text-gray-500 mt-1.5">
+						Tautan postingan, video reel, atau ulasan unit ini di media sosial
+					</p>
 				</div>
 			</div>
 		</div>

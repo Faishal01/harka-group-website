@@ -8,7 +8,7 @@ export const cars = sqliteTable(
 		id: text("id").primaryKey(), // 12-character NanoID
 		title: text("title").notNull(),
 		excerpt: text("excerpt"), // Description & highlights
-		videoTourUrl: text("video_tour_url"),
+		relatedUrl: text("related_url"),
 
 		// Core Vehicle Specs (Searchable & Filtered)
 		make: text("make").notNull(),

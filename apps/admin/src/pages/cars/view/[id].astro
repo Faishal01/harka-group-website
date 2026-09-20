@@ -296,16 +296,16 @@ const formattedPublishDate = new Date(car.publishDate).toLocaleDateString("id-ID
 						</div>
 
 						<div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-							<span class="text-xs text-gray-500 block mb-1">Video Tur YouTube</span>
+							<span class="text-xs text-gray-500 block mb-1">Tautan Terkait</span>
 							{
-								car.videoTourUrl ? (
+								car.relatedUrl ? (
 									<a
-										href={car.videoTourUrl}
+										href={car.relatedUrl}
 										target="_blank"
 										rel="noopener noreferrer"
 										class="text-red-700 font-semibold hover:underline inline-flex items-center gap-1 mt-0.5"
 									>
-										<span>Buka Video Tur</span>
+										<span>Buka Tautan</span>
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
 											class="w-3.5 h-3.5"

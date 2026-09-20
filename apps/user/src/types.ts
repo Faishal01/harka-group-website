@@ -117,7 +117,6 @@ export interface PriceProps {
 
 export interface SliderProps {
 	gallery: { image: string; alt: string }[] | null;
-	videoTour?: string | null;
 }
 
 export interface WidgetLoanProps {

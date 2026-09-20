@@ -2,6 +2,7 @@ export const labels: Record<string, any> = {
 	id: "ID",
 	title: "Judul",
 	gallery: "Galeri",
+	relatedUrl: "Tautan Terkait",
 	videoTourUrl: "URL Tur Video",
 	excerpt: "Kutipan",
 	publishDate: "Tanggal Publikasi",

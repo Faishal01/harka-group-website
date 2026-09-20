@@ -12,6 +12,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
 		const {
 			title,
 			excerpt,
+			relatedUrl,
 			videoTourUrl,
 			make,
 			model,
@@ -64,7 +65,7 @@ export const PUT: APIRoute = async ({ request, params }) => {
 		const updateData = {
 			title: finalTitle,
 			excerpt: excerpt || null,
-			videoTourUrl: videoTourUrl || null,
+			relatedUrl: relatedUrl || videoTourUrl || null,
 			make,
 			model,
 			price: Number(price),

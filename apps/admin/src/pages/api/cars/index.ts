@@ -9,6 +9,7 @@ export const POST: APIRoute = async ({ request }) => {
 		const {
 			title,
 			excerpt,
+			relatedUrl,
 			videoTourUrl,
 			make,
 			model,
@@ -50,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
 			id,
 			title: finalTitle,
 			excerpt: excerpt || null,
-			videoTourUrl: videoTourUrl || null,
+			relatedUrl: relatedUrl || videoTourUrl || null,
 			make,
 			model,
 			price: Number(price),
