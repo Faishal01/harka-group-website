@@ -39,10 +39,12 @@ export function getPrice(price: number): string {
 		.replace(/^Rp(?! )/, "Rp ");
 }
 
+import type { Database } from "@harka/db";
+
 /**
  * Returns a set of unique makes and models from the given cars collection.
  */
-export async function getMakeModelSet(db: any) {
+export async function getMakeModelSet(db: Database) {
 	const { getMakeModelSet: getFromDb } = await import("@harka/db");
 	return await getFromDb(db);
 }

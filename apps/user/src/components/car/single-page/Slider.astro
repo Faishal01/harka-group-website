@@ -11,7 +11,7 @@ const gallery = Astro.props.gallery || [];
 	<div class="embla__viewport overflow-hidden">
 		<div class="embla__container flex touch-pinch-zoom">
 			{
-				gallery.map((image: any) => (
+				gallery.map((image) => (
 					<a
 						href={image.image}
 						target="_blank"
@@ -59,7 +59,7 @@ const gallery = Astro.props.gallery || [];
 		<div class="embla-thumbs bg-gray-900">
 			<div class="embla-thumbs__viewport overflow-hidden">
 				<div class="embla-thumbs__container flex">
-					{gallery.map((image: any) => (
+					{gallery.map((image) => (
 						<div class="embla-thumbs__slide relative overflow-hidden select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
 							<img
 								src={image.image}

@@ -12,7 +12,11 @@ let width = 24;
 let height = 24;
 
 try {
-	let iconsData: any;
+	let iconsData: {
+		icons: Record<string, { body: string }>;
+		width?: number;
+		height?: number;
+	} | null = null;
 	if (prefix === "mdi") {
 		iconsData = (await import("@iconify-json/mdi/icons.json")).default;
 	} else if (prefix === "bi") {

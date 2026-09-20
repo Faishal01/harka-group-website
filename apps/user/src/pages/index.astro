@@ -9,12 +9,23 @@ import Heading from "~/components/Heading.astro";
 
 import ShowCars from "~/components/ShowCars.astro";
 import { homePage } from "~/data/captions";
+import { siteName, siteSlogan } from "~/data/config";
+import { SITE_URL, generateAutoDealerSchema } from "~/utils/seo";
 
 // Images
 import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-451590.jpg";
+
+const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
+const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas berkualitas di Jakarta Selatan dengan garansi bebas tabrak & banjir.`;
 ---
 
-<Layout pageTitle="Home">
+<Layout
+	pageTitle={`${siteName} | Showroom Mobil Bekas Berkualitas Jakarta`}
+	title={`${siteName} - Showroom Mobil Bekas`}
+	description={metaDescription}
+	canonicalUrl={SITE_URL}
+	schema={autoDealerSchema}
+>
 	{/* Main Heading */}
 	<Section class:list={"relative"}>
 		<Image

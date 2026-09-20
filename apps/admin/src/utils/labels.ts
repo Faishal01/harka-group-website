@@ -1,7 +1,8 @@
-export const labels: Record<string, any> = {
+export const labels: Record<string, string> = {
 	id: "ID",
 	title: "Judul",
 	gallery: "Galeri",
+	relatedUrl: "Tautan Terkait",
 	videoTourUrl: "URL Tur Video",
 	excerpt: "Kutipan",
 	publishDate: "Tanggal Publikasi",
@@ -21,6 +22,8 @@ export const labels: Record<string, any> = {
 	ownershipStatus: "Status Kepemilikan",
 	plateNumber: "Nomor Polisi / Plat Nomor",
 	taxExpirationDate: "Masa Berlaku Pajak",
+	isFloodFree: "Bukan Bekas Banjir",
+	isAccidentFree: "Bebas Lakalantas",
 	hasFloodDamage: "Riwayat Terendam Banjir",
 	hasAccidentDamage: "Riwayat Tabrakan / Laka",
 	seatingCapacity: "Kapasitas Penumpang",

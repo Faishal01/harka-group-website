@@ -30,7 +30,7 @@ const searchParamsSchema = z.object({
 
 export const getFilteredCars = async (
 	searchParams: Record<string, string>,
-	env: any,
+	env: Env,
 ): Promise<Car[]> => {
 	const result = searchParamsSchema.safeParse(searchParams);
 

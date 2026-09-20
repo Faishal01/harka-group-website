@@ -7,7 +7,7 @@ import { env } from "cloudflare:workers";
 export const POST: APIRoute = async ({ params }) => {
 	try {
 		const id = params.id as string;
-		const db = getDb(env as any);
+		const db = getDb(env);
 
 		await db
 			.update(carsTable)
@@ -21,8 +21,9 @@ export const POST: APIRoute = async ({ params }) => {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message || "Failed to restore car" }), {
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : "Failed to restore car";
+		return new Response(JSON.stringify({ error: message }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
 		});

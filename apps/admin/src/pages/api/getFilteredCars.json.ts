@@ -45,7 +45,7 @@ export const GET: APIRoute = async ({ request }) => {
 		});
 	}
 
-	const db = getDb(env as any);
+	const db = getDb(env);
 	const params: CarFilterParams = {
 		...result.data,
 		ownershipStatus: result.data.ownershipStatus || result.data.condition,
@@ -77,8 +77,9 @@ export const GET: APIRoute = async ({ request }) => {
 				headers: { "content-type": "application/json" },
 			},
 		);
-	} catch (e: any) {
-		return new Response(JSON.stringify({ error: e.message }), {
+	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : "Terjadi kesalahan";
+		return new Response(JSON.stringify({ error: message }), {
 			status: 500,
 			headers: { "content-type": "application/json" },
 		});

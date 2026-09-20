@@ -67,16 +67,20 @@ const sections = [
 				value: ownershipLabel,
 			},
 			{
+				label: viewPage.plateNumber,
+				value: car.plateNumber || null,
+			},
+			{
 				label: viewPage.taxStatus,
 				value: taxFormatted,
 			},
 			{
 				label: viewPage.floodHistory,
-				value: car.hasFloodDamage ? "Tidak Ada" : "Ada",
+				value: car.isFloodFree ? "Tidak Ada" : "Ada",
 			},
 			{
 				label: viewPage.accidentHistory,
-				value: car.hasAccidentDamage ? "Tidak Ada" : "Ada",
+				value: car.isAccidentFree ? "Tidak Ada" : "Ada",
 			},
 		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
 	},

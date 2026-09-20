@@ -1,18 +1,6 @@
 ---
-import type { CardGridAltProps as Props } from "~/types";
+import { colorClasses, type CardGridAltProps as Props } from "~/types";
 const { title = "", description = "", color = "green", icon = "", href = false } = Astro.props;
-
-export const colorClasses = {
-	brand: "bg-red-700 text-white",
-	black: "bg-gray-800 text-white",
-	white: "bg-white text-gray-800",
-	primary: "bg-red-50 text-red-700",
-	green: "bg-green-50 text-green-700",
-	blue: "bg-blue-50 text-blue-700",
-	purple: "bg-purple-50 text-purple-700",
-	red: "bg-red-50 text-red-700",
-	orange: "bg-orange-50 text-orange-700",
-};
 ---
 
 <div

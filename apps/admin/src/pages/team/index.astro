@@ -1,0 +1,39 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import Container from "~/components/Container.astro";
+import Section from "~/components/Section.astro";
+import TeamManager from "~/components/admin/TeamManager.svelte";
+import { getDb, adminWhitelist } from "@harka/db";
+import { desc } from "drizzle-orm";
+import { env } from "cloudflare:workers";
+
+const currentUser = Astro.locals.user;
+const currentUserRole = Astro.locals.userRole || "admin";
+
+const db = getDb(env);
+const allMembers = await db.select().from(adminWhitelist).orderBy(desc(adminWhitelist.createdAt));
+---
+
+<Layout pageTitle="Kelola Akses Tim | Harka Admin" title="Kelola Akses Tim">
+	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
+		<Container>
+			<!-- Header -->
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+				<div>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Kelola Akses Tim</h1>
+					<p class="text-sm text-gray-500 mt-1">
+						Kelola daftar whitelist email admin yang memiliki izin akses ke dasbor ini.
+					</p>
+				</div>
+			</div>
+
+			<!-- Management Island -->
+			<TeamManager
+				initialMembers={allMembers}
+				currentUserEmail={currentUser?.email || ""}
+				currentUserRole={currentUserRole}
+				client:load
+			/>
+		</Container>
+	</Section>
+</Layout>

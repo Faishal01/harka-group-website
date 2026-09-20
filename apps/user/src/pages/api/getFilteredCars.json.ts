@@ -34,8 +34,9 @@ export const GET: APIRoute = async ({ request }) => {
 				headers: { "content-type": "application/json" },
 			},
 		);
-	} catch (error: any) {
-		return new Response(JSON.stringify({ error: error.message }), {
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : "Terjadi kesalahan";
+		return new Response(JSON.stringify({ error: message }), {
 			status: 400,
 			headers: { "content-type": "application/json" },
 		});

@@ -1,8 +1,31 @@
 import type { CollectionEntry } from "astro:content";
-import type { colorClasses } from "./components/CardGridAlt.astro";
-import type { pillColors } from "./components/Pill.astro";
 import type { Car as DbCar } from "@harka/db";
 export type Car = DbCar;
+
+export const colorClasses = {
+	brand: "bg-red-700 text-white",
+	black: "bg-gray-800 text-white",
+	white: "bg-white text-gray-800",
+	primary: "bg-red-50 text-red-700",
+	green: "bg-green-50 text-green-700",
+	blue: "bg-blue-50 text-blue-700",
+	purple: "bg-purple-50 text-purple-700",
+	red: "bg-red-50 text-red-700",
+	orange: "bg-orange-50 text-orange-700",
+};
+
+export const pillColors = {
+	indigo: "bg-indigo-50 text-indigo-800 ring-1 ring-indigo-800/10",
+	blue: "bg-blue-50 text-blue-800 ring-1 ring-blue-800/10",
+	green: "bg-green-50 text-green-800 ring-1 ring-green-800/10",
+	red: "bg-red-50 text-red-800 ring-1 ring-red-800/10",
+	primary: "bg-red-50 text-red-800 ring-1 ring-red-800/10",
+	purple: "bg-purple-50 text-purple-800 ring-1 ring-purple-800/10",
+	pink: "bg-pink-50 text-pink-800 ring-1 ring-pink-800/10",
+	gray: "bg-gray-50 text-gray-800 ring-1 ring-gray-800/10",
+	black: "bg-black text-white ring-1 ring-white",
+	white: "bg-white text-black ring-1 ring-black",
+};
 export type Testimonial = CollectionEntry<"testimonials">;
 
 // Components
@@ -83,7 +106,6 @@ export interface SectionProps extends ClassNameProps {
 
 export interface ShowCarsProps {
 	recent?: boolean;
-	featured?: boolean;
 	slugs?: string[];
 	ui?: "list" | "grid";
 }
@@ -118,7 +140,6 @@ export interface PriceProps {
 
 export interface SliderProps {
 	gallery: { image: string; alt: string }[] | null;
-	videoTour?: string | null;
 }
 
 export interface WidgetLoanProps {

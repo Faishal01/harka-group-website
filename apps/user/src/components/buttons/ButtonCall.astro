@@ -1,11 +1,45 @@
 ---
 import { phone } from "~/data/config";
-import IconPhone from "~/assets/images/icons/phone.svg";
+import IconWhatsApp from "~/assets/images/icons/social-media/whatsapp.svg";
 import Button from "~/components/Button.astro";
 import { buttonLabels } from "~/data/captions";
+import { getPrice } from "~/utils/helpers";
+import type { Car } from "~/types";
+
+interface Props {
+	car?: Car;
+	url?: string;
+	class?: string;
+}
+
+const { car, url, class: className = "" } = Astro.props;
+
+const cleanPhone = phone.href.replace(/[^0-9]/g, "");
+
+let waHref = phone.href;
+if (car) {
+	const vehicleTitle = `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}`;
+	const priceStr = getPrice(car.price);
+	const messageLines = [
+		`Halo Harka Group, saya tertarik dengan unit *${vehicleTitle}* (Harga: ${priceStr}).`,
+		`Apakah unit ini masih tersedia?`,
+	];
+	if (url) {
+		messageLines.push("", `Link: ${url}`);
+	}
+	waHref = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageLines.join("\n"))}`;
+}
 ---
 
-<Button href={phone.href} class:list={"gap-1"}>
-	<IconPhone class="size-4 inline-block -mt-0.5 mr-1" />
-	<span>{buttonLabels.callUs}</span>
+<Button
+	color="custom"
+	href={waHref}
+	newtab={true}
+	class:list={[
+		"gap-2 bg-emerald-600 hover:bg-emerald-700 text-white focus-visible:outline-emerald-600",
+		className,
+	]}
+>
+	<IconWhatsApp class="size-5 fill-current shrink-0 -mt-0.5" />
+	<span>{buttonLabels.chatWhatsApp}</span>
 </Button>

@@ -13,3 +13,6 @@ export function generateCarId(size = 12): string {
 	}
 	return id;
 }
+
+export const generateId = generateCarId;
+
