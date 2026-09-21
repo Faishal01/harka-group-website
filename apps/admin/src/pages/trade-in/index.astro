@@ -8,8 +8,22 @@ import { getDb, getTradeInSubmissions } from "@harka/db";
 import { env } from "cloudflare:workers";
 import { getPrice } from "~/utils/helpers";
 
+const pageParam = Astro.url.searchParams.get("page");
+const currentPage = Math.max(1, Number(pageParam) || 1);
+const limit = 15;
+
 const db = getDb(env);
-const submissions = await getTradeInSubmissions(db);
+const {
+	items: submissions,
+	total,
+	totalPages,
+} = await getTradeInSubmissions(db, {
+	page: currentPage,
+	limit,
+});
+
+const startIndex = total === 0 ? 0 : (currentPage - 1) * limit + 1;
+const endIndex = Math.min(total, currentPage * limit);
 
 function getOwnershipBadge(status?: string | null) {
 	if (status === "leasing") {
@@ -23,6 +37,46 @@ function getOwnershipBadge(status?: string | null) {
 	}
 	return { label: "Tangan Pertama", badgeClass: "bg-emerald-100 text-emerald-800" };
 }
+
+function getReviewStatusBadge(status?: string | null) {
+	if (status === "approved") {
+		return {
+			label: "Approved",
+			badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+			dotClass: "bg-emerald-500",
+		};
+	}
+	if (status === "rejected") {
+		return {
+			label: "Ditolak",
+			badgeClass: "bg-red-50 text-red-700 border-red-200",
+			dotClass: "bg-red-500",
+		};
+	}
+	return {
+		label: "Menunggu",
+		badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
+		dotClass: "bg-amber-500",
+	};
+}
+
+function generatePaginationRange(
+	current: number,
+	maxPages: number,
+	delta = 2,
+): (number | string)[] {
+	const range: (number | string)[] = [];
+	for (let i = 1; i <= maxPages; i++) {
+		if (i === 1 || i === maxPages || (i >= current - delta && i <= current + delta)) {
+			range.push(i);
+		} else if (range[range.length - 1] !== "...") {
+			range.push("...");
+		}
+	}
+	return range;
+}
+
+const paginationRange = generatePaginationRange(currentPage, totalPages);
 ---
 
 <Layout pageTitle="Pengajuan Tukar Tambah">
@@ -40,13 +94,13 @@ function getOwnershipBadge(status?: string | null) {
 					<span
 						class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200"
 					>
-						Total: {submissions.length} Pengajuan
+						Total: {total} Pengajuan
 					</span>
 				</div>
 			</div>
 
 			{
-				submissions.length === 0 ? (
+				total === 0 ? (
 					<div class="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto shadow-sm">
 						<div class="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
 							<svg
@@ -80,6 +134,7 @@ function getOwnershipBadge(status?: string | null) {
 										<th class="py-3.5 px-4 sm:px-6">Kendaraan</th>
 										<th class="py-3.5 px-4 sm:px-6">Ekspektasi Harga</th>
 										<th class="py-3.5 px-4 sm:px-6">Status Berkas</th>
+										<th class="py-3.5 px-4 sm:px-6">Status Review</th>
 										<th class="py-3.5 px-4 sm:px-6 text-right">Aksi</th>
 									</tr>
 								</thead>
@@ -93,6 +148,7 @@ function getOwnershipBadge(status?: string | null) {
 											minute: "2-digit",
 										});
 										const cleanPhone = sub.customerPhone.replace(/[^0-9]/g, "");
+										const reviewBadge = getReviewStatusBadge(sub.status);
 
 										return (
 											<tr class="hover:bg-gray-50/70 transition">
@@ -172,6 +228,20 @@ function getOwnershipBadge(status?: string | null) {
 													</div>
 												</td>
 
+												<td class="py-4 px-4 sm:px-6 whitespace-nowrap">
+													<span
+														class={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border ${reviewBadge.badgeClass}`}
+													>
+														<span class={`size-1.5 rounded-full ${reviewBadge.dotClass}`} />
+														{reviewBadge.label}
+													</span>
+													{sub.convertedCarId && (
+														<span class="block text-[10px] text-indigo-600 font-semibold mt-1">
+															&bull; Masuk Inventaris
+														</span>
+													)}
+												</td>
+
 												<td class="py-4 px-4 sm:px-6 text-right whitespace-nowrap">
 													<a
 														href={`/trade-in/${sub.id}`}
@@ -198,6 +268,92 @@ function getOwnershipBadge(status?: string | null) {
 								</tbody>
 							</table>
 						</div>
+
+						{/* Pagination Footer */}
+						{totalPages > 1 && (
+							<div class="px-6 py-4 bg-white border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+								<div>
+									Menampilkan <span class="font-bold text-gray-900">{startIndex}</span> -{" "}
+									<span class="font-bold text-gray-900">{endIndex}</span> dari{" "}
+									<span class="font-bold text-gray-900">{total}</span> Pengajuan
+								</div>
+
+								<nav class="flex items-center gap-1">
+									{currentPage > 1 ? (
+										<a
+											href={`/trade-in?page=${currentPage - 1}`}
+											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
+										>
+											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+												<path
+													fill-rule="evenodd"
+													d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+											<span>Sebelumnya</span>
+										</a>
+									) : (
+										<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 text-gray-300 cursor-not-allowed">
+											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+												<path
+													fill-rule="evenodd"
+													d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+											<span>Sebelumnya</span>
+										</span>
+									)}
+
+									<div class="flex items-center gap-1 px-1">
+										{paginationRange.map((p) =>
+											p === "..." ? (
+												<span class="px-2 text-gray-400">...</span>
+											) : (
+												<a
+													href={`/trade-in?page=${p}`}
+													class={`size-8 inline-flex items-center justify-center rounded-md font-medium transition ${
+														p === currentPage
+															? "bg-gray-900 text-white font-bold"
+															: "text-gray-700 hover:bg-gray-100"
+													}`}
+												>
+													{p}
+												</a>
+											),
+										)}
+									</div>
+
+									{currentPage < totalPages ? (
+										<a
+											href={`/trade-in?page=${currentPage + 1}`}
+											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
+										>
+											<span>Berikutnya</span>
+											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+												<path
+													fill-rule="evenodd"
+													d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+										</a>
+									) : (
+										<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-200 text-gray-300 cursor-not-allowed">
+											<span>Berikutnya</span>
+											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+												<path
+													fill-rule="evenodd"
+													d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+										</span>
+									)}
+								</nav>
+							</div>
+						)}
 					</div>
 				)
 			}

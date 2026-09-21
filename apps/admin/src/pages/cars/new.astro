@@ -4,6 +4,68 @@ import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
 import CarForm from "~/components/admin/CarForm.svelte";
+import {
+	getDb,
+	getTradeInSubmissionById,
+	type Car,
+	type Transmission,
+	type FuelType,
+} from "@harka/db";
+import { env } from "cloudflare:workers";
+
+const fromTradeIn = Astro.url.searchParams.get("fromTradeIn");
+let initialCar: Partial<Car> | null = null;
+let tradeInFound = false;
+
+if (fromTradeIn) {
+	const db = getDb(env);
+	const sub = await getTradeInSubmissionById(db, fromTradeIn);
+
+	if (sub) {
+		// Duplicate Guard: If already converted, redirect straight to the car edit page
+		if (sub.convertedCarId) {
+			return Astro.redirect(`/cars/edit/${sub.convertedCarId}`);
+		}
+
+		tradeInFound = true;
+
+		// Calculate tax expiration date from stnkTaxExpiry ("MM/YYYY")
+		let taxExpirationDate: Date | null = null;
+		if (sub.stnkTaxExpiry && sub.stnkTaxExpiry.includes("/")) {
+			const [monthStr, yearStr] = sub.stnkTaxExpiry.split("/");
+			const m = Number(monthStr);
+			const y = Number(yearStr);
+			if (m >= 1 && m <= 12 && y >= 1900) {
+				taxExpirationDate = new Date(y, m - 1, 1);
+			}
+		}
+
+		// Map photos to gallery format
+		const gallery = (sub.photos || []).map((p) => ({
+			image: p.url,
+			alt: `${sub.year} ${sub.make} ${sub.model} - ${p.label || p.slot}`,
+		}));
+
+		initialCar = {
+			make: sub.make,
+			model: sub.model,
+			year: sub.year,
+			mileage: sub.mileage,
+			price: sub.sellingPrice,
+			transmission: (sub.transmission as Transmission) || "Automatic",
+			fuelType: (sub.fuelType as FuelType) || "Petrol",
+			color: "",
+			ownershipStatus: sub.ownershipStatus,
+			plateNumber: sub.plateNumber,
+			isFloodFree: sub.isFloodFree,
+			isAccidentFree: sub.isAccidentFree,
+			taxExpirationDate,
+			excerpt: sub.conditionNotes || null,
+			gallery,
+			hidden: true, // Default to Draft (Hidden) mode
+		};
+	}
+}
 ---
 
 <Layout pageTitle="Tambah Mobil Baru">
@@ -29,7 +91,41 @@ import CarForm from "~/components/admin/CarForm.svelte";
 				</a>
 			</div>
 
-			<CarForm client:load car={null} />
+			{
+				fromTradeIn && tradeInFound && (
+					<div class="max-w-4xl mx-auto mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+						<div class="flex items-start sm:items-center gap-2.5">
+							<svg
+								class="size-5 text-blue-600 shrink-0 mt-0.5 sm:mt-0"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span>
+								Data terisi otomatis dari pengajuan tukar tambah{" "}
+								<strong class="font-mono">{fromTradeIn}</strong>. Status disetel sebagai{" "}
+								<strong>Sembunyi (Draf)</strong> agar Anda dapat memeriksa kelengkapan sebelum
+								dipublikasikan.
+							</span>
+						</div>
+						<a
+							href={`/trade-in/${fromTradeIn}`}
+							class="text-blue-700 underline font-semibold text-xs whitespace-nowrap hover:text-blue-900 self-end sm:self-auto"
+						>
+							Lihat Pengajuan &rarr;
+						</a>
+					</div>
+				)
+			}
+
+			<CarForm client:load car={initialCar} fromTradeIn={fromTradeIn} />
 		</Container>
 	</Section>
 </Layout>

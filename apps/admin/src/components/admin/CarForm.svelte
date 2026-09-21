@@ -10,10 +10,11 @@
 	import { compressCarImages } from "~/utils/imageCompression";
 
 	interface Props {
-		car?: Car | null;
+		car?: Partial<Car> | null;
+		fromTradeIn?: string | null;
 	}
 
-	let { car = null }: Props = $props();
+	let { car = null, fromTradeIn = null }: Props = $props();
 
 	let isLoading = $state(false);
 	let statusMessage = $state("");
@@ -243,6 +244,7 @@
 				seatingCapacity,
 				gallery: finalGallery,
 				hidden,
+				fromTradeIn: fromTradeIn || undefined,
 			};
 
 			const url = car?.id ? `/api/cars/${car.id}` : "/api/cars";

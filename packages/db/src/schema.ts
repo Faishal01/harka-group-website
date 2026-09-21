@@ -142,6 +142,9 @@ export const adminWhitelist = sqliteTable("admin_whitelist", {
 export type AdminWhitelist = typeof adminWhitelist.$inferSelect;
 export type InsertAdminWhitelist = typeof adminWhitelist.$inferInsert;
 
+export const tradeInStatusEnum = ["pending", "approved", "rejected"] as const;
+export type TradeInStatus = (typeof tradeInStatusEnum)[number];
+
 export interface TradeInPhoto {
 	slot: string;
 	label: string;
@@ -152,6 +155,12 @@ export const tradeInSubmissions = sqliteTable(
 	"trade_in_submissions",
 	{
 		id: text("id").primaryKey(), // 12-character NanoID
+
+		// Review & Conversion Lifecycle
+		status: text("status", { enum: tradeInStatusEnum }).notNull().default("pending"),
+		reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+		reviewedBy: text("reviewed_by"),
+		convertedCarId: text("converted_car_id"),
 
 		// Customer Contact
 		customerName: text("customer_name").notNull(),
@@ -193,6 +202,7 @@ export const tradeInSubmissions = sqliteTable(
 	(table) => [
 		index("trade_in_created_at_idx").on(table.createdAt),
 		index("trade_in_customer_phone_idx").on(table.customerPhone),
+		index("trade_in_status_idx").on(table.status),
 	],
 );
 

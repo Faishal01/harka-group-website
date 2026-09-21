@@ -11,7 +11,9 @@ import {
 	fuelTypes,
 	transmissions,
 	ownershipStatuses,
+	tradeInSubmissions,
 } from "@harka/db";
+import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 
 const createCarSchema = z.object({
@@ -48,6 +50,7 @@ const createCarSchema = z.object({
 		.optional()
 		.nullable(),
 	hidden: z.boolean().default(false),
+	fromTradeIn: z.string().optional().nullable(),
 });
 
 export const POST: APIRoute = async ({ request }) => {
@@ -88,6 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
 			plateNumber,
 			gallery,
 			hidden,
+			fromTradeIn,
 		} = payload;
 
 		let formattedPlate: string | null = null;
@@ -147,6 +151,17 @@ export const POST: APIRoute = async ({ request }) => {
 
 		const db = getDb(env);
 		await db.insert(carsTable).values(insertData);
+
+		// If created from a trade-in submission, link convertedCarId
+		if (fromTradeIn) {
+			await db
+				.update(tradeInSubmissions)
+				.set({
+					convertedCarId: id,
+					updatedAt: now,
+				})
+				.where(eq(tradeInSubmissions.id, fromTradeIn));
+		}
 
 		return new Response(JSON.stringify({ success: true, id, redirect: "/cars" }), {
 			status: 200,
