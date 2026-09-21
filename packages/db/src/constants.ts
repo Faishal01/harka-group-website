@@ -1,17 +1,17 @@
 export const ownershipStatuses = [
-	"brand_new",
 	"first_hand",
 	"second_hand",
 	"company_car",
+	"leasing",
 ] as const;
 
 export type OwnershipStatus = (typeof ownershipStatuses)[number];
 
 export const ownershipStatusMap: Record<OwnershipStatus, string> = {
-	brand_new: "Baru",
-	first_hand: "Tangan Pertama",
+	first_hand: "Nama Pribadi (Tangan Pertama)",
 	second_hand: "Tangan Kedua",
-	company_car: "Atas Nama PT",
+	company_car: "Atas Nama Perusahaan",
+	leasing: "Atas Nama Leasing (Kredit)",
 };
 
 export const bodyTypes = [

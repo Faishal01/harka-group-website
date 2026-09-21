@@ -10,6 +10,19 @@ import { getPrice } from "~/utils/helpers";
 
 const db = getDb(env);
 const submissions = await getTradeInSubmissions(db);
+
+function getOwnershipBadge(status?: string | null) {
+	if (status === "leasing") {
+		return { label: "Leasing", badgeClass: "bg-amber-100 text-amber-800" };
+	}
+	if (status === "second_hand") {
+		return { label: "Tangan Kedua", badgeClass: "bg-sky-100 text-sky-800" };
+	}
+	if (status === "company_car") {
+		return { label: "Perusahaan", badgeClass: "bg-purple-100 text-purple-800" };
+	}
+	return { label: "Tangan Pertama", badgeClass: "bg-emerald-100 text-emerald-800" };
+}
 ---
 
 <Layout pageTitle="Pengajuan Tukar Tambah">
@@ -147,9 +160,9 @@ const submissions = await getTradeInSubmissions(db);
 												<td class="py-4 px-4 sm:px-6">
 													<div class="flex flex-col gap-1">
 														<span
-															class={`inline-block px-2 py-0.5 rounded text-[11px] font-bold w-fit ${sub.bpkbStatus === "leasing" ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"}`}
+															class={`inline-block px-2 py-0.5 rounded text-[11px] font-bold w-fit ${getOwnershipBadge(sub.ownershipStatus).badgeClass}`}
 														>
-															BPKB: {sub.bpkbStatus === "leasing" ? "Leasing" : "Lunas"}
+															BPKB: {getOwnershipBadge(sub.ownershipStatus).label}
 														</span>
 														<span
 															class={`inline-block px-2 py-0.5 rounded text-[11px] font-medium w-fit ${sub.stnkStatus === "expired" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"}`}

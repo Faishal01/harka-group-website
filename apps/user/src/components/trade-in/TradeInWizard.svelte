@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { tradeInCaptions } from "~/data/captions";
 	import { compressImagesBatch, type ImageSlotItem } from "~/utils/imageCompression";
-	import { validatePlateNumber, formatPlateNumber } from "@harka/db";
+	import {
+		validatePlateNumber,
+		formatPlateNumber,
+		ownershipStatuses,
+		ownershipStatusMap,
+		type OwnershipStatus,
+	} from "@harka/db";
 
 	// Current wizard step (1 to 4)
 	let currentStep = $state(1);
@@ -46,7 +52,7 @@
 		}
 	}
 
-	let bpkbStatus = $state<"on_hand" | "leasing">("on_hand");
+	let ownershipStatus = $state<OwnershipStatus>("first_hand");
 	let stnkStatus = $state<"active" | "expired">("active");
 	let stnkTaxExpiry = $state("");
 	let hasFaktur = $state(false);
@@ -147,7 +153,7 @@
 		make.trim().length > 0 &&
 			model.trim().length > 0 &&
 			typeof year === "number" &&
-			year >= 1990 &&
+			year >= 1950 &&
 			year <= new Date().getFullYear() + 1 &&
 			typeof mileage === "number" &&
 			mileage >= 0 &&
@@ -226,7 +232,7 @@
 			formData.append("sellingPrice", String(sellingPrice));
 
 			formData.append("plateNumber", formatPlateNumber(plateNumber.trim()) || plateNumber.trim());
-			formData.append("bpkbStatus", bpkbStatus);
+			formData.append("ownershipStatus", ownershipStatus);
 			formData.append("stnkStatus", stnkStatus);
 			formData.append("stnkTaxExpiry", stnkTaxExpiry.trim());
 			formData.append("hasFaktur", String(hasFaktur));
@@ -296,7 +302,7 @@
 		year = "";
 		mileage = "";
 		sellingPrice = "";
-		bpkbStatus = "on_hand";
+		ownershipStatus = "first_hand";
 		stnkStatus = "active";
 		stnkTaxExpiry = "";
 		hasFaktur = false;
@@ -484,7 +490,7 @@
 									type="number"
 									id="year"
 									bind:value={year}
-									min="1990"
+									min="1950"
 									max={new Date().getFullYear() + 1}
 									placeholder={tradeInCaptions.form.yearPlaceholder}
 									class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition"
@@ -641,39 +647,29 @@
 										{/if}
 									</div>
 
-									<div>
+									<div class="sm:col-span-2">
 										<span class="block text-sm font-semibold text-gray-700 mb-2">
-											{tradeInCaptions.form.bpkbStatus}
+											{tradeInCaptions.form.ownershipStatus || tradeInCaptions.form.bpkbStatus}
 										</span>
-										<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {bpkbStatus ===
-												'on_hand'
-													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
-											>
-												<input
-													type="radio"
-													bind:group={bpkbStatus}
-													value="on_hand"
-													class="size-4 text-red-700 accent-red-700 shrink-0"
-												/>
-												<span class="text-xs sm:text-sm">{tradeInCaptions.form.bpkbOnHand}</span>
-											</label>
-											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {bpkbStatus ===
-												'leasing'
-													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
-											>
-												<input
-													type="radio"
-													bind:group={bpkbStatus}
-													value="leasing"
-													class="size-4 text-red-700 accent-red-700 shrink-0"
-												/>
-												<span class="text-xs sm:text-sm">{tradeInCaptions.form.bpkbLeasing}</span>
-											</label>
+										<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+											{#each ownershipStatuses as status (status)}
+												<label
+													class="flex items-center gap-3 p-3.5 rounded-xl border h-full transition cursor-pointer {ownershipStatus ===
+													status
+														? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
+														: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
+												>
+													<input
+														type="radio"
+														bind:group={ownershipStatus}
+														value={status}
+														class="size-4 text-red-700 accent-red-700 shrink-0"
+													/>
+													<span class="text-xs sm:text-sm leading-snug"
+														>{ownershipStatusMap[status] || status}</span
+													>
+												</label>
+											{/each}
 										</div>
 									</div>
 
@@ -683,7 +679,7 @@
 										</span>
 										<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {stnkStatus ===
+												class="flex items-center gap-3 p-3 rounded-xl border h-full transition cursor-pointer {stnkStatus ===
 												'active'
 													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
 													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
@@ -697,7 +693,7 @@
 												<span class="text-xs sm:text-sm">{tradeInCaptions.form.stnkActive}</span>
 											</label>
 											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {stnkStatus ===
+												class="flex items-center gap-3 p-3 rounded-xl border h-full transition cursor-pointer {stnkStatus ===
 												'expired'
 													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
 													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
@@ -713,10 +709,10 @@
 										</div>
 									</div>
 
-									<div class="sm:col-span-2">
+									<div>
 										<label
 											for="stnkTaxExpiry"
-											class="block text-sm font-semibold text-gray-700 mb-1"
+											class="block text-sm font-semibold text-gray-700 mb-2"
 										>
 											{tradeInCaptions.form.stnkTaxExpiry}
 										</label>
@@ -725,7 +721,7 @@
 											id="stnkTaxExpiry"
 											bind:value={stnkTaxExpiry}
 											placeholder={tradeInCaptions.form.stnkTaxExpiryPlaceholder}
-											class="w-full sm:w-72 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition bg-white"
+											class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition bg-white text-sm"
 										/>
 									</div>
 								</div>

@@ -170,7 +170,7 @@ export const tradeInSubmissions = sqliteTable(
 
 		// Administration & Legalitas
 		plateNumber: text("plate_number"),
-		bpkbStatus: text("bpkb_status", { enum: ["on_hand", "leasing"] }).notNull(),
+		ownershipStatus: text("ownership_status").$type<OwnershipStatus>().notNull(),
 		stnkStatus: text("stnk_status", { enum: ["active", "expired"] }).notNull(),
 		stnkTaxExpiry: text("stnk_tax_expiry"), // e.g. "10/2026"
 		hasFaktur: integer("has_faktur", { mode: "boolean" }).notNull().default(false),

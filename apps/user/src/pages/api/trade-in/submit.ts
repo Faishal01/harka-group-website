@@ -6,6 +6,8 @@ import {
 	getDb,
 	tradeInSubmissions,
 	generateId,
+	ownershipStatuses,
+	type OwnershipStatus,
 	type TradeInPhoto,
 	type InsertTradeInSubmission,
 	type TradeInSubmission,
@@ -40,9 +42,12 @@ export const POST: APIRoute = async ({ request }) => {
 		const fuelType = (formData.get("fuelType") || "").toString().trim() || null;
 		const sellingPrice = Number(formData.get("sellingPrice"));
 
-		if (!make || !model || !year || !mileage || !transmission || !sellingPrice) {
+		if (!make || !model || !year || !mileage || !transmission || !sellingPrice || year < 1950) {
 			return new Response(
-				JSON.stringify({ error: "Spesifikasi kendaraan dan estimasi harga wajib diisi lengkap." }),
+				JSON.stringify({
+					error:
+						"Spesifikasi kendaraan dan estimasi harga wajib diisi lengkap (tahun minimal 1950).",
+				}),
 				{ status: 400, headers: { "Content-Type": "application/json" } },
 			);
 		}
@@ -60,7 +65,19 @@ export const POST: APIRoute = async ({ request }) => {
 		}
 		const plateNumber = formatPlateNumber(plateNumberRaw);
 
-		const bpkbStatus = (formData.get("bpkbStatus") || "on_hand").toString();
+		const rawOwnership = (
+			formData.get("ownershipStatus") ||
+			formData.get("bpkbStatus") ||
+			"first_hand"
+		).toString();
+		const ownershipStatus: OwnershipStatus = ownershipStatuses.includes(
+			rawOwnership as OwnershipStatus,
+		)
+			? (rawOwnership as OwnershipStatus)
+			: rawOwnership === "leasing"
+				? "leasing"
+				: "first_hand";
+
 		const stnkStatus = (formData.get("stnkStatus") || "active").toString();
 		const stnkTaxExpiry = (formData.get("stnkTaxExpiry") || "").toString().trim() || null;
 		const hasFaktur = formData.get("hasFaktur") === "true";
@@ -145,7 +162,7 @@ export const POST: APIRoute = async ({ request }) => {
 			fuelType,
 			sellingPrice,
 			plateNumber,
-			bpkbStatus: bpkbStatus === "leasing" ? "leasing" : "on_hand",
+			ownershipStatus,
 			stnkStatus: stnkStatus === "expired" ? "expired" : "active",
 			stnkTaxExpiry,
 			hasFaktur,

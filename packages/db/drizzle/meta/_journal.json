@@ -85,6 +85,13 @@
       "when": 1789576219760,
       "tag": "0011_add_admin_whitelist_role_and_created_by",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1789576219770,
+      "tag": "0012_align_ownership_status",
+      "breakpoints": true
     }
   ]
 }

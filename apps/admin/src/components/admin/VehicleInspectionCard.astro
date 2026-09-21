@@ -1,6 +1,6 @@
 ---
 import { getPrice } from "~/utils/helpers";
-import type { TradeInPhoto } from "@harka/db";
+import { ownershipStatusMap, type TradeInPhoto, type OwnershipStatus } from "@harka/db";
 
 interface Props {
 	make: string;
@@ -14,6 +14,7 @@ interface Props {
 
 	// Administration
 	plateNumber?: string | null;
+	ownershipStatus?: OwnershipStatus | "on_hand" | "leasing" | string | null;
 	bpkbStatus?: "on_hand" | "leasing" | string | null;
 	stnkStatus?: "active" | "expired" | string | null;
 	stnkTaxExpiry?: string | null;
@@ -43,6 +44,7 @@ const {
 	sellingPrice,
 	priceLabel = "Ekspektasi Harga Jual",
 	plateNumber,
+	ownershipStatus: directOwnershipStatus,
 	bpkbStatus,
 	stnkStatus,
 	stnkTaxExpiry,
@@ -60,6 +62,23 @@ const {
 
 const floodFree = isFloodFree !== undefined ? isFloodFree : !hasFloodDamage;
 const accidentFree = isAccidentFree !== undefined ? isAccidentFree : !hasAccidentDamage;
+
+const resolvedOwnership = directOwnershipStatus || bpkbStatus || "first_hand";
+const ownershipLabel =
+	resolvedOwnership === "on_hand"
+		? "Nama Pribadi (Tangan Pertama)"
+		: resolvedOwnership === "leasing"
+			? "Atas Nama Leasing (Kredit)"
+			: (ownershipStatusMap as Record<string, string>)[resolvedOwnership] || resolvedOwnership;
+
+const ownershipColor =
+	resolvedOwnership === "leasing"
+		? "text-amber-700"
+		: resolvedOwnership === "second_hand"
+			? "text-sky-700"
+			: resolvedOwnership === "company_car"
+				? "text-purple-700"
+				: "text-emerald-700";
 ---
 
 <div class="space-y-8">
@@ -125,11 +144,9 @@ const accidentFree = isAccidentFree !== undefined ? isAccidentFree : !hasAcciden
 			</div>
 
 			<div class="p-3 bg-gray-50 rounded-lg border border-gray-100">
-				<span class="text-xs text-gray-500 block">Status BPKB</span>
-				<span
-					class={`text-sm font-bold block ${bpkbStatus === "leasing" ? "text-amber-700" : "text-green-700"}`}
-				>
-					{bpkbStatus === "leasing" ? "Masih Leasing" : "Di Tangan (Lunas)"}
+				<span class="text-xs text-gray-500 block">Status Kepemilikan / BPKB</span>
+				<span class={`text-sm font-bold block ${ownershipColor}`}>
+					{ownershipLabel}
 				</span>
 			</div>
 
