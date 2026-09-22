@@ -1,8 +1,10 @@
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/orbitron@5.3.0/index.css");
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @theme {
 	--font-inter: "Inter", "sans-serif";
+	--font-header: "Orbitron Variable";
 	--breakpoint-sm: 640px;
 	--breakpoint-md: 768px;
 	--breakpoint-lg: 1024px;

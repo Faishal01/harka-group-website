@@ -10,15 +10,14 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 ---
 
 <header>
-	<section class="bg-red-700 text-white">
+	<section class="bg-linear-to-b from-red-900 to-red-600 text-white">
 		<div class="container py-4 lg:py-8">
 			<div class="flex justify-between items-center gap-x-4">
 				<a href="/">
 					<div class="flex items-center gap-x-2">
-						<!-- <icon class="h-5 lg:h-8 inline-block"></icon> -->
 						<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
-						<span class="font-bold text-2xl lg:text-4xl"
-							>Harka <span class="font-normal">Autocar</span></span
+						<span class="font-bold text-2xl lg:text-4xl font-header"
+							>Harka<span class="font-normal">Autocar</span></span
 						>
 					</div>
 				</a>
