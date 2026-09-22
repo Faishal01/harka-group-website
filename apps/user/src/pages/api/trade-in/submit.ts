@@ -9,6 +9,7 @@ import {
 	ownershipStatuses,
 	type OwnershipStatus,
 	type TradeInPhoto,
+	type TradeInDocument,
 	type InsertTradeInSubmission,
 	type TradeInSubmission,
 	validatePlateNumber,
@@ -147,6 +148,67 @@ export const POST: APIRoute = async ({ request }) => {
 			});
 		}
 
+		// Process Surat Pelepasan Hak (SPH) if vehicle is company-owned
+		const uploadedDocs: TradeInDocument[] = [];
+		if (ownershipStatus === "company_car") {
+			const sphFile = formData.get("sphDocument") as File | null;
+			if (!sphFile || sphFile.size === 0) {
+				return new Response(
+					JSON.stringify({
+						error: "Surat Pelepasan Hak (SPH) wajib diunggah untuk mobil atas nama perusahaan.",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+
+			if (sphFile.size > 4 * 1024 * 1024) {
+				return new Response(
+					JSON.stringify({
+						error: "Ukuran berkas SPH melebihi batas maksimal 4 MB.",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+
+			const origName = sphFile.name || "dokumen-sph.pdf";
+			const ext = origName.split(".").pop()?.toLowerCase() || "";
+			const allowedMimeTypes: Record<string, string> = {
+				pdf: "application/pdf",
+				doc: "application/msword",
+				docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			};
+
+			if (!allowedMimeTypes[ext]) {
+				return new Response(
+					JSON.stringify({
+						error: "Format berkas SPH harus berupa PDF, DOC, atau DOCX.",
+					}),
+					{ status: 400, headers: { "Content-Type": "application/json" } },
+				);
+			}
+
+			const contentType =
+				sphFile.type && sphFile.type !== "application/octet-stream"
+					? sphFile.type
+					: allowedMimeTypes[ext];
+
+			const sphBuffer = await sphFile.arrayBuffer();
+			const timestamp = Date.now();
+			const r2Key = `documents/tradein-${id}-sph-${timestamp}.${ext}`;
+
+			await env.IMAGES_BUCKET.put(r2Key, sphBuffer, {
+				httpMetadata: { contentType },
+			});
+
+			uploadedDocs.push({
+				type: "sph",
+				label: "Surat Pelepasan Hak (SPH)",
+				url: `/api/images/${r2Key}`,
+				filename: origName,
+				size: sphFile.size,
+			});
+		}
+
 		const now = new Date();
 		const record: InsertTradeInSubmission = {
 			id,
@@ -173,6 +235,7 @@ export const POST: APIRoute = async ({ request }) => {
 			isAccidentFree,
 			conditionNotes,
 			photos: uploadedPhotos,
+			documents: uploadedDocs.length > 0 ? uploadedDocs : null,
 			createdAt: now,
 			updatedAt: now,
 		};

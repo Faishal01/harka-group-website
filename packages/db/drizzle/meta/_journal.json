@@ -99,6 +99,13 @@
       "when": 1789576219780,
       "tag": "0013_add_trade_in_status",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1789576219790,
+      "tag": "0014_add_trade_in_documents",
+      "breakpoints": true
     }
   ]
 }

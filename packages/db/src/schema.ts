@@ -151,6 +151,14 @@ export interface TradeInPhoto {
 	url: string;
 }
 
+export interface TradeInDocument {
+	type: string; // e.g. "sph"
+	label: string; // e.g. "Surat Pelepasan Hak (SPH)"
+	url: string; // e.g. "/api/images/documents/..."
+	filename?: string;
+	size?: number; // bytes
+}
+
 export const tradeInSubmissions = sqliteTable(
 	"trade_in_submissions",
 	{
@@ -192,8 +200,9 @@ export const tradeInSubmissions = sqliteTable(
 		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
 		conditionNotes: text("condition_notes"),
 
-		// Media
+		// Media & Documents
 		photos: text("photos", { mode: "json" }).$type<TradeInPhoto[]>().notNull(),
+		documents: text("documents", { mode: "json" }).$type<TradeInDocument[]>(),
 
 		// Timestamps
 		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
