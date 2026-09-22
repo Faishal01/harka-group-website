@@ -13,7 +13,8 @@ import { siteName, siteSlogan } from "~/data/config";
 import { SITE_URL, generateAutoDealerSchema, DEALER_LOCATION } from "~/utils/seo";
 
 // Images
-import ImageHeadingBackground from "~/assets/images/pexels-jeshoots-com-147458-451590.jpg";
+import ImageHeadingBackground from "~/assets/images/WhatsApp_Image_2026-09-22_at_23.25.09.jpeg";
+import CtaTextures from "~/assets/images/prew-o.jpg";
 
 const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas berkualitas di ${DEALER_LOCATION} dengan garansi bebas tabrak & banjir.`;
@@ -64,8 +65,16 @@ const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas ber
 	</Section>
 
 	{/* CTA */}
-	<Section class:list={"bg-linear-to-br from-gray-900 to-gray-700"}>
-		<Container>
+	<Section
+		class:list={"relative overflow-hidden bg-linear-to-br from-gray-900/20 via-gray-800/50 to-gray-950/20"}
+	>
+		<Image
+			src={CtaTextures}
+			alt=""
+			aria-hidden="true"
+			class:list={"absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-overlay pointer-events-none select-none"}
+		/>
+		<Container class:list={"relative z-10"}>
 			<Heading class:list={"mb-0 lg:mb-0 prose-invert text-center mx-auto"}>
 				<h2 slot="heading-title">{homePage.ctaTitle}</h2>
 
