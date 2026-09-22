@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { tradeInCaptions } from "~/data/captions";
 	import { compressImagesBatch, type ImageSlotItem } from "~/utils/imageCompression";
-	import { validatePlateNumber, formatPlateNumber } from "@harka/db";
+	import {
+		validatePlateNumber,
+		formatPlateNumber,
+		ownershipStatuses,
+		ownershipStatusMap,
+		type OwnershipStatus,
+	} from "@harka/db";
 
 	// Current wizard step (1 to 4)
 	let currentStep = $state(1);
@@ -46,7 +52,52 @@
 		}
 	}
 
-	let bpkbStatus = $state<"on_hand" | "leasing">("on_hand");
+	let ownershipStatus = $state<OwnershipStatus>("first_hand");
+	let sphFile = $state<File | null>(null);
+	let sphError = $state<string>("");
+
+	function handleSphSelect(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+
+		sphError = "";
+		const ext = file.name.split(".").pop()?.toLowerCase();
+		if (!ext || !["pdf", "doc", "docx"].includes(ext)) {
+			sphError = "Format file tidak didukung. Harap unggah file .pdf, .doc, atau .docx.";
+			target.value = "";
+			return;
+		}
+
+		if (file.size > 4 * 1024 * 1024) {
+			sphError = "Ukuran file terlalu besar. Maksimal ukuran file adalah 4 MB.";
+			target.value = "";
+			return;
+		}
+
+		sphFile = file;
+		target.value = "";
+	}
+
+	function removeSphFile() {
+		sphFile = null;
+		sphError = "";
+	}
+
+	function formatFileSize(bytes: number): string {
+		if (bytes < 1024 * 1024) {
+			return `${(bytes / 1024).toFixed(1)} KB`;
+		}
+		return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+	}
+
+	$effect(() => {
+		if (ownershipStatus !== "company_car" && (sphFile || sphError)) {
+			sphFile = null;
+			sphError = "";
+		}
+	});
+
 	let stnkStatus = $state<"active" | "expired">("active");
 	let stnkTaxExpiry = $state("");
 	let hasFaktur = $state(false);
@@ -147,7 +198,7 @@
 		make.trim().length > 0 &&
 			model.trim().length > 0 &&
 			typeof year === "number" &&
-			year >= 1990 &&
+			year >= 1950 &&
 			year <= new Date().getFullYear() + 1 &&
 			typeof mileage === "number" &&
 			mileage >= 0 &&
@@ -155,7 +206,9 @@
 			sellingPrice > 0,
 	);
 
-	const isStep2Valid = $derived(validatePlateNumber(plateNumber.trim()));
+	const isSphValid = $derived(ownershipStatus !== "company_car" || (Boolean(sphFile) && !sphError));
+
+	const isStep2Valid = $derived(validatePlateNumber(plateNumber.trim()) && isSphValid);
 
 	const isStep4Valid = $derived(
 		customerName.trim().length > 0 &&
@@ -168,6 +221,11 @@
 			if (currentStep === 1 && !isStep1Valid) return;
 			if (currentStep === 2) {
 				handlePlateBlur();
+				if (ownershipStatus === "company_car" && !sphFile) {
+					sphError =
+						"Surat Pelepasan Hak (SPH) wajib diunggah (format PDF, DOC, atau DOCX, maks 4 MB).";
+					return;
+				}
 				if (!isStep2Valid) return;
 			}
 			if (currentStep === 3 && !isStep3Valid) return;
@@ -226,7 +284,10 @@
 			formData.append("sellingPrice", String(sellingPrice));
 
 			formData.append("plateNumber", formatPlateNumber(plateNumber.trim()) || plateNumber.trim());
-			formData.append("bpkbStatus", bpkbStatus);
+			formData.append("ownershipStatus", ownershipStatus);
+			if (ownershipStatus === "company_car" && sphFile) {
+				formData.append("sphDocument", sphFile, sphFile.name);
+			}
 			formData.append("stnkStatus", stnkStatus);
 			formData.append("stnkTaxExpiry", stnkTaxExpiry.trim());
 			formData.append("hasFaktur", String(hasFaktur));
@@ -296,7 +357,7 @@
 		year = "";
 		mileage = "";
 		sellingPrice = "";
-		bpkbStatus = "on_hand";
+		ownershipStatus = "first_hand";
 		stnkStatus = "active";
 		stnkTaxExpiry = "";
 		hasFaktur = false;
@@ -484,7 +545,7 @@
 									type="number"
 									id="year"
 									bind:value={year}
-									min="1990"
+									min="1950"
 									max={new Date().getFullYear() + 1}
 									placeholder={tradeInCaptions.form.yearPlaceholder}
 									class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition"
@@ -641,41 +702,169 @@
 										{/if}
 									</div>
 
-									<div>
+									<div class="sm:col-span-2">
 										<span class="block text-sm font-semibold text-gray-700 mb-2">
-											{tradeInCaptions.form.bpkbStatus}
+											{tradeInCaptions.form.ownershipStatus || tradeInCaptions.form.bpkbStatus}
 										</span>
-										<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {bpkbStatus ===
-												'on_hand'
-													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
-											>
-												<input
-													type="radio"
-													bind:group={bpkbStatus}
-													value="on_hand"
-													class="size-4 text-red-700 accent-red-700 shrink-0"
-												/>
-												<span class="text-xs sm:text-sm">{tradeInCaptions.form.bpkbOnHand}</span>
-											</label>
-											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {bpkbStatus ===
-												'leasing'
-													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
-													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
-											>
-												<input
-													type="radio"
-													bind:group={bpkbStatus}
-													value="leasing"
-													class="size-4 text-red-700 accent-red-700 shrink-0"
-												/>
-												<span class="text-xs sm:text-sm">{tradeInCaptions.form.bpkbLeasing}</span>
-											</label>
+										<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+											{#each ownershipStatuses as status (status)}
+												<label
+													class="flex items-center gap-3 p-3.5 rounded-xl border h-full transition cursor-pointer {ownershipStatus ===
+													status
+														? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
+														: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
+												>
+													<input
+														type="radio"
+														bind:group={ownershipStatus}
+														value={status}
+														class="size-4 text-red-700 accent-red-700 shrink-0"
+													/>
+													<span class="text-xs sm:text-sm leading-snug"
+														>{ownershipStatusMap[status] || status}</span
+													>
+												</label>
+											{/each}
 										</div>
 									</div>
+
+									{#if ownershipStatus === "company_car"}
+										<div class="sm:col-span-2">
+											<div
+												class="p-4 sm:p-5 rounded-xl border transition {sphError
+													? 'border-red-300 bg-red-50/40'
+													: sphFile
+														? 'border-emerald-300 bg-emerald-50/30'
+														: 'border-amber-200 bg-amber-50/40'}"
+											>
+												<div
+													class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3"
+												>
+													<div>
+														<div class="flex items-center gap-2">
+															<span class="font-bold text-gray-900 text-sm">
+																Surat Pelepasan Hak (SPH)
+															</span>
+															<span
+																class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700"
+															>
+																Wajib untuk Mobil PT/Instansi
+															</span>
+														</div>
+														<p class="text-xs text-gray-500 mt-1">
+															Harap lampirkan dokumen resmi SPH dari instansi/perusahaan pemilik
+															kendaraan.
+														</p>
+													</div>
+													{#if sphFile}
+														<span
+															class="text-emerald-700 text-xs font-bold flex items-center gap-1 shrink-0"
+														>
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																class="size-4"
+																viewBox="0 0 20 20"
+																fill="currentColor"
+															>
+																<path
+																	fill-rule="evenodd"
+																	d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+																	clip-rule="evenodd"
+																/>
+															</svg>
+															Terlampir
+														</span>
+													{/if}
+												</div>
+
+												{#if sphFile}
+													<div
+														class="flex items-center justify-between p-3 bg-white border border-emerald-200 rounded-lg shadow-sm"
+													>
+														<div class="flex items-center gap-3 min-w-0">
+															<div
+																class="size-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-xs uppercase"
+															>
+																{sphFile.name.split(".").pop() || "DOC"}
+															</div>
+															<div class="min-w-0">
+																<p
+																	class="text-sm font-medium text-gray-900 truncate max-w-xs sm:max-w-md"
+																>
+																	{sphFile.name}
+																</p>
+																<p class="text-xs text-gray-500">
+																	{formatFileSize(sphFile.size)}
+																</p>
+															</div>
+														</div>
+														<button
+															type="button"
+															onclick={removeSphFile}
+															class="text-xs font-semibold text-red-600 hover:text-red-700 px-2.5 py-1.5 rounded-md hover:bg-red-50 transition shrink-0 ml-2"
+														>
+															Ganti Dokumen
+														</button>
+													</div>
+												{:else}
+													<label
+														class="flex flex-col items-center justify-center border-2 border-dashed {sphError
+															? 'border-red-400 bg-red-50/40'
+															: 'border-gray-300 hover:border-red-400 bg-white'} rounded-xl p-5 cursor-pointer transition text-center group"
+													>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															class="size-8 text-gray-400 group-hover:text-red-600 transition mb-2"
+															fill="none"
+															viewBox="0 0 24 24"
+															stroke="currentColor"
+														>
+															<path
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																stroke-width="2"
+																d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+															/>
+														</svg>
+														<span
+															class="text-xs sm:text-sm font-semibold text-gray-700 group-hover:text-red-700"
+														>
+															Pilih berkas SPH atau seret ke sini
+														</span>
+														<span class="text-xs text-gray-400 mt-1">
+															Format: PDF, DOC, atau DOCX (Maksimal 4 MB)
+														</span>
+														<input
+															type="file"
+															accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+															onchange={handleSphSelect}
+															class="hidden"
+														/>
+													</label>
+												{/if}
+
+												{#if sphError}
+													<p
+														class="mt-2 text-xs text-red-600 font-medium flex items-center gap-1.5"
+													>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															class="size-4 shrink-0"
+															viewBox="0 0 20 20"
+															fill="currentColor"
+														>
+															<path
+																fill-rule="evenodd"
+																d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+																clip-rule="evenodd"
+															/>
+														</svg>
+														{sphError}
+													</p>
+												{/if}
+											</div>
+										</div>
+									{/if}
 
 									<div>
 										<span class="block text-sm font-semibold text-gray-700 mb-2">
@@ -683,7 +872,7 @@
 										</span>
 										<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {stnkStatus ===
+												class="flex items-center gap-3 p-3 rounded-xl border h-full transition cursor-pointer {stnkStatus ===
 												'active'
 													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
 													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
@@ -697,7 +886,7 @@
 												<span class="text-xs sm:text-sm">{tradeInCaptions.form.stnkActive}</span>
 											</label>
 											<label
-												class="flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer {stnkStatus ===
+												class="flex items-center gap-3 p-3 rounded-xl border h-full transition cursor-pointer {stnkStatus ===
 												'expired'
 													? 'border-red-600 bg-red-50/50 text-red-950 font-semibold ring-1 ring-red-600 shadow-sm'
 													: 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'}"
@@ -713,10 +902,10 @@
 										</div>
 									</div>
 
-									<div class="sm:col-span-2">
+									<div>
 										<label
 											for="stnkTaxExpiry"
-											class="block text-sm font-semibold text-gray-700 mb-1"
+											class="block text-sm font-semibold text-gray-700 mb-2"
 										>
 											{tradeInCaptions.form.stnkTaxExpiry}
 										</label>
@@ -725,7 +914,7 @@
 											id="stnkTaxExpiry"
 											bind:value={stnkTaxExpiry}
 											placeholder={tradeInCaptions.form.stnkTaxExpiryPlaceholder}
-											class="w-full sm:w-72 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition bg-white"
+											class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition bg-white text-sm"
 										/>
 									</div>
 								</div>

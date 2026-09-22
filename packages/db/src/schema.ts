@@ -142,16 +142,33 @@ export const adminWhitelist = sqliteTable("admin_whitelist", {
 export type AdminWhitelist = typeof adminWhitelist.$inferSelect;
 export type InsertAdminWhitelist = typeof adminWhitelist.$inferInsert;
 
+export const tradeInStatusEnum = ["pending", "approved", "rejected"] as const;
+export type TradeInStatus = (typeof tradeInStatusEnum)[number];
+
 export interface TradeInPhoto {
 	slot: string;
 	label: string;
 	url: string;
 }
 
+export interface TradeInDocument {
+	type: string; // e.g. "sph"
+	label: string; // e.g. "Surat Pelepasan Hak (SPH)"
+	url: string; // e.g. "/api/images/documents/..."
+	filename?: string;
+	size?: number; // bytes
+}
+
 export const tradeInSubmissions = sqliteTable(
 	"trade_in_submissions",
 	{
 		id: text("id").primaryKey(), // 12-character NanoID
+
+		// Review & Conversion Lifecycle
+		status: text("status", { enum: tradeInStatusEnum }).notNull().default("pending"),
+		reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+		reviewedBy: text("reviewed_by"),
+		convertedCarId: text("converted_car_id"),
 
 		// Customer Contact
 		customerName: text("customer_name").notNull(),
@@ -170,7 +187,7 @@ export const tradeInSubmissions = sqliteTable(
 
 		// Administration & Legalitas
 		plateNumber: text("plate_number"),
-		bpkbStatus: text("bpkb_status", { enum: ["on_hand", "leasing"] }).notNull(),
+		ownershipStatus: text("ownership_status").$type<OwnershipStatus>().notNull(),
 		stnkStatus: text("stnk_status", { enum: ["active", "expired"] }).notNull(),
 		stnkTaxExpiry: text("stnk_tax_expiry"), // e.g. "10/2026"
 		hasFaktur: integer("has_faktur", { mode: "boolean" }).notNull().default(false),
@@ -183,8 +200,9 @@ export const tradeInSubmissions = sqliteTable(
 		isAccidentFree: integer("is_accident_free", { mode: "boolean" }).notNull().default(false),
 		conditionNotes: text("condition_notes"),
 
-		// Media
+		// Media & Documents
 		photos: text("photos", { mode: "json" }).$type<TradeInPhoto[]>().notNull(),
+		documents: text("documents", { mode: "json" }).$type<TradeInDocument[]>(),
 
 		// Timestamps
 		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -193,6 +211,7 @@ export const tradeInSubmissions = sqliteTable(
 	(table) => [
 		index("trade_in_created_at_idx").on(table.createdAt),
 		index("trade_in_customer_phone_idx").on(table.customerPhone),
+		index("trade_in_status_idx").on(table.status),
 	],
 );
 

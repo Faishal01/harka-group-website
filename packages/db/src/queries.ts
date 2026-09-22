@@ -217,14 +217,51 @@ export async function getDistinctColors(db: Database): Promise<string[]> {
 	return rows.map((r) => r.color).filter(Boolean);
 }
 
+export interface TradeInQueryParams {
+	page?: number;
+	limit?: number;
+}
+
+export interface PaginatedTradeInSubmissions {
+	items: TradeInSubmission[];
+	total: number;
+	page: number;
+	limit: number;
+	totalPages: number;
+}
+
 /**
- * Returns all trade-in submissions sorted by newest first.
+ * Returns paginated trade-in submissions sorted by newest first (submission time).
  */
-export async function getTradeInSubmissions(db: Database): Promise<TradeInSubmission[]> {
-	return await db
+export async function getTradeInSubmissions(
+	db: Database,
+	params?: TradeInQueryParams,
+): Promise<PaginatedTradeInSubmissions> {
+	const page = Math.max(1, Number(params?.page) || 1);
+	const limit = Math.max(1, Number(params?.limit) || 15);
+	const offset = (page - 1) * limit;
+
+	const [{ count }] = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(tradeInSubmissions);
+
+	const items = await db
 		.select()
 		.from(tradeInSubmissions)
-		.orderBy(desc(tradeInSubmissions.createdAt));
+		.orderBy(desc(tradeInSubmissions.createdAt))
+		.limit(limit)
+		.offset(offset);
+
+	const total = Number(count) || 0;
+	const totalPages = Math.ceil(total / limit) || 1;
+
+	return {
+		items,
+		total,
+		page,
+		limit,
+		totalPages,
+	};
 }
 
 /**
