@@ -76,7 +76,7 @@ export const buttonLabels = {
 	askAQuestion: "Tanya Kami",
 	share: "Bagikan",
 	copyLink: "Salin tautan",
-	print: "Print",
+	linkCopied: "Tersalin!",
 };
 
 export const loanLabels = {
@@ -207,6 +207,18 @@ export const tradeInCaptions = {
 		successDesc:
 			"Terima kasih telah mengajukan mobil Anda. Tim appraisal Harka Autocar akan segera mempelajari data unit Anda dan menghubungi Anda via WhatsApp.",
 		submitAnother: "Ajukan Mobil Lain",
+		takePhoto: "Ambil Foto",
+		chooseGallery: "Pilih Galeri",
+		draftFoundTitle: "Draf Pengajuan Ditemukan",
+		draftFoundDesc:
+			"Data spesifikasi kendaraan dan kontak yang Anda isi sebelumnya tersimpan di perangkat ini.",
+		useDraft: "Gunakan Draf",
+		discardDraft: "Hapus Draf",
+		progressStagePreparing: "Menyiapkan berkas foto...",
+		progressStageLoading: "Membaca foto...",
+		progressStageCompressing: "Mengompresi foto secara adaptif...",
+		progressStageUploading: "Mengunggah data & foto ke server...",
+		progressWarning: "Mohon jangan menutup atau me-refresh halaman ini selama proses berlangsung.",
 	},
 	photoSlots: [
 		{ id: "front", label: "Tampak Depan", desc: "Sudut lurus dari depan mobil" },

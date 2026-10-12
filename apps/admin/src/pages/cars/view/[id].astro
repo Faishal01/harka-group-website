@@ -3,16 +3,16 @@ export const prerender = false;
 import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
-import { getDb, cars as carsTable, ownershipStatusMap, transmissionMap } from "@harka/db";
-import { eq } from "drizzle-orm";
+import { ownershipStatusMap, transmissionMap } from "@harka/db";
+import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
 import { getPrice } from "~/utils/helpers";
 
 const { id } = Astro.params;
-const db = getDb(env);
-const car = await db.query.cars.findFirst({
-	where: eq(carsTable.id, id as string),
-});
+const core = createCore(env);
+const car = id
+	? await core.cars.getById(id as string, { adminView: true }).catch(() => null)
+	: null;
 
 if (!car) {
 	return Astro.redirect("/cars");

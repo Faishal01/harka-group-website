@@ -82,30 +82,45 @@ async function compressSingleImage(
 	});
 }
 
+export interface CompressionProgress {
+	phase: "loading" | "compressing" | "uploading";
+	current: number;
+	total: number;
+	percent: number;
+	message: string;
+}
+
 /**
  * Adaptively compresses all provided images so that the combined total size
  * does NOT exceed the 5 MB limit.
  */
 export async function compressImagesBatch(
 	items: ImageSlotItem[],
-	onProgress?: (current: number, total: number) => void,
+	onProgress?: (progress: CompressionProgress) => void,
 ): Promise<{ compressed: CompressedImageItem[]; totalBytes: number }> {
 	if (items.length === 0) {
 		return { compressed: [], totalBytes: 0 };
 	}
 
-	// 1. Preload all images
+	// 1. Preload all images (Phase: Loading, 0% - 30%)
 	const loadedImages: { item: ImageSlotItem; img: HTMLImageElement }[] = [];
 	for (let i = 0; i < items.length; i++) {
 		const item = items[i];
 		const img = await loadImage(item.file);
 		loadedImages.push({ item, img });
 		if (onProgress) {
-			onProgress(i + 1, items.length);
+			const percent = Math.round(((i + 1) / items.length) * 30);
+			onProgress({
+				phase: "loading",
+				current: i + 1,
+				total: items.length,
+				percent,
+				message: `Membaca foto ${i + 1} dari ${items.length}...`,
+			});
 		}
 	}
 
-	// 2. Multi-tier compression parameters to guarantee < 5 MB
+	// 2. Multi-tier compression parameters to guarantee < 5 MB (Phase: Compressing, 30% - 85%)
 	const attempts = [
 		{ maxDimension: 1600, quality: 0.8 },
 		{ maxDimension: 1400, quality: 0.75 },
@@ -120,7 +135,8 @@ export async function compressImagesBatch(
 		const results: CompressedImageItem[] = [];
 		let totalBytes = 0;
 
-		for (const { item, img } of loadedImages) {
+		for (let imgIdx = 0; imgIdx < loadedImages.length; imgIdx++) {
+			const { item, img } = loadedImages[imgIdx];
 			const { blob, size } = await compressSingleImage(img, item.file.name, maxDimension, quality);
 			const cleanName = item.file.name.replace(/\.[^/.]+$/, "") + ".jpg";
 			const file = new File([blob], cleanName, { type: "image/jpeg" });
@@ -131,6 +147,17 @@ export async function compressImagesBatch(
 				size,
 			});
 			totalBytes += size;
+
+			if (onProgress) {
+				const percent = 30 + Math.round(((imgIdx + 1) / loadedImages.length) * 55);
+				onProgress({
+					phase: "compressing",
+					current: imgIdx + 1,
+					total: loadedImages.length,
+					percent,
+					message: `Mengompresi foto ${imgIdx + 1} dari ${loadedImages.length}...`,
+				});
+			}
 		}
 
 		// If totalBytes satisfies constraint or this is our most aggressive attempt, return

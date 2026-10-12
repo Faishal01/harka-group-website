@@ -1,75 +1,135 @@
 ---
+import type { Car } from "~/types";
+import { siteName } from "~/data/config";
+import { getPrice } from "~/utils/helpers";
+import { buttonLabels } from "~/data/captions";
+
 import IconShare from "~/assets/images/icons/share.svg";
 import IconFacebook from "~/assets/images/icons/social-media/facebook.svg";
 import IconX from "~/assets/images/icons/social-media/x.svg";
 import IconWhatsApp from "~/assets/images/icons/social-media/whatsapp.svg";
 import IconEmail from "~/assets/images/icons/social-media/email.svg";
 import IconLink from "~/assets/images/icons/social-media/link.svg";
-import { buttonLabels, shareMessages } from "~/data/captions";
 
-const currentPageUrl = Astro.url.href;
-const emailSubject = shareMessages.emailSubject;
-const emailBody = `${shareMessages.emailBodyTop}${currentPageUrl}${shareMessages.emailBodyBottom}`;
+interface Props {
+	car?: Car | null;
+	url?: string;
+	class?: string;
+}
 
-const emailSubjectEncoded = encodeURIComponent(emailSubject);
-const emailBodyEncoded = encodeURIComponent(emailBody);
+const { car, url, class: className = "" } = Astro.props;
 
-const SocialUrls = {
-	Facebook: `https://www.facebook.com/sharer.php?u=${currentPageUrl}`,
-	"X/Twitter": `https://twitter.com/intent/tweet?text=Check%20out%20this%20awesome%20ride!%20${currentPageUrl}`,
-	WhatsApp: `whatsapp://send/?text=${currentPageUrl}`,
-	Email: `mailto:?subject=${emailSubjectEncoded}&body=${emailBodyEncoded}`,
-};
+const shareUrl = url || Astro.url.href;
+const vehicleTitle = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}` : siteName;
+const priceFormatted = car ? getPrice(car.price) : "";
+const shareTitle = vehicleTitle ? `${vehicleTitle} | ${siteName}` : siteName;
+const shareDescription = car ? `${vehicleTitle} (${priceFormatted}) - ${siteName}` : siteName;
+
+// WhatsApp text (single query param including both message and URL):
+const waText = car
+	? `*${vehicleTitle}* (${priceFormatted}) - ${siteName}\n${shareUrl}`
+	: `${siteName}\n${shareUrl}`;
+
+// X (Twitter) text:
+const xText = car
+	? `Lihat ${vehicleTitle} di ${siteName}: ${shareUrl}`
+	: `Kunjungi ${siteName}: ${shareUrl}`;
+
+// Email:
+const emailSubject = car
+	? `Rekomendasi Mobil: ${vehicleTitle} di ${siteName}`
+	: `Rekomendasi Mobil di ${siteName}`;
+
+const emailBody = car
+	? `Halo,\n\nCek unit ${vehicleTitle} (${priceFormatted}) di ${siteName}.\n\nLihat rincian lengkapnya di tautan berikut:\n${shareUrl}\n\nSalam,\n${siteName}`
+	: `Halo,\n\nCek pilihan mobil di ${siteName}:\n${shareUrl}\n\nSalam,\n${siteName}`;
+
+const socialLinks = [
+	{
+		name: "WhatsApp",
+		href: `https://wa.me/?text=${encodeURIComponent(waText)}`,
+		icon: "whatsapp",
+		isExternal: true,
+	},
+	{
+		name: "Facebook",
+		href: `https://www.facebook.com/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+		icon: "facebook",
+		isExternal: true,
+	},
+	{
+		name: "X (Twitter)",
+		href: `https://x.com/intent/post?text=${encodeURIComponent(xText)}`,
+		icon: "x",
+		isExternal: true,
+	},
+	{
+		name: "Email",
+		href: `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`,
+		icon: "email",
+		isExternal: false,
+	},
+];
 ---
 
-<custom-share class="relative inline-block text-left">
+<custom-share
+	class={`relative inline-block text-left ${className}`}
+	data-share-title={shareTitle}
+	data-share-description={shareDescription}
+	data-share-url={shareUrl}
+>
 	<div>
 		<button
 			type="button"
-			class="font-medium block text-sm transition hover:text-gray-500"
+			class="inline-flex items-center justify-center px-4 py-2.5 sm:py-3 text-sm font-bold rounded shadow-sm border border-gray-300 bg-white text-gray-800 hover:bg-gray-50 hover:border-gray-400 gap-1.5 transition cursor-pointer"
 			id="button-social-share"
-			aria-expanded="true"
+			aria-expanded="false"
 			aria-haspopup="true"
 		>
-			<IconShare class="size-3 inline-block mr-1 -mt-0.5" />
+			<IconShare class="size-4 shrink-0 -mt-0.5 text-gray-600" />
 			<span>{buttonLabels.share}</span>
 		</button>
 	</div>
 
 	<div
 		id="menu-social-share"
-		class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none ease-in duration-75 transform opacity-0 scale-95"
+		class="hidden absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-lg bg-white shadow-xl ring-1 ring-black/5 divide-y divide-gray-100 focus:outline-none transition-all duration-150 transform opacity-0 scale-95"
 		role="menu"
 		aria-orientation="vertical"
 		aria-labelledby="button-social-share"
 		tabindex="-1"
 	>
-		<div class="py-0" role="none">
+		<div class="py-1" role="none">
 			{
-				Object.entries(SocialUrls).map(([key, value]) => (
+				socialLinks.map((item) => (
 					<a
-						href={value}
-						class="block px-4 py-2 text-sm hover:bg-gray-100"
+						href={item.href}
+						{...(item.isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+						class="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition gap-2.5"
 						role="menuitem"
 						tabindex="-1"
 					>
-						{key === "Facebook" && <IconFacebook class="size-5 inline-block mr-1 -mt-0.5" />}
-						{key === "X/Twitter" && <IconX class="size-5 inline-block mr-1 -mt-0.5" />}
-						{key === "WhatsApp" && <IconWhatsApp class="size-5 inline-block mr-1 -mt-0.5" />}
-						{key === "Email" && <IconEmail class="size-5 inline-block mr-1 -mt-0.5" />}
-						{key}
+						{item.icon === "whatsapp" && <IconWhatsApp class="size-4 text-emerald-600 shrink-0" />}
+						{item.icon === "facebook" && <IconFacebook class="size-4 text-blue-600 shrink-0" />}
+						{item.icon === "x" && <IconX class="size-4 text-gray-900 shrink-0" />}
+						{item.icon === "email" && <IconEmail class="size-4 text-gray-600 shrink-0" />}
+						<span>{item.name}</span>
 					</a>
 				))
 			}
+		</div>
+		<div class="py-1" role="none">
 			<button
 				id="button-copy-link"
 				type="button"
-				class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+				class="flex items-center w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition gap-2.5 cursor-pointer"
 				role="menuitem"
 				tabindex="-1"
 			>
-				<IconLink class="size-5 inline-block mr-1 -mt-0.5" />
-				{buttonLabels.copyLink}
+				<span id="copy-icon-wrapper" class="shrink-0 flex items-center">
+					<IconLink class="size-4 text-gray-600" />
+				</span>
+				<span id="copy-text">{buttonLabels.copyLink}</span>
 			</button>
 		</div>
 	</div>
@@ -77,62 +137,116 @@ const SocialUrls = {
 
 <script>
 	class CustomShare extends HTMLElement {
-		outsideClickHandler!: (event: Event) => void;
+		private outsideClickHandler?: (event: Event) => void;
+		private escapeKeyHandler?: (event: KeyboardEvent) => void;
+
 		connectedCallback() {
-			const buttonSocialShare = this.querySelector("#button-social-share")!;
-			const menuSocialShare = this.querySelector("#menu-social-share")!;
-			const buttonCopyLink = this.querySelector("#button-copy-link")!;
+			// Clean up previous listeners if element is re-connected
+			this.disconnectedCallback();
+
+			const buttonSocialShare = this.querySelector<HTMLButtonElement>("#button-social-share");
+			const menuSocialShare = this.querySelector<HTMLDivElement>("#menu-social-share");
+			const buttonCopyLink = this.querySelector<HTMLButtonElement>("#button-copy-link");
+			const copyText = this.querySelector<HTMLSpanElement>("#copy-text");
+			const copyIconWrapper = this.querySelector<HTMLSpanElement>("#copy-icon-wrapper");
+
+			if (!buttonSocialShare || !menuSocialShare) return;
+
+			const shareTitle = this.dataset.shareTitle || document.title;
+			const shareDescription = this.dataset.shareDescription || "";
+			const shareUrl = this.dataset.shareUrl || window.location.href;
+
+			let isOpen = false;
 
 			const openMenu = () => {
-				menuSocialShare.classList.remove(
-					"ease-in",
-					"duration-75",
-					"transform",
-					"opacity-0",
-					"scale-95",
-				);
-				menuSocialShare.classList.add(
-					"ease-out",
-					"duration-100",
-					"transform",
-					"opacity-100",
-					"scale-100",
-				);
+				isOpen = true;
+				buttonSocialShare.setAttribute("aria-expanded", "true");
+				menuSocialShare.classList.remove("hidden");
+				// Trigger reflow for smooth transition
+				void menuSocialShare.offsetWidth;
+				menuSocialShare.classList.remove("opacity-0", "scale-95");
+				menuSocialShare.classList.add("opacity-100", "scale-100");
 			};
 
 			const closeMenu = () => {
-				menuSocialShare.classList.remove(
-					"ease-out",
-					"duration-100",
-					"transform",
-					"opacity-100",
-					"scale-100",
-				);
-				menuSocialShare.classList.add(
-					"ease-in",
-					"duration-75",
-					"transform",
-					"opacity-0",
-					"scale-95",
-				);
+				if (!isOpen) return;
+				isOpen = false;
+				buttonSocialShare.setAttribute("aria-expanded", "false");
+				menuSocialShare.classList.remove("opacity-100", "scale-100");
+				menuSocialShare.classList.add("opacity-0", "scale-95");
+				setTimeout(() => {
+					if (!isOpen) {
+						menuSocialShare.classList.add("hidden");
+					}
+				}, 150);
 			};
 
-			buttonSocialShare.addEventListener("click", () => {
-				if (menuSocialShare.classList.contains("opacity-100")) {
+			const isMobileOrTablet =
+				/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+				(navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+
+			buttonSocialShare.addEventListener("click", async (e) => {
+				e.stopPropagation();
+
+				// On mobile devices with Web Share API support, invoke native share sheet
+				if (isMobileOrTablet && typeof navigator.share === "function") {
+					try {
+						await navigator.share({
+							title: shareTitle,
+							text: shareDescription,
+							url: shareUrl,
+						});
+						return;
+					} catch (err: unknown) {
+						if (err instanceof Error && err.name === "AbortError") {
+							return; // User dismissed share sheet
+						}
+						// Fallback to opening dropdown menu if native share errors
+					}
+				}
+
+				if (isOpen) {
 					closeMenu();
 				} else {
 					openMenu();
 				}
 			});
 
-			buttonCopyLink.addEventListener("click", async () => {
-				try {
-					await navigator.clipboard.writeText(window.location.href);
-				} catch (e) {
-					console.error("Clipboard API failed", e);
-				}
-				closeMenu();
+			// Close dropdown when any link inside it is clicked
+			menuSocialShare.querySelectorAll("a").forEach((link) => {
+				link.addEventListener("click", () => {
+					closeMenu();
+				});
 			});
+
+			if (buttonCopyLink) {
+				buttonCopyLink.addEventListener("click", async (e) => {
+					e.stopPropagation();
+					try {
+						await navigator.clipboard.writeText(shareUrl);
+						if (copyText && copyIconWrapper) {
+							const originalText = copyText.textContent;
+							const originalIcon = copyIconWrapper.innerHTML;
+
+							copyText.textContent = "Tersalin!";
+							copyText.classList.add("text-emerald-600", "font-bold");
+							copyIconWrapper.innerHTML = `<svg class="size-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+
+							setTimeout(() => {
+								copyText.textContent = originalText;
+								copyText.classList.remove("text-emerald-600", "font-bold");
+								copyIconWrapper.innerHTML = originalIcon;
+								closeMenu();
+							}, 1200);
+						} else {
+							closeMenu();
+						}
+					} catch (err) {
+						console.error("Clipboard API failed", err);
+						closeMenu();
+					}
+				});
+			}
 
 			this.outsideClickHandler = (event: Event) => {
 				const target = event.target as Node;
@@ -140,15 +254,26 @@ const SocialUrls = {
 					closeMenu();
 				}
 			};
+			document.addEventListener("click", this.outsideClickHandler);
 
-			// Defer adding the listener so it doesn't fire on the click that opens it
-			setTimeout(() => {
-				document.addEventListener("click", this.outsideClickHandler);
-			}, 0);
+			this.escapeKeyHandler = (event: KeyboardEvent) => {
+				if (event.key === "Escape" && isOpen) {
+					closeMenu();
+					buttonSocialShare.focus();
+				}
+			};
+			document.addEventListener("keydown", this.escapeKeyHandler);
 		}
 
 		disconnectedCallback() {
-			document.removeEventListener("click", this.outsideClickHandler);
+			if (this.outsideClickHandler) {
+				document.removeEventListener("click", this.outsideClickHandler);
+				this.outsideClickHandler = undefined;
+			}
+			if (this.escapeKeyHandler) {
+				document.removeEventListener("keydown", this.escapeKeyHandler);
+				this.escapeKeyHandler = undefined;
+			}
 		}
 	}
 

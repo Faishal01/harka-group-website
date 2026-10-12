@@ -6,7 +6,7 @@ import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
 import VehicleInspectionCard from "~/components/admin/VehicleInspectionCard.astro";
 import TradeInReviewActions from "~/components/admin/TradeInReviewActions.svelte";
-import { getDb, getTradeInSubmissionById } from "@harka/db";
+import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
 
 const { id } = Astro.params;
@@ -15,8 +15,8 @@ if (!id) {
 	return Astro.redirect("/trade-in");
 }
 
-const db = getDb(env);
-const sub = await getTradeInSubmissionById(db, id);
+const core = createCore(env);
+const sub = await core.tradeIn.getById(id).catch(() => null);
 
 if (!sub) {
 	return Astro.redirect("/trade-in");

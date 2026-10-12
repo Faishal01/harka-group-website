@@ -1,6 +1,6 @@
 ---
-import { getDb, cars as carsTable, maskPlateNumber } from "@harka/db";
-import { eq } from "drizzle-orm";
+import { maskPlateNumber } from "@harka/db";
+import { createCore } from "@harka/core";
 
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
@@ -18,7 +18,6 @@ import ModalSlider from "~/components/modals/ModalSlider.astro";
 // Buttons
 import ButtonGoBack from "~/components/buttons/ButtonGoBack.astro";
 import ButtonShare from "~/components/buttons/ButtonShare.astro";
-import ButtonPrint from "~/components/buttons/ButtonPrint.astro";
 import ButtonCall from "~/components/buttons/ButtonCall.astro";
 import ButtonInquire from "~/components/buttons/ButtonInquire.astro";
 import { env } from "cloudflare:workers";
@@ -39,14 +38,10 @@ export const prerender = false;
 
 const { id } = Astro.params;
 
-const db = getDb(env);
-const rawCar = id
-	? await db.query.cars.findFirst({
-			where: eq(carsTable.id, id),
-		})
-	: null;
+const core = createCore(env);
+const rawCar = id ? await core.cars.getById(id, { adminView: false }).catch(() => null) : null;
 
-const notFound = !rawCar || rawCar.hidden || rawCar.archiveReason === "removed";
+const notFound = !rawCar;
 if (notFound) {
 	Astro.response.status = 404;
 }
@@ -225,9 +220,8 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 											)}
 										</div>
 
-										<div class="sm:ml-auto flex items-center max-sm:justify-center gap-x-4 shrink-0">
-											<ButtonShare />
-											<ButtonPrint />
+										<div class="sm:ml-auto flex items-center max-sm:justify-center shrink-0">
+											<ButtonShare car={car} url={`${SITE_URL}/view/${car.id}`} />
 										</div>
 									</div>
 								</div>
