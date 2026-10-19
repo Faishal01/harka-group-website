@@ -1,0 +1,20 @@
+{
+	"name": "gas",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"push": "vite build && clasp push",
+		"deploy": "vite build && clasp push && clasp deploy",
+		"clasp": "clasp"
+	},
+	"devDependencies": {
+		"@gas-plugin/unplugin": "^0.2.2",
+		"@google/clasp": "^3.4.1",
+		"@types/google-apps-script": "^2.0.13",
+		"vite": "^8.3.4"
+	},
+	"peerDependencies": {
+		"typescript": "^7"
+	}
+}
