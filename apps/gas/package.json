@@ -1,20 +1,25 @@
 {
 	"name": "gas",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "vite build",
-		"push": "vite build && clasp push",
-		"deploy": "vite build && clasp push && clasp deploy",
-		"clasp": "clasp"
+	"dependencies": {
+		"preact": "^11.0.1"
 	},
 	"devDependencies": {
 		"@gas-plugin/unplugin": "^0.2.2",
 		"@google/clasp": "^3.4.1",
+		"@preact/preset-vite": "^2.10.6",
 		"@types/google-apps-script": "^2.0.13",
-		"vite": "^8.3.4"
+		"typescript": "^7.0.2",
+		"vite": "^8.3.4",
+		"vite-plugin-singlefile": "^2.3.4"
 	},
-	"peerDependencies": {
-		"typescript": "^7"
-	}
+	"private": true,
+	"scripts": {
+		"build:script": "vite build --config vite.config.script.ts",
+		"build:ui": "vite build --config vite.config.ui.ts",
+		"build": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts",
+		"push": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts && clasp push",
+		"deploy": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts && clasp push && clasp deploy",
+		"clasp": "clasp"
+	},
+	"type": "module"
 }
