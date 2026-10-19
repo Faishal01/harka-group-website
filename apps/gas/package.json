@@ -1,7 +1,9 @@
 {
 	"name": "gas",
 	"dependencies": {
-		"preact": "^11.0.1"
+		"@tailwindcss/vite": "^4.3.3",
+		"preact": "^11.0.1",
+		"tailwindcss": "^4.3.3"
 	},
 	"devDependencies": {
 		"@gas-plugin/unplugin": "^0.2.2",
