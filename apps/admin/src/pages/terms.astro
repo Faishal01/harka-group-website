@@ -1,0 +1,231 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import { siteName, contactEmail, contactPhone, contactAddress } from "~/data/config";
+
+const lastUpdated = "20 Oktober 2026";
+---
+
+<Layout
+	title="Syarat dan Ketentuan | Harka Admin"
+	pageTitle="Syarat dan Ketentuan - Harka Admin"
+	hideSidebar={true}
+>
+	<div class="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+		<div class="max-w-4xl mx-auto">
+			<!-- Navigation / Back to Login -->
+			<div class="mb-6 flex items-center justify-between">
+				<a
+					href="/login"
+					class="inline-flex items-center text-sm font-medium text-red-700 hover:text-red-800 transition-colors"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-4 w-4 mr-1.5"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+					</svg>
+					Kembali ke Halaman Masuk
+				</a>
+				<span class="text-xs text-gray-500">Pembaruan Terakhir: {lastUpdated}</span>
+			</div>
+
+			<!-- Main Content Card -->
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 sm:p-12">
+				<header class="border-b border-gray-200 pb-8 mb-8">
+					<div
+						class="inline-block px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-semibold tracking-wide uppercase mb-3"
+					>
+						Legal & Ketentuan
+					</div>
+					<h1 class="text-3xl font-extrabold text-gray-900 tracking-tight sm:text-4xl">
+						Syarat dan Ketentuan Harka Admin
+					</h1>
+					<p class="mt-3 text-base text-gray-600">
+						Syarat dan Ketentuan ini mengatur hak akses dan kewajiban staf serta administrator resmi
+						dalam menggunakan portal internal <strong class="text-gray-900">Harka Admin</strong>.
+					</p>
+				</header>
+
+				<div class="space-y-8 text-gray-700 text-sm leading-relaxed sm:text-base">
+					<!-- Section 1 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>1</span
+							>
+							Penerimaan Ketentuan
+						</h2>
+						<p>
+							Dengan masuk ke portal Harka Admin menggunakan akun Google yang terdaftar, Anda
+							menyatakan bahwa Anda adalah staf atau perwakilan sah dari {siteName} dan menyetujui untuk
+							terikat oleh Syarat dan Ketentuan Penggunaan ini serta kebijakan internal perusahaan yang
+							berlaku.
+						</p>
+					</section>
+
+					<!-- Section 2 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>2</span
+							>
+							Otorisasi dan Pembatasan Akses
+						</h2>
+						<p class="mb-3">
+							Aplikasi ini merupakan sistem tertutup (restricted access). Ketentuan akses mencakup:
+						</p>
+						<ul class="list-disc pl-6 space-y-2 text-gray-600">
+							<li>
+								Akses hanya diberikan kepada akun Google yang telah dimasukkan ke dalam daftar
+								whitelist oleh pengelola resmi.
+							</li>
+							<li>
+								Setiap upaya masuk atau eksploitasi oleh pihak yang tidak berwenang dilarang keras
+								dan dapat dikenakan tindakan hukum atau tindakan disipliner perusahaan.
+							</li>
+							<li>
+								Peran pengguna (Role) menentukan batasan tindakan yang dapat dilakukan di dalam
+								sistem sesuai penugasan masing-masing staf.
+							</li>
+						</ul>
+					</section>
+
+					<!-- Section 3 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>3</span
+							>
+							Tanggung Jawab dan Keamanan Akun
+						</h2>
+						<p class="mb-2">Sebagai pengguna berwenang, Anda bertanggung jawab untuk:</p>
+						<ul class="list-disc pl-6 space-y-2 text-gray-600">
+							<li>
+								Menjaga keamanan akun Google Anda dengan menerapkan autentikasi dua faktor (2FA).
+							</li>
+							<li>
+								Tidak meminjamkan, mengalihkan, atau membagikan sesi masuk kepada individu lain,
+								baik staf lain maupun pihak eksternal.
+							</li>
+							<li>
+								Segera keluar (sign out) dari sesi portal saat meninggalkan perangkat kerja yang
+								tidak diawasi.
+							</li>
+							<li>
+								Segera melaporkan indikasi kebocoran kredensial atau akses mencurigakan kepada tim
+								IT pengelola.
+							</li>
+						</ul>
+					</section>
+
+					<!-- Section 4 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>4</span
+							>
+							Integritas Data dan Pengelolaan Inventaris
+						</h2>
+						<p class="mb-2">
+							Setiap staf berkewajiban menjaga integritas dan keakuratan data yang dimasukkan ke
+							dalam sistem Harka Admin, termasuk namun tidak terbatas pada:
+						</p>
+						<ul class="list-disc pl-6 space-y-1.5 text-gray-600">
+							<li>
+								Kebenaran spesifikasi, jarak tempuh (odometer), harga jual, dan status ketersediaan
+								unit mobil.
+							</li>
+							<li>
+								Foto unit kendaraan yang orisinal, jelas, dan representatif tanpa manipulasi yang
+								menyesatkan calon pembeli.
+							</li>
+							<li>
+								Pemeriksaan data permohonan tukar tambah (trade-in) secara teliti sesuai fakta fisik
+								kendaraan.
+							</li>
+						</ul>
+					</section>
+
+					<!-- Section 5 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>5</span
+							>
+							Kerahasiaan Data Konsumen
+						</h2>
+						<div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-3">
+							<p class="text-amber-900 font-medium">
+								Seluruh data pribadi calon pembeli (nama, nomor telepon, dokumen STNK/BPKB, serta
+								informasi penawaran) yang diakses melalui portal ini bersifat sangat rahasia.
+							</p>
+						</div>
+						<p>
+							Staf dilarang keras menyalin, mengekspor, mendistribusikan, atau memanfaatkan data
+							pelanggan di luar kepentingan operasional resmi transaksi {siteName}.
+						</p>
+					</section>
+
+					<!-- Section 6 -->
+					<section>
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>6</span
+							>
+							Pencabutan Akses dan Perubahan Ketentuan
+						</h2>
+						<p>
+							Manajemen {siteName} berhak untuk mencabut hak akses pengguna, menonaktifkan akun, atau
+							memperbarui Syarat dan Ketentuan ini sewaktu-waktu tanpa pemberitahuan sebelumnya demi menjaga
+							integritas dan keamanan sistem.
+						</p>
+					</section>
+
+					<!-- Section 7 -->
+					<section class="pt-4 border-t border-gray-200">
+						<h2 class="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+							<span
+								class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-700 text-xs font-bold"
+								>7</span
+							>
+							Kontak Administrasi
+						</h2>
+						<p class="mb-3">
+							Jika terdapat pertanyaan atau kendala mengenai akses dan operasional Harka Admin,
+							silakan hubungi tim pengelola {siteName}:
+						</p>
+						<div class="bg-gray-50 p-4 rounded-lg space-y-1.5 text-sm">
+							<p><strong class="text-gray-900">Organisasi:</strong> {siteName}</p>
+							<p>
+								<strong class="text-gray-900">Email:</strong>
+								<a href={`mailto:${contactEmail}`} class="text-red-700 hover:underline"
+									>{contactEmail}</a>
+							</p>
+							<p><strong class="text-gray-900">Telepon:</strong> {contactPhone}</p>
+							<p><strong class="text-gray-900">Alamat:</strong> {contactAddress}</p>
+						</div>
+					</section>
+				</div>
+			</div>
+
+			<!-- Footer Note -->
+			<div class="mt-8 text-center text-xs text-gray-500">
+				&copy; {new Date().getFullYear()}
+				{siteName}. Seluruh hak cipta dilindungi.
+			</div>
+		</div>
+	</div>
+</Layout>
