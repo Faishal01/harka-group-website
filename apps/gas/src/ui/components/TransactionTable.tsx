@@ -22,9 +22,7 @@ export function TransactionTable({
 }: TransactionTableProps) {
 	const renderSortIcon = (col: SortColumn) => {
 		if (filters.sortBy !== col) {
-			return (
-				<span className="text-slate-300 ml-1 inline-block">↕</span>
-			);
+			return <span className="text-slate-300 ml-1 inline-block">↕</span>;
 		}
 		return (
 			<span className="text-blue-600 ml-1 inline-block">
@@ -57,7 +55,8 @@ export function TransactionTable({
 				</div>
 				<h4 className="text-sm font-semibold text-slate-800">Tidak ada transaksi ditemukan</h4>
 				<p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-					Belum ada data transaksi atau tidak ada transaksi yang cocok dengan filter yang diterapkan.
+					Belum ada data transaksi atau tidak ada transaksi yang cocok dengan filter yang
+					diterapkan.
 				</p>
 			</div>
 		);
@@ -65,7 +64,7 @@ export function TransactionTable({
 
 	return (
 		<div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-			<div className="overflow-x-auto max-h-[500px]">
+			<div className="overflow-x-auto max-h-125">
 				<table className="w-full text-left border-collapse text-xs">
 					<thead className="bg-slate-50/90 text-slate-600 font-semibold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200 backdrop-blur-sm">
 						<tr>
@@ -109,13 +108,11 @@ export function TransactionTable({
 
 							return (
 								<tr
-									key={item.no}
+									key={item.id || item.no}
 									className="hover:bg-slate-50/80 transition-colors group"
 								>
 									{/* No */}
-									<td className="py-2.5 px-3 font-semibold text-slate-800">
-										#{item.no}
-									</td>
+									<td className="py-2.5 px-3 font-semibold text-slate-800">#{item.no}</td>
 
 									{/* Tanggal */}
 									<td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
@@ -134,9 +131,7 @@ export function TransactionTable({
 
 									{/* Kategori */}
 									<td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-										<span className="text-[11px] font-medium text-slate-700">
-											{item.category}
-										</span>
+										<span className="text-[11px] font-medium text-slate-700">{item.category}</span>
 									</td>
 
 									{/* Pembeli */}
@@ -158,9 +153,7 @@ export function TransactionTable({
 									{/* Sisa */}
 									<td className="py-2.5 px-3 text-right whitespace-nowrap">
 										<span
-											className={`font-semibold ${
-												sisa > 0 ? "text-amber-600" : "text-slate-400"
-											}`}
+											className={`font-semibold ${sisa > 0 ? "text-amber-600" : "text-slate-400"}`}
 										>
 											{formatRp(sisa)}
 										</span>
@@ -194,8 +187,18 @@ export function TransactionTable({
 													title="Tandai LUNAS"
 													className="p-1 rounded text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
 												>
-													<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+													<svg
+														className="w-4 h-4"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth={2}
+															d="M5 13l4 4L19 7"
+														/>
 													</svg>
 												</button>
 											)}
@@ -205,7 +208,12 @@ export function TransactionTable({
 												title="Edit Transaksi"
 												className="p-1 rounded text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
 											>
-												<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
 													<path
 														strokeLinecap="round"
 														strokeLinejoin="round"
@@ -220,7 +228,12 @@ export function TransactionTable({
 												title="Hapus Transaksi"
 												className="p-1 rounded text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
 											>
-												<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
 													<path
 														strokeLinecap="round"
 														strokeLinejoin="round"
@@ -239,7 +252,9 @@ export function TransactionTable({
 			</div>
 			<div className="py-2.5 px-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
 				<span>Menampilkan {transactions.length} transaksi</span>
-				<span className="text-[11px] text-slate-400">Data bersumber langsung dari sheet "TRANSAKSI"</span>
+				<span className="text-[11px] text-slate-400">
+					Data bersumber langsung dari sheet "TRANSAKSI"
+				</span>
 			</div>
 		</div>
 	);

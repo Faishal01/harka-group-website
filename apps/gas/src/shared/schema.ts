@@ -8,25 +8,42 @@ export const TRANSACTION_CATEGORIES = [
 
 export const TRANSACTION_STATUSES = ["LUNAS", "BELUM LUNAS"] as const;
 
-export const PLATE_NUMBER_REGEX =
-	/^([A-Za-z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Za-z]{0,3})$/;
+export const PLATE_NUMBER_REGEX = /^([A-Za-z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Za-z]{0,3})$/;
+
+/**
+ * Normalize car plate: eliminate all whitespace and convert to uppercase.
+ */
+export function normalizePlate(plate: string): string {
+	return (plate || "").replace(/\s+/g, "").toUpperCase();
+}
+
+/**
+ * Deterministic 32-bit FNV-1a hash returning an 8-character hex identifier.
+ */
+export function hashPlate(plate: string): string {
+	const clean = normalizePlate(plate);
+	let hash = 0x811c9dc5;
+	for (let i = 0; i < clean.length; i++) {
+		hash ^= clean.charCodeAt(i);
+		hash = Math.imul(hash, 0x01000193);
+	}
+	return (hash >>> 0).toString(16).padStart(8, "0");
+}
 
 export const TransactionSchema = z.object({
+	id: z.string().optional(),
 	no: z.number().int().positive("No harus berupa angka positif"),
 	transactionDate: z
 		.string()
 		.min(1, "Tanggal transaksi wajib diisi")
-		.regex(
-			/^\d{1,2}\/\d{1,2}\/\d{2,4}$/,
-			"Format tanggal harus DD/MM/YY atau DD/MM/YYYY",
-		),
+		.regex(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/, "Format tanggal harus DD/MM/YY atau DD/MM/YYYY"),
 	carDescription: z.string().min(1, "Deskripsi mobil wajib diisi"),
 	plateNumber: z
 		.string()
 		.min(1, "Plat mobil wajib diisi")
 		.regex(PLATE_NUMBER_REGEX, "Format plat nomor tidak valid (contoh: B 1234 CD)"),
 	category: z.enum(TRANSACTION_CATEGORIES, {
-		errorMap: () => ({ message: "Kategori transaksi tidak valid" }),
+		message: "Kategori transaksi tidak valid",
 	}),
 	buyerName: z.string().min(1, "Nama pembeli wajib diisi"),
 	phoneNumber: z.string().min(1, "Nomor telpon wajib diisi"),
@@ -35,13 +52,15 @@ export const TransactionSchema = z.object({
 	remainingBalance: z.number().nullable().optional(),
 	salesPerson: z.string().min(1, "Sales/Marketing wajib diisi"),
 	status: z.enum(TRANSACTION_STATUSES, {
-		errorMap: () => ({ message: "Status transaksi tidak valid" }),
+		message: "Status transaksi tidak valid",
 	}),
 	notes: z.string().nullable().optional(),
 });
 
-export const TransactionCreateSchema = TransactionSchema.omit({ no: true });
-export const TransactionUpdateSchema = TransactionSchema;
+export const TransactionCreateSchema = TransactionSchema.omit({ id: true, no: true });
+export const TransactionUpdateSchema = TransactionSchema.extend({
+	id: z.string().min(1, "ID transaksi wajib ada"),
+});
 
 export type TransactionCategory = (typeof TRANSACTION_CATEGORIES)[number];
 export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];

@@ -11,25 +11,31 @@ export function StatsCards({ transactions }: StatsCardsProps) {
 
 	const totalPending = transactions.reduce((acc, t) => {
 		if (t.status === "BELUM LUNAS") {
-			return acc + (t.remainingBalance != null ? t.remainingBalance : t.sellingPrice - (t.downPayment ?? 0));
+			return (
+				acc +
+				(t.remainingBalance != null ? t.remainingBalance : t.sellingPrice - (t.downPayment ?? 0))
+			);
 		}
 		return acc;
 	}, 0);
 
 	const lunasCount = transactions.filter((t) => t.status === "LUNAS").length;
 	const belumLunasCount = totalTransactions - lunasCount;
-	const lunasPercent = totalTransactions > 0 ? Math.round((lunasCount / totalTransactions) * 100) : 0;
+	const lunasPercent =
+		totalTransactions > 0 ? Math.round((lunasCount / totalTransactions) * 100) : 0;
 
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
 			{/* Total Transaksi */}
 			<div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
 				<div>
-					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Transaksi</p>
+					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+						Total Transaksi
+					</p>
 					<h3 className="text-2xl font-bold text-slate-900 mt-1">{totalTransactions}</h3>
 					<p className="text-xs text-slate-400 mt-0.5">Unit mobil terjual</p>
 				</div>
-				<div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+				<div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
 					<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							strokeLinecap="round"
@@ -44,13 +50,18 @@ export function StatsCards({ transactions }: StatsCardsProps) {
 			{/* Total Penjualan */}
 			<div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
 				<div>
-					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Penjualan</p>
-					<h3 className="text-xl font-bold text-slate-900 mt-1 truncate max-w-[170px]" title={formatRp(totalSales)}>
+					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+						Total Penjualan
+					</p>
+					<h3
+						className="text-xl font-bold text-slate-900 mt-1 truncate max-w-42.5"
+						title={formatRp(totalSales)}
+					>
 						{formatRp(totalSales)}
 					</h3>
 					<p className="text-xs text-emerald-600 font-medium mt-0.5">Omzet kotor</p>
 				</div>
-				<div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+				<div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
 					<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							strokeLinecap="round"
@@ -65,16 +76,20 @@ export function StatsCards({ transactions }: StatsCardsProps) {
 			{/* Sisa Piutang */}
 			<div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
 				<div>
-					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Piutang / Sisa</p>
+					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+						Piutang / Sisa
+					</p>
 					<h3
-						className="text-xl font-bold text-amber-600 mt-1 truncate max-w-[170px]"
+						className="text-xl font-bold text-amber-600 mt-1 truncate max-w-42.5"
 						title={formatRp(totalPending)}
 					>
 						{formatRp(totalPending)}
 					</h3>
-					<p className="text-xs text-amber-600/80 font-medium mt-0.5">{belumLunasCount} transaksi belum lunas</p>
+					<p className="text-xs text-amber-600/80 font-medium mt-0.5">
+						{belumLunasCount} transaksi belum lunas
+					</p>
 				</div>
-				<div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+				<div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
 					<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							strokeLinecap="round"
@@ -89,7 +104,9 @@ export function StatsCards({ transactions }: StatsCardsProps) {
 			{/* Status Pelunasan */}
 			<div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
 				<div>
-					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status Pelunasan</p>
+					<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+						Status Pelunasan
+					</p>
 					<div className="flex items-baseline gap-2 mt-1">
 						<h3 className="text-2xl font-bold text-slate-900">{lunasPercent}%</h3>
 						<span className="text-xs text-slate-500">
@@ -103,7 +120,7 @@ export function StatsCards({ transactions }: StatsCardsProps) {
 						/>
 					</div>
 				</div>
-				<div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+				<div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
 					<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path
 							strokeLinecap="round"

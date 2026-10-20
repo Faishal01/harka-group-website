@@ -7,11 +7,16 @@
 		"zod": "^4.6.7"
 	},
 	"devDependencies": {
+		"@eslint/js": "^10.0.1",
 		"@gas-plugin/unplugin": "^0.2.2",
 		"@google/clasp": "^3.4.1",
 		"@preact/preset-vite": "^2.10.6",
 		"@types/google-apps-script": "^2.0.13",
-		"typescript": "^7.0.2",
+		"eslint": "^10.11.0",
+		"globals": "^17.12.0",
+		"prettier": "^3.9.8",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.70.0",
 		"vite": "^8.3.4",
 		"vite-plugin-singlefile": "^2.3.4"
 	},
@@ -22,7 +27,11 @@
 		"build": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts",
 		"push": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts && clasp push",
 		"deploy": "vite build --config vite.config.script.ts && vite build --config vite.config.ui.ts && clasp push && clasp deploy",
-		"clasp": "clasp"
+		"clasp": "clasp",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"lint": "eslint .",
+		"check": "prettier --check . && tsc --noEmit && eslint ."
 	},
 	"type": "module"
 }

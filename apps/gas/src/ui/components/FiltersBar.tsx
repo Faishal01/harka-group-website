@@ -116,7 +116,12 @@ export function FiltersBar({
 						className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer"
 					>
 						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 4v16m8-8H4"
+							/>
 						</svg>
 						<span>Tambah Transaksi</span>
 					</button>
@@ -132,9 +137,7 @@ export function FiltersBar({
 					</label>
 					<select
 						value={filters.month}
-						onChange={(e) =>
-							onChange({ ...filters, month: (e.target as HTMLSelectElement).value })
-						}
+						onChange={(e) => onChange({ ...filters, month: (e.target as HTMLSelectElement).value })}
 						className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
 					>
 						<option value="ALL">Semua Bulan</option>

@@ -30,16 +30,19 @@ gas/
 ## Available Scripts
 
 - **Build:** Bundles TypeScript files in `src/` to `build/Code.js`, copies HTML templates and `appsscript.json` into `build/`.
+
   ```bash
   bun run build
   ```
 
 - **Push (Draft):** Builds and pushes the latest code to Google Apps Script.
+
   ```bash
   bun run push
   ```
 
 - **Deploy (Versioned):** Builds, pushes code, and creates a versioned deployment.
+
   ```bash
   bun run deploy
   ```

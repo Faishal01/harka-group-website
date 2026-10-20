@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import {
+	hashPlate,
 	parseDate,
 	TransactionCreateInput,
 	TransactionItem,
@@ -28,6 +29,7 @@ declare const google: {
 
 const INITIAL_MOCK_DATA: TransactionItem[] = [
 	{
+		id: hashPlate("B 1234 ABC"),
 		no: 1,
 		transactionDate: "03/10/26",
 		carDescription: "Toyota Innova Zenix 2.0 V CVT 2023 Putih",
@@ -43,6 +45,7 @@ const INITIAL_MOCK_DATA: TransactionItem[] = [
 		notes: "Surat lengkap, serah terima langsung.",
 	},
 	{
+		id: hashPlate("D 5678 EFG"),
 		no: 2,
 		transactionDate: "12/10/26",
 		carDescription: "Honda CR-V 1.5 Turbo Prestige 2021 Hitam",
@@ -58,6 +61,7 @@ const INITIAL_MOCK_DATA: TransactionItem[] = [
 		notes: "Pelunasan dijadwalkan akhir bulan.",
 	},
 	{
+		id: hashPlate("B 9999 XYZ"),
 		no: 3,
 		transactionDate: "18/10/26",
 		carDescription: "Mitsubishi Pajero Sport 2.4 Dakar 4x2 AT 2022 Abu-abu",
@@ -87,8 +91,20 @@ interface TabItem {
 const DASHBOARD_TABS: TabItem[] = [
 	{ id: "transaksi", label: "Transaksi", sheetName: "TRANSAKSI", isAvailable: true },
 	{ id: "stok", label: "Stok Mobil", sheetName: "STOK MOBIL", badge: "Segera", isAvailable: false },
-	{ id: "pengeluaran", label: "Pengeluaran Unit", sheetName: "PENGELUARAN PER UNIT", badge: "Segera", isAvailable: false },
-	{ id: "keuntungan", label: "Laporan Keuntungan", sheetName: "LAPORAN KEUNTUNGAN", badge: "Segera", isAvailable: false },
+	{
+		id: "pengeluaran",
+		label: "Pengeluaran Unit",
+		sheetName: "PENGELUARAN PER UNIT",
+		badge: "Segera",
+		isAvailable: false,
+	},
+	{
+		id: "keuntungan",
+		label: "Laporan Keuntungan",
+		sheetName: "LAPORAN KEUNTUNGAN",
+		badge: "Segera",
+		isAvailable: false,
+	},
 ];
 
 export function App() {
@@ -172,8 +188,16 @@ export function App() {
 					.appendTransaction(payload);
 			});
 		} else {
+			const plateHash = hashPlate(payload.plateNumber);
+			if (transactions.some((t) => (t.id || hashPlate(t.plateNumber)) === plateHash)) {
+				throw new Error(`Mobil dengan plat "${payload.plateNumber.toUpperCase()}" sudah ada.`);
+			}
 			const nextNo = transactions.reduce((max, t) => Math.max(max, t.no), 0) + 1;
-			const newItem: TransactionItem = { ...payload, no: nextNo };
+			const newItem: TransactionItem = {
+				...payload,
+				id: plateHash,
+				no: nextNo,
+			};
 			setTransactions([newItem, ...transactions]);
 			showToast("Transaksi baru berhasil ditambahkan (Dev Mock)", "success");
 		}
@@ -195,50 +219,59 @@ export function App() {
 					.updateTransaction(payload);
 			});
 		} else {
-			setTransactions(transactions.map((t) => (t.no === payload.no ? payload : t)));
+			setTransactions(
+				transactions.map((t) => ((t.id || hashPlate(t.plateNumber)) === payload.id ? payload : t)),
+			);
 			showToast(`Transaksi #${payload.no} berhasil diperbarui (Dev Mock)`, "success");
 		}
 	};
 
 	// Delete transaction
 	const handleDelete = async (item: TransactionItem) => {
+		const targetId = item.id || hashPlate(item.plateNumber);
 		if (isGasEnv) {
 			return new Promise<void>((resolve, reject) => {
 				google.script.run
 					.withSuccessHandler(() => {
-						showToast(`Transaksi #${item.no} berhasil dihapus dari Google Sheets`, "success");
+						showToast(`Transaksi #${item.no} (${item.plateNumber}) berhasil dihapus`, "success");
 						loadTransactions();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
 						reject(err);
 					})
-					.deleteTransaction(item.no);
+					.deleteTransaction(targetId);
 			});
 		} else {
-			setTransactions(transactions.filter((t) => t.no !== item.no));
-			showToast(`Transaksi #${item.no} berhasil dihapus (Dev Mock)`, "success");
+			setTransactions(transactions.filter((t) => (t.id || hashPlate(t.plateNumber)) !== targetId));
+			showToast(
+				`Transaksi #${item.no} (${item.plateNumber}) berhasil dihapus (Dev Mock)`,
+				"success",
+			);
 		}
 	};
 
 	// Quick Mark Lunas
 	const handleQuickLunas = async (item: TransactionItem) => {
 		if (item.status === "LUNAS") return;
+		const targetId = item.id || hashPlate(item.plateNumber);
 
 		if (isGasEnv) {
 			google.script.run
 				.withSuccessHandler(() => {
-					showToast(`Transaksi #${item.no} berhasil dilunasi`, "success");
+					showToast(`Transaksi #${item.no} (${item.plateNumber}) berhasil dilunasi`, "success");
 					loadTransactions();
 				})
 				.withFailureHandler((err: Error) => {
 					showToast(`Gagal melunasi: ${err.message}`, "error");
 				})
-				.quickMarkLunas(item.no);
+				.quickMarkLunas(targetId);
 		} else {
 			setTransactions(
 				transactions.map((t) =>
-					t.no === item.no ? { ...t, status: "LUNAS", remainingBalance: 0 } : t,
+					(t.id || hashPlate(t.plateNumber)) === targetId
+						? { ...t, status: "LUNAS", remainingBalance: 0 }
+						: t,
 				),
 			);
 			showToast(`Transaksi #${item.no} berhasil dilunasi (Dev Mock)`, "success");
@@ -329,9 +362,7 @@ export function App() {
 					</div>
 					<div>
 						<div className="flex items-center gap-2">
-							<h1 className="text-xl font-bold text-slate-900 leading-tight">
-								Harka Dashboard
-							</h1>
+							<h1 className="text-xl font-bold text-slate-900 leading-tight">Harka Dashboard</h1>
 							<span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
 								Spreadsheet Suite
 							</span>
@@ -445,7 +476,8 @@ export function App() {
 						Modul {DASHBOARD_TABS.find((t) => t.id === activeTab)?.label}
 					</h3>
 					<p className="text-xs text-slate-500 mt-1.5 max-w-md mx-auto leading-relaxed">
-						Integrasi sheet "{DASHBOARD_TABS.find((t) => t.id === activeTab)?.sheetName}" akan segera tersedia pada pembaruan berikutnya.
+						Integrasi sheet "{DASHBOARD_TABS.find((t) => t.id === activeTab)?.sheetName}" akan
+						segera tersedia pada pembaruan berikutnya.
 					</p>
 					<button
 						onClick={() => setActiveTab("transaksi")}

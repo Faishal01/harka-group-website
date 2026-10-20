@@ -7,11 +7,7 @@ interface DeleteConfirmModalProps {
 	onConfirm: (item: TransactionItem) => Promise<void>;
 }
 
-export function DeleteConfirmModal({
-	item,
-	onClose,
-	onConfirm,
-}: DeleteConfirmModalProps) {
+export function DeleteConfirmModal({ item, onClose, onConfirm }: DeleteConfirmModalProps) {
 	if (!item) return null;
 
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -47,9 +43,7 @@ export function DeleteConfirmModal({
 					</div>
 
 					<div>
-						<h3 className="text-base font-bold text-slate-900">
-							Hapus Transaksi #{item.no}?
-						</h3>
+						<h3 className="text-base font-bold text-slate-900">Hapus Transaksi #{item.no}?</h3>
 						<p className="text-xs text-slate-500 mt-1">
 							Baris transaksi ini akan dihapus secara permanen dari spreadsheet "TRANSAKSI".
 						</p>
@@ -64,7 +58,8 @@ export function DeleteConfirmModal({
 							Pembeli: <span className="text-slate-700 font-medium">{item.buyerName}</span>
 						</div>
 						<div className="text-slate-500">
-							Harga Jual: <span className="text-slate-900 font-semibold">{formatRp(item.sellingPrice)}</span>
+							Harga Jual:{" "}
+							<span className="text-slate-900 font-semibold">{formatRp(item.sellingPrice)}</span>
 						</div>
 					</div>
 
