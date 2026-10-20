@@ -7,7 +7,7 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"types": ["google-apps-script"],
+		"types": ["google-apps-script", "unplugin-icons/types/preact"],
 		"jsx": "react-jsx",
 		"jsxImportSource": "preact"
 	},

@@ -1,5 +1,10 @@
+import IconPlus from "~icons/lucide/plus";
+import IconRefreshCw from "~icons/lucide/refresh-cw";
+import IconRotateCcw from "~icons/lucide/rotate-ccw";
+import IconSearch from "~icons/lucide/search";
 import { TRANSACTION_CATEGORIES, TRANSACTION_STATUSES, TransactionItem } from "../../shared/schema";
 import { FilterState } from "../types";
+import { Select } from "./Select";
 
 interface FiltersBarProps {
 	filters: FilterState;
@@ -45,7 +50,7 @@ export function FiltersBar({
 			category: "ALL",
 			salesPerson: "ALL",
 			sortBy: "no",
-			sortDirection: "desc",
+			sortDirection: "asc",
 		});
 	};
 
@@ -61,19 +66,7 @@ export function FiltersBar({
 			<div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
 				{/* Search Bar */}
 				<div className="relative flex-1">
-					<svg
-						className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-						/>
-					</svg>
+					<IconSearch className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
 					<input
 						type="text"
 						value={filters.searchQuery}
@@ -94,19 +87,7 @@ export function FiltersBar({
 						title="Muat ulang data dari Google Sheet"
 						className="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
 					>
-						<svg
-							className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-							/>
-						</svg>
+						<IconRefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
 						<span>Refresh</span>
 					</button>
 
@@ -115,14 +96,7 @@ export function FiltersBar({
 						type="button"
 						className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer"
 					>
-						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M12 4v16m8-8H4"
-							/>
-						</svg>
+						<IconPlus className="w-4 h-4" />
 						<span>Tambah Transaksi</span>
 					</button>
 				</div>
@@ -135,10 +109,10 @@ export function FiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Bulan
 					</label>
-					<select
+					<Select
 						value={filters.month}
 						onChange={(e) => onChange({ ...filters, month: (e.target as HTMLSelectElement).value })}
-						className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+						className="px-2.5 py-1.5"
 					>
 						<option value="ALL">Semua Bulan</option>
 						{months.map((m) => (
@@ -146,7 +120,7 @@ export function FiltersBar({
 								{m}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				{/* Status Filter */}
@@ -154,12 +128,12 @@ export function FiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Status
 					</label>
-					<select
+					<Select
 						value={filters.status}
 						onChange={(e) =>
 							onChange({ ...filters, status: (e.target as HTMLSelectElement).value })
 						}
-						className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+						className="px-2.5 py-1.5"
 					>
 						<option value="ALL">Semua Status</option>
 						{TRANSACTION_STATUSES.map((s) => (
@@ -167,7 +141,7 @@ export function FiltersBar({
 								{s}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				{/* Kategori Filter */}
@@ -175,12 +149,12 @@ export function FiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Kategori
 					</label>
-					<select
+					<Select
 						value={filters.category}
 						onChange={(e) =>
 							onChange({ ...filters, category: (e.target as HTMLSelectElement).value })
 						}
-						className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+						className="px-2.5 py-1.5"
 					>
 						<option value="ALL">Semua Kategori</option>
 						{TRANSACTION_CATEGORIES.map((c) => (
@@ -188,7 +162,7 @@ export function FiltersBar({
 								{c}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				{/* Sales Filter */}
@@ -196,12 +170,12 @@ export function FiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Sales / Marketing
 					</label>
-					<select
+					<Select
 						value={filters.salesPerson}
 						onChange={(e) =>
 							onChange({ ...filters, salesPerson: (e.target as HTMLSelectElement).value })
 						}
-						className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+						className="px-2.5 py-1.5"
 					>
 						<option value="ALL">Semua Sales</option>
 						{salesList.map((s) => (
@@ -209,7 +183,7 @@ export function FiltersBar({
 								{s}
 							</option>
 						))}
-					</select>
+					</Select>
 				</div>
 
 				{/* Reset Button */}
@@ -218,9 +192,10 @@ export function FiltersBar({
 						<button
 							onClick={handleReset}
 							type="button"
-							className="w-full px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer text-center"
+							className="w-full px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
 						>
-							Reset Filter
+							<IconRotateCcw className="w-3.5 h-3.5 text-slate-500" />
+							<span>Reset Filter</span>
 						</button>
 					)}
 				</div>

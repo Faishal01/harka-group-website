@@ -13,7 +13,8 @@ export function onOpen() {
 export function openDialog() {
 	const html = HtmlService.createHtmlOutputFromFile("Index")
 		.setWidth(1200)
-		.setHeight(780)
+		.setHeight(850)
+		.addMetaTag("viewport", "width=device-width, initial-scale=1")
 		.setTitle("Harka Dashboard");
 
 	SpreadsheetApp.getUi().showModalDialog(html, "Harka Dashboard");

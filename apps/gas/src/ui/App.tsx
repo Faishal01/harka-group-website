@@ -120,7 +120,7 @@ export function App() {
 		category: "ALL",
 		salesPerson: "ALL",
 		sortBy: "no",
-		sortDirection: "desc",
+		sortDirection: "asc",
 	});
 
 	// Modals
@@ -290,7 +290,7 @@ export function App() {
 			setFilters({
 				...filters,
 				sortBy: col,
-				sortDirection: col === "no" ? "desc" : "asc",
+				sortDirection: col === "no" ? "asc" : "desc",
 			});
 		}
 	};
@@ -352,6 +352,16 @@ export function App() {
 				return 0;
 			});
 	}, [transactions, filters]);
+
+	// Derived unique existing sales list for autocomplete
+	const existingSales = useMemo(() => {
+		const set = new Set<string>();
+		for (const t of transactions) {
+			const s = (t.salesPerson || "").trim();
+			if (s) set.add(s);
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b, "id-ID"));
+	}, [transactions]);
 
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased">
@@ -501,6 +511,7 @@ export function App() {
 					}
 					mode={modalMode}
 					initialData={activeItem}
+					existingSales={existingSales}
 					onClose={() => {
 						setModalMode(null);
 						setActiveItem(null);

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
+import IconAlertTriangle from "~icons/lucide/alert-triangle";
+import IconX from "~icons/lucide/x";
 import {
 	formatDateToDDMMYY,
 	formatRp,
@@ -11,10 +13,14 @@ import {
 	TransactionStatus,
 } from "../../shared/schema";
 import { ModalMode } from "../types";
+import { DatePicker } from "./DatePicker";
+import { SalesCombobox } from "./SalesCombobox";
+import { Select } from "./Select";
 
 interface TransactionFormModalProps {
 	mode: ModalMode;
 	initialData?: TransactionItem | null;
+	existingSales?: string[];
 	onClose: () => void;
 	onSubmit: (payload: any) => Promise<void>;
 }
@@ -22,6 +28,7 @@ interface TransactionFormModalProps {
 export function TransactionFormModal({
 	mode,
 	initialData,
+	existingSales = [],
 	onClose,
 	onSubmit,
 }: TransactionFormModalProps) {
@@ -31,9 +38,7 @@ export function TransactionFormModal({
 	const [tanggal, setTanggal] = useState(
 		initialData?.transactionDate || formatDateToDDMMYY(new Date()),
 	);
-	const [kategori, setKategori] = useState<TransactionCategory>(
-		initialData?.category || "JUAL CASH LUNAS",
-	);
+	const [kategori, setKategori] = useState<TransactionCategory | "">(initialData?.category || "");
 	const [deskripsi, setDeskripsi] = useState(initialData?.carDescription || "");
 	const [plat, setPlat] = useState(initialData?.plateNumber || "");
 	const [pembeli, setPembeli] = useState(initialData?.buyerName || "");
@@ -41,7 +46,7 @@ export function TransactionFormModal({
 	const [hargaJual, setHargaJual] = useState<number | "">(initialData?.sellingPrice ?? "");
 	const [dp, setDp] = useState<number | "">(initialData?.downPayment ?? "");
 	const [sales, setSales] = useState(initialData?.salesPerson || "");
-	const [status, setStatus] = useState<TransactionStatus>(initialData?.status || "LUNAS");
+	const [status, setStatus] = useState<TransactionStatus | "">(initialData?.status || "");
 	const [catatan, setCatatan] = useState(initialData?.notes || "");
 	const [showPlateInfo, setShowPlateInfo] = useState(false);
 
@@ -50,7 +55,7 @@ export function TransactionFormModal({
 
 	const resetForm = () => {
 		setTanggal(formatDateToDDMMYY(new Date()));
-		setKategori("JUAL CASH LUNAS");
+		setKategori("");
 		setDeskripsi("");
 		setPlat("");
 		setPembeli("");
@@ -58,7 +63,7 @@ export function TransactionFormModal({
 		setHargaJual("");
 		setDp("");
 		setSales("");
-		setStatus("LUNAS");
+		setStatus("");
 		setCatatan("");
 		setErrors({});
 		setShowPlateInfo(false);
@@ -73,7 +78,7 @@ export function TransactionFormModal({
 	useEffect(() => {
 		if (mode === "edit" && initialData) {
 			setTanggal(initialData.transactionDate || formatDateToDDMMYY(new Date()));
-			setKategori(initialData.category || "JUAL CASH LUNAS");
+			setKategori(initialData.category || "");
 			setDeskripsi(initialData.carDescription || "");
 			setPlat(initialData.plateNumber || "");
 			setPembeli(initialData.buyerName || "");
@@ -81,7 +86,7 @@ export function TransactionFormModal({
 			setHargaJual(initialData.sellingPrice ?? "");
 			setDp(initialData.downPayment ?? "");
 			setSales(initialData.salesPerson || "");
-			setStatus(initialData.status || "LUNAS");
+			setStatus(initialData.status || "");
 			setCatatan(initialData.notes || "");
 		} else {
 			// Fresh defaults for "create" mode
@@ -158,9 +163,9 @@ export function TransactionFormModal({
 
 	return (
 		<div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-			<div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+			<div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl animate-in fade-in zoom-in-95 duration-200">
 				{/* Modal Header */}
-				<div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+				<div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between rounded-t-2xl">
 					<div>
 						<h3 className="text-base font-bold text-slate-900">
 							{isEditing ? `Edit Transaksi #${initialData?.no}` : "Tambah Transaksi Baru"}
@@ -177,7 +182,7 @@ export function TransactionFormModal({
 						type="button"
 						className="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
 					>
-						✕
+						<IconX className="w-4 h-4" />
 					</button>
 				</div>
 
@@ -204,15 +209,7 @@ export function TransactionFormModal({
 									Hari Ini
 								</button>
 							</div>
-							<input
-								type="text"
-								value={tanggal}
-								onInput={(e) => setTanggal((e.target as HTMLInputElement).value)}
-								placeholder="DD/MM/YY (contoh: 20/10/26)"
-								className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 ${
-									errors.transactionDate ? "border-rose-400" : "border-slate-200"
-								}`}
-							/>
+							<DatePicker value={tanggal} onChange={setTanggal} error={errors.transactionDate} />
 							{errors.transactionDate && (
 								<p className="text-[11px] text-rose-600 mt-1">{errors.transactionDate}</p>
 							)}
@@ -223,19 +220,26 @@ export function TransactionFormModal({
 							<label className="block text-xs font-semibold text-slate-700 mb-1">
 								Kategori Transaksi <span className="text-rose-500">*</span>
 							</label>
-							<select
+							<Select
 								value={kategori}
 								onChange={(e) =>
 									setKategori((e.target as HTMLSelectElement).value as TransactionCategory)
 								}
-								className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+								error={Boolean(errors.category)}
+								className="px-3 py-2"
 							>
+								<option value="" disabled>
+									-- Pilih Kategori Transaksi --
+								</option>
 								{TRANSACTION_CATEGORIES.map((c) => (
 									<option key={c} value={c}>
 										{c}
 									</option>
 								))}
-							</select>
+							</Select>
+							{errors.category && (
+								<p className="text-[11px] text-rose-600 mt-1">{errors.category}</p>
+							)}
 						</div>
 
 						{/* Deskripsi Mobil */}
@@ -271,21 +275,9 @@ export function TransactionFormModal({
 											onMouseEnter={() => setShowPlateInfo(true)}
 											onMouseLeave={() => setShowPlateInfo(false)}
 											className="text-amber-500 hover:text-amber-600 focus:outline-none transition-colors cursor-pointer"
-											title="Penting tentang plat nomor"
+											aria-label="Penting tentang plat nomor"
 										>
-											<svg
-												className="w-3.5 h-3.5"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-											>
-												<path
-													strokeLinecap="round"
-													strokeLinejoin="round"
-													strokeWidth={2}
-													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-												/>
-											</svg>
+											<IconAlertTriangle className="w-3.5 h-3.5" />
 										</button>
 
 										{showPlateInfo && (
@@ -335,19 +327,28 @@ export function TransactionFormModal({
 							<label className="block text-xs font-semibold text-slate-700 mb-1">
 								Status Transaksi <span className="text-rose-500">*</span>
 							</label>
-							<select
+							<Select
 								value={status}
-								onChange={(e) =>
-									setStatus((e.target as HTMLSelectElement).value as TransactionStatus)
-								}
-								className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+								onChange={(e) => {
+									const newStatus = (e.target as HTMLSelectElement).value as TransactionStatus;
+									setStatus(newStatus);
+									if (newStatus === "LUNAS") {
+										setDp("");
+									}
+								}}
+								error={Boolean(errors.status)}
+								className="px-3 py-2"
 							>
+								<option value="" disabled>
+									-- Pilih Status Transaksi --
+								</option>
 								{TRANSACTION_STATUSES.map((s) => (
 									<option key={s} value={s}>
 										{s}
 									</option>
 								))}
-							</select>
+							</Select>
+							{errors.status && <p className="text-[11px] text-rose-600 mt-1">{errors.status}</p>}
 						</div>
 
 						{/* Nama Pembeli */}
@@ -421,16 +422,29 @@ export function TransactionFormModal({
 							<input
 								type="number"
 								value={dp}
+								disabled={status === "LUNAS"}
 								onInput={(e) => {
 									const val = (e.target as HTMLInputElement).value;
 									setDp(val === "" ? "" : Number(val));
 								}}
-								placeholder="Kosongkan jika lunas"
-								className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+								placeholder={
+									status === "LUNAS" ? "Tidak berlaku (Lunas)" : "Kosongkan jika belum ada DP"
+								}
+								className={`w-full px-3 py-2 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 ${
+									status === "LUNAS"
+										? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+										: "bg-slate-50 border-slate-200"
+								}`}
 							/>
-							<p className="text-[11px] text-slate-500 mt-1 font-semibold">
-								Preview: {formatRp(numDp)}
-							</p>
+							{status === "LUNAS" ? (
+								<p className="text-[10px] text-slate-400 mt-1 italic">
+									DP dinonaktifkan karena status transaksi LUNAS
+								</p>
+							) : (
+								<p className="text-[11px] text-slate-500 mt-1 font-semibold">
+									Preview: {formatRp(numDp)}
+								</p>
+							)}
 						</div>
 
 						{/* Sisa (Auto-calculated) */}
@@ -448,14 +462,11 @@ export function TransactionFormModal({
 							<label className="block text-xs font-semibold text-slate-700 mb-1">
 								Sales / Marketing <span className="text-rose-500">*</span>
 							</label>
-							<input
-								type="text"
+							<SalesCombobox
 								value={sales}
-								onInput={(e) => setSales((e.target as HTMLInputElement).value)}
-								placeholder="Nama marketing"
-								className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 ${
-									errors.salesPerson ? "border-rose-400" : "border-slate-200"
-								}`}
+								onChange={setSales}
+								options={existingSales}
+								error={errors.salesPerson}
 							/>
 							{errors.salesPerson && (
 								<p className="text-[11px] text-rose-600 mt-1">{errors.salesPerson}</p>
@@ -472,7 +483,7 @@ export function TransactionFormModal({
 								onInput={(e) => setCatatan((e.target as HTMLTextAreaElement).value)}
 								rows={2}
 								placeholder="Catatan kondisi mobil, syarat serah terima, kelengkapan surat..."
-								className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
+								className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 resize-none"
 							/>
 						</div>
 					</div>

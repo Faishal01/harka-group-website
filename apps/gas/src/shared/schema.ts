@@ -43,7 +43,7 @@ export const TransactionSchema = z.object({
 		.min(1, "Plat mobil wajib diisi")
 		.regex(PLATE_NUMBER_REGEX, "Format plat nomor tidak valid (contoh: B 1234 CD)"),
 	category: z.enum(TRANSACTION_CATEGORIES, {
-		message: "Kategori transaksi tidak valid",
+		message: "Kategori transaksi wajib dipilih",
 	}),
 	buyerName: z.string().min(1, "Nama pembeli wajib diisi"),
 	phoneNumber: z.string().min(1, "Nomor telpon wajib diisi"),
@@ -52,7 +52,7 @@ export const TransactionSchema = z.object({
 	remainingBalance: z.number().nullable().optional(),
 	salesPerson: z.string().min(1, "Sales/Marketing wajib diisi"),
 	status: z.enum(TRANSACTION_STATUSES, {
-		message: "Status transaksi tidak valid",
+		message: "Status transaksi wajib dipilih",
 	}),
 	notes: z.string().nullable().optional(),
 });
@@ -101,6 +101,33 @@ export function formatRp(amount: number | null | undefined): string {
 }
 
 /**
+ * Format number into compact Indonesian Rupiah format (e.g. "Rp 2,46 M", "Rp 425 Jt").
+ */
+export function formatCompactRp(amount: number | null | undefined): string {
+	if (amount === null || amount === undefined || isNaN(amount) || amount === 0) return "Rp 0";
+	const abs = Math.abs(amount);
+	const sign = amount < 0 ? "-" : "";
+
+	if (abs >= 1_000_000_000) {
+		const val = abs / 1_000_000_000;
+		const formatted = new Intl.NumberFormat("id-ID", {
+			maximumFractionDigits: 2,
+		}).format(val);
+		return `${sign}Rp ${formatted} M`;
+	}
+
+	if (abs >= 1_000_000) {
+		const val = abs / 1_000_000;
+		const formatted = new Intl.NumberFormat("id-ID", {
+			maximumFractionDigits: 1,
+		}).format(val);
+		return `${sign}Rp ${formatted} Jt`;
+	}
+
+	return formatRp(amount);
+}
+
+/**
  * Parse any string, currency string ("Rp 150.000.000"), or raw number into a clean number.
  */
 export function parseRp(val: unknown): number {
@@ -136,4 +163,36 @@ export function formatDateToDDMMYY(date: Date = new Date()): string {
 	const month = String(date.getMonth() + 1).padStart(2, "0");
 	const year = String(date.getFullYear()).slice(-2);
 	return `${day}/${month}/${year}`;
+}
+
+/**
+ * Convert DD/MM/YY or DD/MM/YYYY string to YYYY-MM-DD for HTML <input type="date">.
+ */
+export function ddmmyyToIsoDate(dStr: string): string {
+	if (!dStr) return "";
+	const parts = dStr.split("/");
+	if (parts.length === 3) {
+		const day = parts[0].padStart(2, "0");
+		const month = parts[1].padStart(2, "0");
+		let year = parseInt(parts[2], 10);
+		if (isNaN(year)) return "";
+		if (year < 100) year += 2000;
+		return `${year}-${month}-${day}`;
+	}
+	return "";
+}
+
+/**
+ * Convert YYYY-MM-DD (from HTML <input type="date">) to DD/MM/YY string format.
+ */
+export function isoDateToDdmmyy(isoStr: string): string {
+	if (!isoStr) return "";
+	const parts = isoStr.split("-");
+	if (parts.length === 3) {
+		const year = parts[0].slice(-2);
+		const month = parts[1].padStart(2, "0");
+		const day = parts[2].padStart(2, "0");
+		return `${day}/${month}/${year}`;
+	}
+	return "";
 }
