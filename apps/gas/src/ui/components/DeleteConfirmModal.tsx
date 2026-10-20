@@ -8,10 +8,10 @@ interface DeleteConfirmModalProps {
 }
 
 export function DeleteConfirmModal({ item, onClose, onConfirm }: DeleteConfirmModalProps) {
-	if (!item) return null;
-
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	if (!item) return null;
 
 	const handleConfirm = async () => {
 		try {

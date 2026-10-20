@@ -90,7 +90,7 @@ export function getTransactions(): TransactionItem[] {
 		if (!no || isNaN(no)) continue;
 
 		const rawDate = row[1];
-		let transactionDate = "";
+		let transactionDate: string;
 		if (rawDate instanceof Date) {
 			transactionDate = formatDateToDDMMYY(rawDate);
 		} else {
@@ -163,12 +163,15 @@ export function appendTransaction(payload: TransactionCreateInput): {
 		}
 	}
 
+	const hasDp = payload.downPayment != null && payload.downPayment > 0;
 	const remainingBalance =
-		payload.status === "LUNAS"
-			? 0
-			: payload.remainingBalance != null
-				? payload.remainingBalance
-				: payload.sellingPrice - (payload.downPayment ?? 0);
+		payload.remainingBalance != null
+			? payload.remainingBalance
+			: hasDp
+				? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
+				: payload.status === "LUNAS"
+					? 0
+					: payload.sellingPrice;
 
 	const rowValues = [
 		nextNo,
@@ -204,12 +207,15 @@ export function updateTransaction(payload: TransactionUpdateInput): {
 		throw new Error(`Transaksi dengan plat "${payload.plateNumber}" tidak ditemukan`);
 	}
 
+	const hasDp = payload.downPayment != null && payload.downPayment > 0;
 	const remainingBalance =
-		payload.status === "LUNAS"
-			? 0
-			: payload.remainingBalance != null
-				? payload.remainingBalance
-				: payload.sellingPrice - (payload.downPayment ?? 0);
+		payload.remainingBalance != null
+			? payload.remainingBalance
+			: hasDp
+				? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
+				: payload.status === "LUNAS"
+					? 0
+					: payload.sellingPrice;
 
 	const rowValues = [
 		payload.no,

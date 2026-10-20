@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import {
 	formatDateToDDMMYY,
 	formatRp,
@@ -25,8 +25,6 @@ export function TransactionFormModal({
 	onClose,
 	onSubmit,
 }: TransactionFormModalProps) {
-	if (!mode) return null;
-
 	const isEditing = mode === "edit";
 
 	// Form states
@@ -50,10 +48,54 @@ export function TransactionFormModal({
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
+	const resetForm = () => {
+		setTanggal(formatDateToDDMMYY(new Date()));
+		setKategori("JUAL CASH LUNAS");
+		setDeskripsi("");
+		setPlat("");
+		setPembeli("");
+		setTelpon("");
+		setHargaJual("");
+		setDp("");
+		setSales("");
+		setStatus("LUNAS");
+		setCatatan("");
+		setErrors({});
+		setShowPlateInfo(false);
+	};
+
+	const handleClose = () => {
+		resetForm();
+		onClose();
+	};
+
+	// Reset / sync form fields whenever modal mode or initialData changes
+	useEffect(() => {
+		if (mode === "edit" && initialData) {
+			setTanggal(initialData.transactionDate || formatDateToDDMMYY(new Date()));
+			setKategori(initialData.category || "JUAL CASH LUNAS");
+			setDeskripsi(initialData.carDescription || "");
+			setPlat(initialData.plateNumber || "");
+			setPembeli(initialData.buyerName || "");
+			setTelpon(initialData.phoneNumber || "");
+			setHargaJual(initialData.sellingPrice ?? "");
+			setDp(initialData.downPayment ?? "");
+			setSales(initialData.salesPerson || "");
+			setStatus(initialData.status || "LUNAS");
+			setCatatan(initialData.notes || "");
+		} else {
+			// Fresh defaults for "create" mode
+			resetForm();
+		}
+		setErrors({});
+		setShowPlateInfo(false);
+	}, [mode, initialData]);
+
 	// Calculated remaining balance
 	const numHarga = typeof hargaJual === "number" ? hargaJual : 0;
 	const numDp = typeof dp === "number" ? dp : 0;
-	const sisa = status === "LUNAS" ? 0 : Math.max(0, numHarga - numDp);
+	const hasDp = typeof dp === "number" && dp > 0;
+	const sisa = hasDp ? Math.max(0, numHarga - numDp) : status === "LUNAS" ? 0 : numHarga;
 
 	// Plate number validation check
 	const isPlateValid = plat.trim() === "" || PLATE_NUMBER_REGEX.test(plat.trim());
@@ -102,6 +144,7 @@ export function TransactionFormModal({
 			} else {
 				await onSubmit(rawPayload);
 			}
+			resetForm();
 			onClose();
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : String(err);
@@ -110,6 +153,8 @@ export function TransactionFormModal({
 			setIsSubmitting(false);
 		}
 	};
+
+	if (!mode) return null;
 
 	return (
 		<div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -127,7 +172,7 @@ export function TransactionFormModal({
 						</p>
 					</div>
 					<button
-						onClick={onClose}
+						onClick={handleClose}
 						disabled={isSubmitting}
 						type="button"
 						className="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
@@ -435,7 +480,7 @@ export function TransactionFormModal({
 					{/* Modal Footer */}
 					<div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
 						<button
-							onClick={onClose}
+							onClick={handleClose}
 							disabled={isSubmitting}
 							type="button"
 							className="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"

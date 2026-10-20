@@ -125,6 +125,7 @@ export function App() {
 
 	// Modals
 	const [modalMode, setModalMode] = useState<ModalMode>(null);
+	const [createCounter, setCreateCounter] = useState(0);
 	const [activeItem, setActiveItem] = useState<TransactionItem | null>(null);
 	const [deletingItem, setDeletingItem] = useState<TransactionItem | null>(null);
 
@@ -440,6 +441,7 @@ export function App() {
 						transactions={transactions}
 						onAddNew={() => {
 							setActiveItem(null);
+							setCreateCounter((c) => c + 1);
 							setModalMode("create");
 						}}
 						onRefresh={loadTransactions}
@@ -490,22 +492,31 @@ export function App() {
 			)}
 
 			{/* Add / Edit Transaction Modal */}
-			<TransactionFormModal
-				mode={modalMode}
-				initialData={activeItem}
-				onClose={() => {
-					setModalMode(null);
-					setActiveItem(null);
-				}}
-				onSubmit={modalMode === "edit" ? handleUpdate : handleCreate}
-			/>
+			{modalMode && (
+				<TransactionFormModal
+					key={
+						modalMode === "edit"
+							? `edit-${activeItem?.id || activeItem?.no}`
+							: `create-${createCounter}`
+					}
+					mode={modalMode}
+					initialData={activeItem}
+					onClose={() => {
+						setModalMode(null);
+						setActiveItem(null);
+					}}
+					onSubmit={modalMode === "edit" ? handleUpdate : handleCreate}
+				/>
+			)}
 
 			{/* Delete Confirmation Modal */}
-			<DeleteConfirmModal
-				item={deletingItem}
-				onClose={() => setDeletingItem(null)}
-				onConfirm={handleDelete}
-			/>
+			{deletingItem && (
+				<DeleteConfirmModal
+					item={deletingItem}
+					onClose={() => setDeletingItem(null)}
+					onConfirm={handleDelete}
+				/>
+			)}
 
 			{/* Toast Notifications */}
 			<Toast toast={toast} onClose={() => setToast((prev) => ({ ...prev, show: false }))} />
