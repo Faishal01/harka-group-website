@@ -2,6 +2,7 @@
 	"name": "gas",
 	"dependencies": {
 		"@tailwindcss/vite": "^4.3.3",
+		"chart.js": "^4.5.1",
 		"preact": "^11.0.1",
 		"tailwindcss": "^4.3.3",
 		"zod": "^4.6.7"

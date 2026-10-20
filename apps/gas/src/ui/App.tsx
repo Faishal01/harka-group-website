@@ -8,6 +8,7 @@ import {
 } from "../shared/schema";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { FiltersBar } from "./components/FiltersBar";
+import { MonthlySalesChart } from "./components/MonthlySalesChart";
 import { StatsCards } from "./components/StatsCards";
 import { Toast } from "./components/Toast";
 import { TransactionFormModal } from "./components/TransactionFormModal";
@@ -363,6 +364,39 @@ export function App() {
 		return Array.from(set).sort((a, b) => a.localeCompare(b, "id-ID"));
 	}, [transactions]);
 
+	// Transactions filtered for the Monthly Sales Trend Chart:
+	// respects salesPerson, category, status, and searchQuery, but intentionally ignores month filter
+	// so the user can see the 12-month trajectory for that specific slice
+	const chartTransactions = useMemo(() => {
+		return transactions.filter((t) => {
+			if (filters.searchQuery.trim() !== "") {
+				const query = filters.searchQuery.toLowerCase();
+				const match =
+					t.carDescription.toLowerCase().includes(query) ||
+					t.plateNumber.toLowerCase().includes(query) ||
+					t.buyerName.toLowerCase().includes(query) ||
+					t.phoneNumber.toLowerCase().includes(query) ||
+					t.salesPerson.toLowerCase().includes(query) ||
+					String(t.no).includes(query);
+				if (!match) return false;
+			}
+			if (filters.status !== "ALL" && t.status !== filters.status) return false;
+			if (filters.category !== "ALL" && t.category !== filters.category) return false;
+			if (filters.salesPerson !== "ALL" && t.salesPerson !== filters.salesPerson) return false;
+			return true;
+		});
+	}, [transactions, filters.searchQuery, filters.status, filters.category, filters.salesPerson]);
+
+	const chartFilterLabel = useMemo(() => {
+		const activeFilters: string[] = [];
+		if (filters.salesPerson !== "ALL") activeFilters.push(`Sales: ${filters.salesPerson}`);
+		if (filters.category !== "ALL") activeFilters.push(`Kategori: ${filters.category}`);
+		if (filters.status !== "ALL") activeFilters.push(`Status: ${filters.status}`);
+		if (filters.searchQuery.trim() !== "")
+			activeFilters.push(`Cari: "${filters.searchQuery.trim()}"`);
+		return activeFilters.length > 0 ? activeFilters.join(" | ") : null;
+	}, [filters.salesPerson, filters.category, filters.status, filters.searchQuery]);
+
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased">
 			{/* Top Bar */}
@@ -446,6 +480,9 @@ export function App() {
 				<>
 					{/* KPI Summary Cards */}
 					<StatsCards transactions={transactions} />
+
+					{/* Monthly Sales & Volume Trend Graph */}
+					<MonthlySalesChart transactions={chartTransactions} filterLabel={chartFilterLabel} />
 
 					{/* Filters & Actions Bar */}
 					<FiltersBar

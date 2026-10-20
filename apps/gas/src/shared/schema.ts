@@ -196,3 +196,86 @@ export function isoDateToDdmmyy(isoStr: string): string {
 	}
 	return "";
 }
+
+export interface MonthlySalesData {
+	key: string;
+	label: string;
+	fullLabel: string;
+	sales: number;
+	count: number;
+}
+
+const SHORT_MONTH_NAMES = [
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"Mei",
+	"Jun",
+	"Jul",
+	"Agu",
+	"Sep",
+	"Okt",
+	"Nov",
+	"Des",
+];
+
+const FULL_MONTH_NAMES = [
+	"Januari",
+	"Februari",
+	"Maret",
+	"April",
+	"Mei",
+	"Juni",
+	"Juli",
+	"Agustus",
+	"September",
+	"Oktober",
+	"November",
+	"Desember",
+];
+
+/**
+ * Aggregates transactions by month, chronologically sorted up to maxMonths (default 12).
+ */
+export function aggregateMonthlySales(
+	transactions: TransactionItem[],
+	maxMonths: number = 12,
+): MonthlySalesData[] {
+	const map = new Map<string, { year: number; month: number; sales: number; count: number }>();
+
+	for (const t of transactions) {
+		if (!t.transactionDate || !t.transactionDate.includes("/")) continue;
+		const parts = t.transactionDate.split("/");
+		if (parts.length !== 3) continue;
+
+		const monthIdx = parseInt(parts[1], 10) - 1;
+		let year = parseInt(parts[2], 10);
+		if (isNaN(monthIdx) || isNaN(year) || monthIdx < 0 || monthIdx > 11) continue;
+		if (year < 100) year += 2000;
+
+		const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
+		const existing = map.get(key) || { year, month: monthIdx, sales: 0, count: 0 };
+		existing.sales += t.sellingPrice || 0;
+		existing.count += 1;
+		map.set(key, existing);
+	}
+
+	// Sort chronologically
+	const sorted = Array.from(map.entries()).sort((a, b) => {
+		const valA = a[1].year * 100 + a[1].month;
+		const valB = b[1].year * 100 + b[1].month;
+		return valA - valB;
+	});
+
+	// Take the latest maxMonths
+	const sliced = sorted.length > maxMonths ? sorted.slice(-maxMonths) : sorted;
+
+	return sliced.map(([key, data]) => ({
+		key,
+		label: `${SHORT_MONTH_NAMES[data.month]} ${String(data.year).slice(-2)}`,
+		fullLabel: `${FULL_MONTH_NAMES[data.month]} ${data.year}`,
+		sales: data.sales,
+		count: data.count,
+	}));
+}
