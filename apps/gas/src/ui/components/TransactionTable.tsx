@@ -252,9 +252,14 @@ export function TransactionTable({
 			</div>
 			<div className="py-2.5 px-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
 				<span>Menampilkan {transactions.length} transaksi</span>
-				<span className="text-[11px] text-slate-400">
-					Data bersumber langsung dari sheet "TRANSAKSI"
-				</span>
+				<div className="flex items-center gap-2">
+					<span className="text-[11px] text-slate-400">
+						Data bersumber langsung dari sheet "TRANSAKSI"
+					</span>
+					<span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+						{typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "v0.0.0"}
+					</span>
+				</div>
 			</div>
 		</div>
 	);

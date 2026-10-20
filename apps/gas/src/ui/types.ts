@@ -1,5 +1,3 @@
-import { TransactionItem } from "../shared/schema";
-
 export type SortColumn = "no" | "date" | "price";
 export type SortDirection = "asc" | "desc";
 

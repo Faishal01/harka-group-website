@@ -377,6 +377,9 @@ export function App() {
 							<span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
 								Spreadsheet Suite
 							</span>
+							<span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+								{typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "v0.0.0"}
+							</span>
 						</div>
 						<p className="text-xs text-slate-500 mt-0.5">
 							Sistem Manajemen Showroom Terintegrasi Google Sheets
