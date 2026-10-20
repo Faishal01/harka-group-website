@@ -9,7 +9,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const isAuthRoute =
 		context.url.pathname.startsWith("/api/auth") ||
 		context.url.pathname === "/login" ||
-		context.url.pathname === "/unauthorized";
+		context.url.pathname === "/unauthorized" ||
+		context.url.pathname === "/privacy" ||
+		context.url.pathname === "/terms";
 
 	const isPublicAsset =
 		context.url.pathname.startsWith("/_astro/") ||

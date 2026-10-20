@@ -23,6 +23,18 @@ if (Astro.locals.user) {
 			<div class="mt-8 flex justify-center">
 				<LoginButton client:load />
 			</div>
+
+			<div class="mt-8 border-t border-gray-100 pt-6">
+				<div class="flex items-center justify-center space-x-4 text-xs text-gray-500">
+					<a href="/privacy" class="hover:text-red-700 underline transition-colors">
+						Kebijakan Privasi
+					</a>
+					<span>&bull;</span>
+					<a href="/terms" class="hover:text-red-700 underline transition-colors">
+						Syarat & Ketentuan
+					</a>
+				</div>
+			</div>
 		</div>
 	</div>
 </Layout>
