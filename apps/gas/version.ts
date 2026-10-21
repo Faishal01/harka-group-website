@@ -7,20 +7,24 @@ export const MAJOR = 0;
 export const PATCH = 0;
 
 /**
- * Derives the MINOR version dynamically from the latest deployment number + 1.
- * Falls back gracefully to 1 if clasp is unreachable or offline.
+ * Derives the MINOR version dynamically from the latest clasp version number + 1.
+ * Google Apps Script versions increment monotonically without the 20-deployment cap.
+ * Falls back gracefully to cache if clasp is unreachable or offline.
  */
 export function getMinorVersion(): number {
 	const baseDir = import.meta.dirname || process.cwd();
 	const cacheFile = path.resolve(baseDir, ".version-cache.json");
+	let cachedMinor = 1;
+
 	try {
 		if (fs.existsSync(cacheFile)) {
 			const stat = fs.statSync(cacheFile);
-			// Reuse cached deployment count if less than 60 seconds old
-			if (Date.now() - stat.mtimeMs < 60000) {
-				const data = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
-				if (typeof data.minor === "number") {
-					return data.minor;
+			const data = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
+			if (typeof data.minor === "number") {
+				cachedMinor = data.minor;
+				// Reuse cached version count if less than 60 seconds old
+				if (Date.now() - stat.mtimeMs < 60000) {
+					return cachedMinor;
 				}
 			}
 		}
@@ -28,24 +32,29 @@ export function getMinorVersion(): number {
 		// Ignore cache read errors
 	}
 
-	let minor = 1;
+	let minor = cachedMinor;
 	try {
-		const out = execSync("bun run clasp deployments", {
-			timeout: 5000,
+		const out = execSync("bun run clasp versions", {
+			cwd: baseDir,
+			timeout: 30000,
 			encoding: "utf8",
 			stdio: ["ignore", "pipe", "ignore"],
 		});
-		const match = out.match(/Found (\d+) deployments/);
+
+		// Check for "Found X versions"
+		const match = out.match(/Found (\d+) versions/);
 		if (match) {
 			minor = parseInt(match[1], 10) + 1;
 		} else {
-			const nums = [...out.matchAll(/@(\d+)/g)].map((m) => parseInt(m[1], 10));
+			// Alternatively parse the highest numbered version line e.g. "24 - No description"
+			const nums = [...out.matchAll(/^\s*(\d+)\s*-\s*/gm)].map((m) => parseInt(m[1], 10));
 			if (nums.length) {
 				minor = Math.max(...nums) + 1;
 			}
 		}
 	} catch {
-		// Fallback
+		// Fallback to cachedMinor if offline
+		minor = cachedMinor;
 	}
 
 	try {

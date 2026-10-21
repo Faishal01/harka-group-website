@@ -13,6 +13,7 @@ import {
 	TransactionStatus,
 	TransactionUpdateInput,
 } from "../shared/schema";
+import { withDocumentLock } from "./lock";
 
 /**
  * Get or initialize the TRANSAKSI worksheet.
@@ -137,60 +138,62 @@ export function appendTransaction(payload: TransactionCreateInput): {
 	id: string;
 	no: number;
 } {
-	const sheet = getTransactionSheet();
-	const plateHash = hashPlate(payload.plateNumber);
+	return withDocumentLock(() => {
+		const sheet = getTransactionSheet();
+		const plateHash = hashPlate(payload.plateNumber);
 
-	// Enforce 1:1 plate uniqueness
-	const existingRow = findRowByPlateHash(sheet, plateHash);
-	if (existingRow !== -1) {
-		throw new Error(
-			`Mobil dengan plat nomor "${payload.plateNumber.toUpperCase()}" sudah terdaftar dalam transaksi.`,
-		);
-	}
+		// Enforce 1:1 plate uniqueness
+		const existingRow = findRowByPlateHash(sheet, plateHash);
+		if (existingRow !== -1) {
+			throw new Error(
+				`Mobil dengan plat nomor "${payload.plateNumber.toUpperCase()}" sudah terdaftar dalam transaksi.`,
+			);
+		}
 
-	const lastRow = sheet.getLastRow();
+		const lastRow = sheet.getLastRow();
 
-	let nextNo = 1;
-	if (lastRow >= DATA_START_ROW_INDEX) {
-		const noValues = sheet
-			.getRange(DATA_START_ROW_INDEX, 1, lastRow - DATA_START_ROW_INDEX + 1, 1)
-			.getValues();
-		for (let i = 0; i < noValues.length; i++) {
-			const val = Number(noValues[i][0]);
-			if (!isNaN(val) && val >= nextNo) {
-				nextNo = val + 1;
+		let nextNo = 1;
+		if (lastRow >= DATA_START_ROW_INDEX) {
+			const noValues = sheet
+				.getRange(DATA_START_ROW_INDEX, 1, lastRow - DATA_START_ROW_INDEX + 1, 1)
+				.getValues();
+			for (let i = 0; i < noValues.length; i++) {
+				const val = Number(noValues[i][0]);
+				if (!isNaN(val) && val >= nextNo) {
+					nextNo = val + 1;
+				}
 			}
 		}
-	}
 
-	const hasDp = payload.downPayment != null && payload.downPayment > 0;
-	const remainingBalance =
-		payload.remainingBalance != null
-			? payload.remainingBalance
-			: hasDp
-				? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
-				: payload.status === "LUNAS"
-					? 0
-					: payload.sellingPrice;
+		const hasDp = payload.downPayment != null && payload.downPayment > 0;
+		const remainingBalance =
+			payload.remainingBalance != null
+				? payload.remainingBalance
+				: hasDp
+					? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
+					: payload.status === "LUNAS"
+						? 0
+						: payload.sellingPrice;
 
-	const rowValues = [
-		nextNo,
-		payload.transactionDate,
-		payload.carDescription,
-		payload.plateNumber.toUpperCase(),
-		payload.category,
-		payload.buyerName,
-		payload.phoneNumber,
-		formatRp(payload.sellingPrice),
-		payload.downPayment != null ? formatRp(payload.downPayment) : "",
-		formatRp(remainingBalance),
-		payload.salesPerson,
-		payload.status,
-		payload.notes || "",
-	];
+		const rowValues = [
+			nextNo,
+			payload.transactionDate,
+			payload.carDescription,
+			payload.plateNumber.toUpperCase(),
+			payload.category,
+			payload.buyerName,
+			payload.phoneNumber,
+			formatRp(payload.sellingPrice),
+			payload.downPayment != null ? formatRp(payload.downPayment) : "",
+			formatRp(remainingBalance),
+			payload.salesPerson,
+			payload.status,
+			payload.notes || "",
+		];
 
-	sheet.appendRow(rowValues);
-	return { success: true, id: plateHash, no: nextNo };
+		sheet.appendRow(rowValues);
+		return { success: true, id: plateHash, no: nextNo };
+	});
 }
 
 /**
@@ -199,74 +202,80 @@ export function appendTransaction(payload: TransactionCreateInput): {
 export function updateTransaction(payload: TransactionUpdateInput): {
 	success: boolean;
 } {
-	const sheet = getTransactionSheet();
-	const targetHash = payload.id || hashPlate(payload.plateNumber);
-	const targetRow = findRowByPlateHash(sheet, targetHash);
+	return withDocumentLock(() => {
+		const sheet = getTransactionSheet();
+		const targetHash = payload.id || hashPlate(payload.plateNumber);
+		const targetRow = findRowByPlateHash(sheet, targetHash);
 
-	if (targetRow === -1) {
-		throw new Error(`Transaksi dengan plat "${payload.plateNumber}" tidak ditemukan`);
-	}
+		if (targetRow === -1) {
+			throw new Error(`Transaksi dengan plat "${payload.plateNumber}" tidak ditemukan`);
+		}
 
-	const hasDp = payload.downPayment != null && payload.downPayment > 0;
-	const remainingBalance =
-		payload.remainingBalance != null
-			? payload.remainingBalance
-			: hasDp
-				? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
-				: payload.status === "LUNAS"
-					? 0
-					: payload.sellingPrice;
+		const hasDp = payload.downPayment != null && payload.downPayment > 0;
+		const remainingBalance =
+			payload.remainingBalance != null
+				? payload.remainingBalance
+				: hasDp
+					? Math.max(0, payload.sellingPrice - (payload.downPayment ?? 0))
+					: payload.status === "LUNAS"
+						? 0
+						: payload.sellingPrice;
 
-	const rowValues = [
-		payload.no,
-		payload.transactionDate,
-		payload.carDescription,
-		payload.plateNumber.toUpperCase(),
-		payload.category,
-		payload.buyerName,
-		payload.phoneNumber,
-		formatRp(payload.sellingPrice),
-		payload.downPayment != null ? formatRp(payload.downPayment) : "",
-		formatRp(remainingBalance),
-		payload.salesPerson,
-		payload.status,
-		payload.notes || "",
-	];
+		const rowValues = [
+			payload.no,
+			payload.transactionDate,
+			payload.carDescription,
+			payload.plateNumber.toUpperCase(),
+			payload.category,
+			payload.buyerName,
+			payload.phoneNumber,
+			formatRp(payload.sellingPrice),
+			payload.downPayment != null ? formatRp(payload.downPayment) : "",
+			formatRp(remainingBalance),
+			payload.salesPerson,
+			payload.status,
+			payload.notes || "",
+		];
 
-	sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
-	return { success: true };
+		sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+		return { success: true };
+	});
 }
 
 /**
  * Delete a transaction row by its plate hash.
  */
 export function deleteTransaction(id: string): { success: boolean } {
-	const sheet = getTransactionSheet();
-	const targetRow = findRowByPlateHash(sheet, id);
+	return withDocumentLock(() => {
+		const sheet = getTransactionSheet();
+		const targetRow = findRowByPlateHash(sheet, id);
 
-	if (targetRow === -1) {
-		throw new Error("Transaksi tidak ditemukan");
-	}
+		if (targetRow === -1) {
+			throw new Error("Transaksi tidak ditemukan");
+		}
 
-	sheet.deleteRow(targetRow);
-	return { success: true };
+		sheet.deleteRow(targetRow);
+		return { success: true };
+	});
 }
 
 /**
  * Quickly mark a transaction as LUNAS by its plate hash.
  */
 export function quickMarkLunas(id: string): { success: boolean } {
-	const sheet = getTransactionSheet();
-	const targetRow = findRowByPlateHash(sheet, id);
+	return withDocumentLock(() => {
+		const sheet = getTransactionSheet();
+		const targetRow = findRowByPlateHash(sheet, id);
 
-	if (targetRow === -1) {
-		throw new Error("Transaksi tidak ditemukan");
-	}
+		if (targetRow === -1) {
+			throw new Error("Transaksi tidak ditemukan");
+		}
 
-	// Column 10: sisa (1-based index 10)
-	// Column 12: Status Transaksi (1-based index 12)
-	sheet.getRange(targetRow, 10).setValue(formatRp(0));
-	sheet.getRange(targetRow, 12).setValue("LUNAS");
+		// Column 10: sisa (1-based index 10)
+		// Column 12: Status Transaksi (1-based index 12)
+		sheet.getRange(targetRow, 10).setValue(formatRp(0));
+		sheet.getRange(targetRow, 12).setValue("LUNAS");
 
-	return { success: true };
+		return { success: true };
+	});
 }

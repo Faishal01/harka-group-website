@@ -80,7 +80,13 @@ export function TransactionTable({
 							>
 								Tanggal {renderSortIcon("date")}
 							</th>
-							<th className="py-3 px-3 whitespace-nowrap">Mobil & Plat</th>
+							<th
+								onClick={() => onSort("car")}
+								className="py-3 px-3 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+							>
+								Deskripsi Mobil {renderSortIcon("car")}
+							</th>
+							<th className="py-3 px-3 whitespace-nowrap">Plat Nomor</th>
 							<th className="py-3 px-3 whitespace-nowrap">Kategori</th>
 							<th className="py-3 px-3 whitespace-nowrap">Pembeli & Kontak</th>
 							<th
@@ -119,14 +125,18 @@ export function TransactionTable({
 										{item.transactionDate}
 									</td>
 
-									{/* Mobil & Plat */}
+									{/* Deskripsi Mobil */}
 									<td className="py-2.5 px-3">
 										<div className="font-semibold text-slate-900 leading-tight">
 											{item.carDescription}
 										</div>
-										<div className="inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
+									</td>
+
+									{/* Plat Nomor */}
+									<td className="py-2.5 px-3 whitespace-nowrap">
+										<span className="inline-block px-1.5 py-0.5 text-[11px] font-mono font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
 											{item.plateNumber}
-										</div>
+										</span>
 									</td>
 
 									{/* Kategori */}

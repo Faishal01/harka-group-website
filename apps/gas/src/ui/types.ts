@@ -1,4 +1,4 @@
-export type SortColumn = "no" | "date" | "price";
+export type SortColumn = "no" | "date" | "car" | "price";
 export type SortDirection = "asc" | "desc";
 
 export interface FilterState {
@@ -8,6 +8,14 @@ export interface FilterState {
 	category: string;
 	salesPerson: string;
 	sortBy: SortColumn;
+	sortDirection: SortDirection;
+}
+
+export type ExpenditureSortColumn = "no" | "car" | "cost";
+
+export interface ExpenditureFilterState {
+	searchQuery: string;
+	sortBy: ExpenditureSortColumn;
 	sortDirection: SortDirection;
 }
 

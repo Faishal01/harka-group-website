@@ -22,5 +22,6 @@ export function openDialog() {
 	SpreadsheetApp.getUi().showModalDialog(html, `Harka Dashboard ${__APP_VERSION__}`);
 }
 
-// Re-export TRANSAKSI sheet operations
+// Re-export sheet operations
 export * from "./transaction";
+export * from "./expenditure";

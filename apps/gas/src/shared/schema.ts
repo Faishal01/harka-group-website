@@ -279,3 +279,59 @@ export function aggregateMonthlySales(
 		count: data.count,
 	}));
 }
+
+// -------------------------------------------------------------
+// PENGELUARAN PER UNIT (Unit Reconditioning & Repair Expenses)
+// -------------------------------------------------------------
+
+export const EXPENDITURE_SHEET_NAME = "PENGELUARAN PER UNIT";
+export const EXPENDITURE_HEADER_ROW_INDEX = 3;
+export const EXPENDITURE_DATA_START_ROW_INDEX = 4;
+
+export const EXPENDITURE_COLUMNS = [
+	"No",
+	"Deskripsi Mobil",
+	"Plat Mobil",
+	"Deskripsi Perbaikan",
+	"Biaya",
+	"Total",
+] as const;
+
+export const RepairItemSchema = z.object({
+	id: z.string().min(1),
+	description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+	cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
+});
+
+export const VehicleExpenditureSchema = z.object({
+	id: z.string().min(1), // hashPlate(plateNumber)
+	no: z.number().int().positive("No harus berupa angka positif"),
+	carDescription: z.string().min(1, "Deskripsi mobil wajib diisi"),
+	plateNumber: z.string().min(1, "Plat mobil wajib diisi"),
+	repairs: z.array(RepairItemSchema).min(1, "Minimal harus ada 1 item perbaikan"),
+	totalCost: z.number().min(0),
+});
+
+export const VehicleExpenditureCreateSchema = z.object({
+	carDescription: z.string().min(1, "Deskripsi mobil wajib diisi"),
+	plateNumber: z.string().min(1, "Plat mobil wajib diisi"),
+	repairs: z
+		.array(
+			z.object({
+				description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+				cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
+			}),
+		)
+		.min(1, "Minimal harus ada 1 item perbaikan"),
+});
+
+export const AddRepairInputSchema = z.object({
+	vehiclePlateHash: z.string().min(1, "ID kendaraan wajib ada"),
+	description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+	cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
+});
+
+export type RepairItem = z.infer<typeof RepairItemSchema>;
+export type VehicleExpenditureItem = z.infer<typeof VehicleExpenditureSchema>;
+export type VehicleExpenditureCreateInput = z.infer<typeof VehicleExpenditureCreateSchema>;
+export type AddRepairInput = z.infer<typeof AddRepairInputSchema>;

@@ -1,19 +1,37 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import {
+	AddRepairInput,
 	hashPlate,
 	parseDate,
+	RepairItem,
 	TransactionCreateInput,
 	TransactionItem,
 	TransactionUpdateInput,
+	VehicleExpenditureCreateInput,
+	VehicleExpenditureItem,
 } from "../shared/schema";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
+import { AddRepairModal } from "./components/expenditure/AddRepairModal";
+import { DeleteRepairConfirmModal } from "./components/expenditure/DeleteRepairConfirmModal";
+import { DeleteVehicleExpenditureModal } from "./components/expenditure/DeleteVehicleExpenditureModal";
+import { ExpenditureCreateModal } from "./components/expenditure/ExpenditureCreateModal";
+import { ExpenditureFiltersBar } from "./components/expenditure/ExpenditureFiltersBar";
+import { ExpenditureStatsCards } from "./components/expenditure/ExpenditureStatsCards";
+import { ExpenditureTable } from "./components/expenditure/ExpenditureTable";
 import { FiltersBar } from "./components/FiltersBar";
 import { MonthlySalesChart } from "./components/MonthlySalesChart";
 import { StatsCards } from "./components/StatsCards";
 import { Toast } from "./components/Toast";
 import { TransactionFormModal } from "./components/TransactionFormModal";
 import { TransactionTable } from "./components/TransactionTable";
-import { FilterState, ModalMode, SortColumn, ToastState } from "./types";
+import {
+	ExpenditureFilterState,
+	ExpenditureSortColumn,
+	FilterState,
+	ModalMode,
+	SortColumn,
+	ToastState,
+} from "./types";
 
 declare const google: {
 	script: {
@@ -79,6 +97,45 @@ const INITIAL_MOCK_DATA: TransactionItem[] = [
 	},
 ];
 
+const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
+	{
+		id: hashPlate("B 1234 ABC"),
+		no: 1,
+		carDescription: "Toyota Innova Zenix 2.0 V CVT 2023 Putih",
+		plateNumber: "B 1234 ABC",
+		repairs: [
+			{ id: "B 1234 ABC-r1", description: "Ganti Oli Mesin & Filter", cost: 850000 },
+			{ id: "B 1234 ABC-r2", description: "Salon Detailing Interior & Eksterior", cost: 1200000 },
+			{ id: "B 1234 ABC-r3", description: "Spooring & Balancing", cost: 350000 },
+		],
+		totalCost: 2400000,
+	},
+	{
+		id: hashPlate("D 5678 EFG"),
+		no: 2,
+		carDescription: "Honda CR-V 1.5 Turbo Prestige 2021 Hitam",
+		plateNumber: "D 5678 EFG",
+		repairs: [
+			{ id: "D 5678 EFG-r1", description: "Cat Bemper Depan & Poles Baret", cost: 1500000 },
+			{ id: "D 5678 EFG-r2", description: "Ganti Kampas Rem Depan", cost: 650000 },
+		],
+		totalCost: 2150000,
+	},
+	{
+		id: hashPlate("B 9999 XYZ"),
+		no: 3,
+		carDescription: "Mitsubishi Pajero Sport 2.4 Dakar 4x2 AT 2022 Abu-abu",
+		plateNumber: "B 9999 XYZ",
+		repairs: [
+			{ id: "B 9999 XYZ-r1", description: "Service AC & Ganti Filter Kabin", cost: 900000 },
+			{ id: "B 9999 XYZ-r2", description: "Ganti Aki Kering 70Ah", cost: 1450000 },
+			{ id: "B 9999 XYZ-r3", description: "Ganti Kaca Film Samping", cost: 800000 },
+			{ id: "B 9999 XYZ-r4", description: "Cuci Kolong & Anti Karat", cost: 600000 },
+		],
+		totalCost: 3750000,
+	},
+];
+
 export type DashboardTab = "transaksi" | "stok" | "pengeluaran" | "keuntungan";
 
 interface TabItem {
@@ -96,8 +153,7 @@ const DASHBOARD_TABS: TabItem[] = [
 		id: "pengeluaran",
 		label: "Pengeluaran Unit",
 		sheetName: "PENGELUARAN PER UNIT",
-		badge: "Segera",
-		isAvailable: false,
+		isAvailable: true,
 	},
 	{
 		id: "keuntungan",
@@ -129,6 +185,27 @@ export function App() {
 	const [createCounter, setCreateCounter] = useState(0);
 	const [activeItem, setActiveItem] = useState<TransactionItem | null>(null);
 	const [deletingItem, setDeletingItem] = useState<TransactionItem | null>(null);
+
+	// Expenditure state
+	const [expenditures, setExpenditures] = useState<VehicleExpenditureItem[]>([]);
+	const [isExpenditureLoading, setIsExpenditureLoading] = useState(false);
+	const [isCreateExpenditureOpen, setIsCreateExpenditureOpen] = useState(false);
+	const [activeAddRepairVehicle, setActiveAddRepairVehicle] =
+		useState<VehicleExpenditureItem | null>(null);
+	const [deletingRepairTarget, setDeletingRepairTarget] = useState<{
+		vehicle: VehicleExpenditureItem;
+		repair: RepairItem;
+		repairIndex: number;
+	} | null>(null);
+	const [deletingExpenditureVehicle, setDeletingExpenditureVehicle] =
+		useState<VehicleExpenditureItem | null>(null);
+
+	// Expenditure filters & sorting
+	const [expenditureFilters, setExpenditureFilters] = useState<ExpenditureFilterState>({
+		searchQuery: "",
+		sortBy: "no",
+		sortDirection: "asc",
+	});
 
 	// Toast
 	const [toast, setToast] = useState<ToastState>({
@@ -170,8 +247,169 @@ export function App() {
 		}
 	};
 
+	// Fetch expenditures data
+	const loadExpenditures = () => {
+		setIsExpenditureLoading(true);
+		if (isGasEnv) {
+			google.script.run
+				.withSuccessHandler((data: VehicleExpenditureItem[]) => {
+					setExpenditures(data || []);
+					setIsExpenditureLoading(false);
+				})
+				.withFailureHandler((err: Error) => {
+					showToast(`Gagal memuat data pengeluaran: ${err.message}`, "error");
+					setIsExpenditureLoading(false);
+				})
+				.getExpenditures();
+		} else {
+			// Mock in dev
+			setTimeout(() => {
+				setExpenditures(INITIAL_MOCK_EXPENDITURES);
+				setIsExpenditureLoading(false);
+			}, 300);
+		}
+	};
+
 	useEffect(() => {
 		loadTransactions();
+		loadExpenditures();
+	}, []);
+
+	// Create vehicle expenditure
+	const handleCreateExpenditure = async (payload: VehicleExpenditureCreateInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Pengeluaran unit berhasil dicatat ke Google Sheets", "success");
+						loadExpenditures();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.appendVehicleExpenditure(payload);
+			});
+		} else {
+			const plateHash = hashPlate(payload.plateNumber);
+			const nextNo = expenditures.reduce((max, v) => Math.max(max, v.no), 0) + 1;
+			const newItem: VehicleExpenditureItem = {
+				id: plateHash,
+				no: nextNo,
+				carDescription: payload.carDescription,
+				plateNumber: payload.plateNumber,
+				repairs: payload.repairs.map((r, idx) => ({
+					id: `${plateHash}-r${idx + 1}`,
+					description: r.description,
+					cost: r.cost,
+				})),
+				totalCost: payload.repairs.reduce((acc, r) => acc + r.cost, 0),
+			};
+			setExpenditures([...expenditures, newItem]);
+			showToast("Pengeluaran unit berhasil dicatat (Dev Mock)", "success");
+		}
+	};
+
+	// Add single repair to existing vehicle
+	const handleAddRepair = async (payload: AddRepairInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Item perbaikan berhasil ditambahkan", "success");
+						loadExpenditures();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.appendRepairToVehicle(payload);
+			});
+		} else {
+			setExpenditures((prev) =>
+				prev.map((v) => {
+					if (v.id === payload.vehiclePlateHash) {
+						const newRepairs = [
+							...v.repairs,
+							{
+								id: `${v.id}-r${v.repairs.length + 1}`,
+								description: payload.description,
+								cost: payload.cost,
+							},
+						];
+						return {
+							...v,
+							repairs: newRepairs,
+							totalCost: newRepairs.reduce((sum, r) => sum + r.cost, 0),
+						};
+					}
+					return v;
+				}),
+			);
+			showToast("Item perbaikan berhasil ditambahkan (Dev Mock)", "success");
+		}
+	};
+
+	// Delete repair item
+	const handleDeleteRepair = async (targetHash: string, repairIndex: number) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Item perbaikan berhasil dihapus", "success");
+						loadExpenditures();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.deleteRepair(targetHash, repairIndex);
+			});
+		} else {
+			setExpenditures((prev) => {
+				return prev
+					.map((v) => {
+						if (v.id === targetHash) {
+							const newRepairs = v.repairs.filter((_, idx) => idx !== repairIndex);
+							if (newRepairs.length === 0) return null;
+							return {
+								...v,
+								repairs: newRepairs,
+								totalCost: newRepairs.reduce((sum, r) => sum + r.cost, 0),
+							};
+						}
+						return v;
+					})
+					.filter((v): v is VehicleExpenditureItem => v !== null);
+			});
+			showToast("Item perbaikan berhasil dihapus (Dev Mock)", "success");
+		}
+	};
+
+	// Delete entire vehicle expenditure
+	const handleDeleteExpenditureVehicle = async (targetHash: string) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Unit pengeluaran berhasil dihapus dari Google Sheets", "success");
+						loadExpenditures();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.deleteVehicleExpenditure(targetHash);
+			});
+		} else {
+			setExpenditures((prev) => prev.filter((v) => v.id !== targetHash));
+			showToast("Unit pengeluaran berhasil dihapus (Dev Mock)", "success");
+		}
+	};
+
+	useEffect(() => {
+		loadTransactions();
+		loadExpenditures();
 	}, []);
 
 	// Create transaction
@@ -350,9 +588,56 @@ export function App() {
 				if (filters.sortBy === "date") {
 					return (parseDate(a.transactionDate) - parseDate(b.transactionDate)) * dir;
 				}
+				if (filters.sortBy === "car") {
+					return a.carDescription.localeCompare(b.carDescription, "id-ID") * dir;
+				}
 				return 0;
 			});
 	}, [transactions, filters]);
+
+	// Expenditure Sort toggle
+	const handleExpenditureSort = (col: ExpenditureSortColumn) => {
+		if (expenditureFilters.sortBy === col) {
+			setExpenditureFilters({
+				...expenditureFilters,
+				sortDirection: expenditureFilters.sortDirection === "asc" ? "desc" : "asc",
+			});
+		} else {
+			setExpenditureFilters({
+				...expenditureFilters,
+				sortBy: col,
+				sortDirection: col === "no" ? "asc" : "desc",
+			});
+		}
+	};
+
+	// Filtered & Sorted Expenditures
+	const filteredExpenditures = useMemo(() => {
+		const q = expenditureFilters.searchQuery.trim().toLowerCase();
+		const dir = expenditureFilters.sortDirection === "asc" ? 1 : -1;
+
+		return expenditures
+			.filter((item) => {
+				if (!q) return true;
+				const matchCar = item.carDescription.toLowerCase().includes(q);
+				const matchPlate = item.plateNumber.toLowerCase().includes(q);
+				const matchNo = String(item.no).includes(q);
+				const matchRepair = item.repairs.some((r) => r.description.toLowerCase().includes(q));
+				return matchCar || matchPlate || matchNo || matchRepair;
+			})
+			.sort((a, b) => {
+				if (expenditureFilters.sortBy === "no") {
+					return (a.no - b.no) * dir;
+				}
+				if (expenditureFilters.sortBy === "car") {
+					return a.carDescription.localeCompare(b.carDescription, "id-ID") * dir;
+				}
+				if (expenditureFilters.sortBy === "cost") {
+					return (a.totalCost - b.totalCost) * dir;
+				}
+				return 0;
+			});
+	}, [expenditures, expenditureFilters]);
 
 	// Derived unique existing sales list for autocomplete
 	const existingSales = useMemo(() => {
@@ -465,6 +750,11 @@ export function App() {
 									{transactions.length}
 								</span>
 							)}
+							{tab.id === "pengeluaran" && expenditures.length > 0 && (
+								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
+									{expenditures.length}
+								</span>
+							)}
 							{tab.badge && (
 								<span className="px-1.5 py-0.2 rounded-full text-[9px] uppercase tracking-wider bg-slate-200/80 text-slate-600 font-medium">
 									{tab.badge}
@@ -510,6 +800,36 @@ export function App() {
 						onDelete={(item) => setDeletingItem(item)}
 						onQuickLunas={handleQuickLunas}
 						isLoading={isLoading}
+					/>
+				</>
+			) : activeTab === "pengeluaran" ? (
+				<>
+					{/* Expenditure KPI Summary Cards */}
+					<ExpenditureStatsCards expenditures={expenditures} />
+
+					{/* Standalone Expenditure Filters Bar */}
+					<ExpenditureFiltersBar
+						searchQuery={expenditureFilters.searchQuery}
+						onSearchChange={(query) =>
+							setExpenditureFilters((prev) => ({ ...prev, searchQuery: query }))
+						}
+						onAddNew={() => setIsCreateExpenditureOpen(true)}
+						onRefresh={loadExpenditures}
+						isLoading={isExpenditureLoading}
+					/>
+
+					{/* Master-Detail Expandable Table */}
+					<ExpenditureTable
+						expenditures={filteredExpenditures}
+						sortBy={expenditureFilters.sortBy}
+						sortDirection={expenditureFilters.sortDirection}
+						onSort={handleExpenditureSort}
+						isLoading={isExpenditureLoading}
+						onAddRepair={(vehicle) => setActiveAddRepairVehicle(vehicle)}
+						onDeleteRepair={(vehicle, repair, index) =>
+							setDeletingRepairTarget({ vehicle, repair, repairIndex: index })
+						}
+						onDeleteVehicle={(vehicle) => setDeletingExpenditureVehicle(vehicle)}
 					/>
 				</>
 			) : (
@@ -560,12 +880,58 @@ export function App() {
 				/>
 			)}
 
-			{/* Delete Confirmation Modal */}
+			{/* Delete Transaction Confirmation Modal */}
 			{deletingItem && (
 				<DeleteConfirmModal
 					item={deletingItem}
 					onClose={() => setDeletingItem(null)}
 					onConfirm={handleDelete}
+				/>
+			)}
+
+			{/* Expenditure Create Modal */}
+			{isCreateExpenditureOpen && (
+				<ExpenditureCreateModal
+					existingExpenditures={expenditures}
+					transactionCars={transactions}
+					onClose={() => setIsCreateExpenditureOpen(false)}
+					onSubmit={handleCreateExpenditure}
+				/>
+			)}
+
+			{/* Add Single Repair Modal */}
+			{activeAddRepairVehicle && (
+				<AddRepairModal
+					vehicle={activeAddRepairVehicle}
+					onClose={() => setActiveAddRepairVehicle(null)}
+					onSubmit={handleAddRepair}
+				/>
+			)}
+
+			{/* Delete Repair Confirm Modal */}
+			{deletingRepairTarget && (
+				<DeleteRepairConfirmModal
+					vehicle={deletingRepairTarget.vehicle}
+					repair={deletingRepairTarget.repair}
+					repairIndex={deletingRepairTarget.repairIndex}
+					onClose={() => setDeletingRepairTarget(null)}
+					onConfirm={async () => {
+						await handleDeleteRepair(
+							deletingRepairTarget.vehicle.id,
+							deletingRepairTarget.repairIndex,
+						);
+					}}
+				/>
+			)}
+
+			{/* Delete Entire Vehicle Expenditure Modal */}
+			{deletingExpenditureVehicle && (
+				<DeleteVehicleExpenditureModal
+					vehicle={deletingExpenditureVehicle}
+					onClose={() => setDeletingExpenditureVehicle(null)}
+					onConfirm={async () => {
+						await handleDeleteExpenditureVehicle(deletingExpenditureVehicle.id);
+					}}
 				/>
 			)}
 
