@@ -12,10 +12,12 @@ import {
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureItem,
 } from "../../../shared/schema";
+import { RepairCombobox } from "./RepairCombobox";
 
 interface ExpenditureCreateModalProps {
 	existingExpenditures: VehicleExpenditureItem[];
 	transactionCars: TransactionItem[];
+	existingRepairDescriptions?: string[];
 	onClose: () => void;
 	onSubmit: (payload: VehicleExpenditureCreateInput) => Promise<void>;
 }
@@ -28,6 +30,7 @@ interface RepairLineDraft {
 export function ExpenditureCreateModal({
 	existingExpenditures,
 	transactionCars,
+	existingRepairDescriptions,
 	onClose,
 	onSubmit,
 }: ExpenditureCreateModalProps) {
@@ -64,6 +67,21 @@ export function ExpenditureCreateModal({
 			(c) => c.plateNumber.toLowerCase().includes(q) || c.carDescription.toLowerCase().includes(q),
 		);
 	}, [uniqueCars, carQuery]);
+
+	// Repair description suggestions from entire expenditure dataset
+	const repairOptions = useMemo(() => {
+		if (existingRepairDescriptions && existingRepairDescriptions.length > 0) {
+			return existingRepairDescriptions;
+		}
+		const set = new Set<string>();
+		for (const v of existingExpenditures) {
+			for (const r of v.repairs) {
+				const desc = r.description.trim();
+				if (desc) set.add(desc);
+			}
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b, "id", { sensitivity: "base" }));
+	}, [existingRepairDescriptions, existingExpenditures]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -165,7 +183,7 @@ export function ExpenditureCreateModal({
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs overscroll-contain">
 			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
 				{/* Modal Header */}
 				<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
@@ -189,7 +207,10 @@ export function ExpenditureCreateModal({
 					</button>
 				</div>
 
-				<form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+				<form
+					onSubmit={handleSubmit}
+					className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-5"
+				>
 					{error && (
 						<div className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg">
 							{error}
@@ -234,7 +255,7 @@ export function ExpenditureCreateModal({
 							</div>
 
 							{isCarDropdownOpen && filteredCars.length > 0 && (
-								<div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-xs">
+								<div className="absolute z-30 left-0 right-0 mt-1 max-h-48 overflow-y-auto overscroll-contain bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-xs">
 									{filteredCars.map((c) => {
 										const isSelected = plateNumber === c.plateNumber;
 										return (
@@ -314,19 +335,13 @@ export function ExpenditureCreateModal({
 									<span className="text-xs font-mono font-semibold text-slate-400 w-5 text-center">
 										{idx + 1}.
 									</span>
-									<input
-										type="text"
+									<RepairCombobox
+										className="flex-1"
 										required
-										placeholder="Deskripsi perbaikan (misal: Ganti Oli & Filter)"
+										placeholder="Pilih dari daftar atau ketik perbaikan baru..."
 										value={repair.description}
-										onInput={(e) =>
-											handleUpdateRepairLine(
-												idx,
-												"description",
-												(e.target as HTMLInputElement).value,
-											)
-										}
-										className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+										options={repairOptions}
+										onChange={(val) => handleUpdateRepairLine(idx, "description", val)}
 									/>
 									<input
 										type="number"

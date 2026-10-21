@@ -142,7 +142,7 @@ export function SalesCombobox({
 
 			{/* Floating Custom Dropdown Menu */}
 			{isOpen && (
-				<div className="absolute left-0 top-full mt-1.5 z-40 w-full bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto">
+				<div className="absolute left-0 top-full mt-1.5 z-40 w-full bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto overscroll-contain">
 					{filteredOptions.length > 0 ? (
 						<div className="p-1">
 							<div className="px-2.5 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">

@@ -2,14 +2,21 @@ import { useState } from "preact/hooks";
 import IconWrench from "~icons/lucide/wrench";
 import IconX from "~icons/lucide/x";
 import { AddRepairInput, formatRp, VehicleExpenditureItem } from "../../../shared/schema";
+import { RepairCombobox } from "./RepairCombobox";
 
 interface AddRepairModalProps {
 	vehicle: VehicleExpenditureItem;
+	existingRepairDescriptions?: string[];
 	onClose: () => void;
 	onSubmit: (payload: AddRepairInput) => Promise<void>;
 }
 
-export function AddRepairModal({ vehicle, onClose, onSubmit }: AddRepairModalProps) {
+export function AddRepairModal({
+	vehicle,
+	existingRepairDescriptions = [],
+	onClose,
+	onSubmit,
+}: AddRepairModalProps) {
 	const [description, setDescription] = useState("");
 	const [cost, setCost] = useState<number | "">("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +50,7 @@ export function AddRepairModal({ vehicle, onClose, onSubmit }: AddRepairModalPro
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+		<div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
 			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
 				{/* Modal Header */}
 				<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
@@ -78,13 +85,13 @@ export function AddRepairModal({ vehicle, onClose, onSubmit }: AddRepairModalPro
 						<label className="block text-xs font-semibold text-slate-700 mb-1">
 							Deskripsi Perbaikan <span className="text-red-500">*</span>
 						</label>
-						<input
-							type="text"
+						<RepairCombobox
 							required
-							placeholder="Contoh: Ganti Kampas Rem Depan / Salon Detailing"
+							autoFocus
 							value={description}
-							onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-							className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+							onChange={setDescription}
+							options={existingRepairDescriptions}
+							placeholder="Pilih dari daftar atau ketik perbaikan baru..."
 						/>
 					</div>
 

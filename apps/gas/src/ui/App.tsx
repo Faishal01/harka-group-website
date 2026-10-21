@@ -208,6 +208,27 @@ export function App() {
 	const [editingExpenditureVehicle, setEditingExpenditureVehicle] =
 		useState<VehicleExpenditureItem | null>(null);
 
+	// Lock background body scrolling whenever any modal is mounted
+	const isAnyModalOpen = Boolean(
+		modalMode ||
+		deletingItem ||
+		isCreateExpenditureOpen ||
+		activeAddRepairVehicle ||
+		editingExpenditureVehicle ||
+		deletingRepairTarget ||
+		deletingExpenditureVehicle,
+	);
+
+	useEffect(() => {
+		if (isAnyModalOpen) {
+			const originalOverflow = document.body.style.overflow;
+			document.body.style.overflow = "hidden";
+			return () => {
+				document.body.style.overflow = originalOverflow;
+			};
+		}
+	}, [isAnyModalOpen]);
+
 	// Expenditure filters & sorting
 	const [expenditureFilters, setExpenditureFilters] = useState<ExpenditureFilterState>({
 		searchQuery: "",
@@ -681,6 +702,18 @@ export function App() {
 			});
 	}, [expenditures, expenditureFilters]);
 
+	// All unique repair descriptions across expenditures for combobox suggestions
+	const existingRepairDescriptions = useMemo(() => {
+		const set = new Set<string>();
+		for (const v of expenditures) {
+			for (const r of v.repairs) {
+				const desc = r.description.trim();
+				if (desc) set.add(desc);
+			}
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b, "id", { sensitivity: "base" }));
+	}, [expenditures]);
+
 	// Derived unique existing sales list for autocomplete
 	const existingSales = useMemo(() => {
 		const set = new Set<string>();
@@ -953,6 +986,7 @@ export function App() {
 				<ExpenditureCreateModal
 					existingExpenditures={expenditures}
 					transactionCars={transactions}
+					existingRepairDescriptions={existingRepairDescriptions}
 					onClose={() => setIsCreateExpenditureOpen(false)}
 					onSubmit={handleCreateExpenditure}
 				/>
@@ -962,6 +996,7 @@ export function App() {
 			{activeAddRepairVehicle && (
 				<AddRepairModal
 					vehicle={activeAddRepairVehicle}
+					existingRepairDescriptions={existingRepairDescriptions}
 					onClose={() => setActiveAddRepairVehicle(null)}
 					onSubmit={handleAddRepair}
 				/>
