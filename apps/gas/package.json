@@ -12,6 +12,7 @@
 		"@gas-plugin/unplugin": "^0.2.2",
 		"@google/clasp": "^3.4.1",
 		"@iconify-json/lucide": "^1.2.147",
+		"@iconify-json/pinhead": "^1.2.35",
 		"@preact/preset-vite": "^2.10.6",
 		"@svgr/core": "^8.1.0",
 		"@svgr/plugin-jsx": "^8.1.0",

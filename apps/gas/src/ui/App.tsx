@@ -24,6 +24,7 @@ import { StatsCards } from "./components/StatsCards";
 import { Toast } from "./components/Toast";
 import { TransactionFormModal } from "./components/TransactionFormModal";
 import { TransactionTable } from "./components/TransactionTable";
+import IconBread from "~icons/pinhead/loaf-of-pan-bread-with-steam";
 import {
 	ExpenditureFilterState,
 	ExpenditureSortColumn,
@@ -692,7 +693,7 @@ export function App() {
 	}, [filters.salesPerson, filters.category, filters.status, filters.searchQuery]);
 
 	return (
-		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased">
+		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
 			{/* Top Bar */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-3">
 				<div className="flex items-center gap-3">
@@ -869,6 +870,22 @@ export function App() {
 					</button>
 				</div>
 			)}
+
+			{/* Subtle Maker Credit Footer */}
+			<footer className="mt-auto pt-2.5 pb-0 flex items-center justify-center text-[11px] text-slate-400 select-none">
+				<div className="inline-flex items-baseline gap-1.5">
+					<span>kneaded and baked by</span>
+					<a
+						href="https://github.com/mralfarrakhan"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="font-bold text-slate-800 hover:text-black hover:underline transition-colors"
+					>
+						mr.alfarrakhan
+					</a>
+					<IconBread className="w-3.5 h-3.5 text-slate-600 self-baseline inline-block" />
+				</div>
+			</footer>
 
 			{/* Add / Edit Transaction Modal */}
 			{modalMode && (

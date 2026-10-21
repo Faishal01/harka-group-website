@@ -6,10 +6,7 @@
 declare const __APP_VERSION__: string;
 
 export function onOpen() {
-	SpreadsheetApp.getUi()
-		.createMenu("Harka Dashboard")
-		.addItem("Open Dashboard", "openDialog")
-		.addToUi();
+	SpreadsheetApp.getUi().createMenu("Harka Group").addItem("Dashboard", "openDialog").addToUi();
 }
 
 export function openDialog() {
