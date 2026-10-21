@@ -12,6 +12,7 @@ import {
 	VehicleExpenditureItem,
 } from "../shared/schema";
 import { withDocumentLock } from "./lock";
+import { getLunasPlateHashes } from "./transaction";
 
 /**
  * Get or initialize the PENGELUARAN PER UNIT worksheet.
@@ -132,6 +133,9 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 	const totalRows = lastRow - EXPENDITURE_DATA_START_ROW_INDEX + 1;
 	const values = sheet.getRange(EXPENDITURE_DATA_START_ROW_INDEX, 1, totalRows, 6).getValues();
 
+	// Fetch set of LUNAS vehicle plate hashes in TRANSAKSI
+	const lunasSet = getLunasPlateHashes();
+
 	const result: VehicleExpenditureItem[] = [];
 	let currentVehicle: VehicleExpenditureItem | null = null;
 
@@ -154,6 +158,7 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 
 			const parsedNo = Number(cellNo) || result.length + 1;
 			const id = hashPlate(cellPlate);
+			const isLunas = lunasSet.has(id);
 
 			currentVehicle = {
 				id,
@@ -162,6 +167,7 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 				plateNumber: cellPlate,
 				repairs: [],
 				totalCost: 0,
+				isLunas,
 			};
 		}
 
@@ -198,6 +204,7 @@ export function formatVehicleRange(
 	sheet: GoogleAppsScript.Spreadsheet.Sheet,
 	startRow: number,
 	numRows: number,
+	isLunas = false,
 ): void {
 	const blockRange = sheet.getRange(startRow, 1, numRows, 6);
 
@@ -213,6 +220,9 @@ export function formatVehicleRange(
 		SpreadsheetApp.BorderStyle.SOLID,
 	);
 
+	// Background fill: soft yellow (#fff2cc) for entire vehicle block if LUNAS in TRANSAKSI, white (#ffffff) otherwise
+	blockRange.setBackground(isLunas ? "#fff2cc" : "#ffffff");
+
 	// All cells vertically top-aligned
 	blockRange.setVerticalAlignment("top");
 
@@ -223,6 +233,23 @@ export function formatVehicleRange(
 	sheet.getRange(startRow, 4, numRows, 1).setHorizontalAlignment("left");
 	sheet.getRange(startRow, 5, numRows, 1).setHorizontalAlignment("right");
 	sheet.getRange(startRow, 6, numRows, 1).setHorizontalAlignment("right");
+}
+
+/**
+ * Synchronize the background fill color of a vehicle block in PENGELUARAN PER UNIT
+ * to yellow (#fff2cc) if LUNAS, or white (#ffffff) if not.
+ */
+export function syncVehicleLunasBackground(plateHash: string, isLunas: boolean): void {
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getSheetByName(EXPENDITURE_SHEET_NAME);
+	if (!sheet) return;
+
+	const range = findVehicleRowRange(sheet, plateHash);
+	if (!range) return;
+
+	sheet
+		.getRange(range.startRow, 1, range.numRows, 6)
+		.setBackground(isLunas ? "#fff2cc" : "#ffffff");
 }
 
 /**
@@ -281,8 +308,10 @@ export function appendVehicleExpenditure(
 		sheet.getRange(startRow, 5, numRows, 1).setNumberFormat("Rp #,##0");
 		sheet.getRange(startRow, 6, 1, 1).setNumberFormat("Rp #,##0");
 
-		// Apply borders and alignments
-		formatVehicleRange(sheet, startRow, numRows);
+		const isLunas = getLunasPlateHashes().has(targetHash);
+
+		// Apply borders, alignments, and LUNAS yellow background
+		formatVehicleRange(sheet, startRow, numRows, isLunas);
 
 		return {
 			id: targetHash,
@@ -295,6 +324,7 @@ export function appendVehicleExpenditure(
 				cost: r.cost,
 			})),
 			totalCost: parsed.repairs.reduce((sum, r) => sum + r.cost, 0),
+			isLunas,
 		};
 	});
 }
@@ -346,8 +376,10 @@ export function appendRepairToVehicle(payload: AddRepairInput): VehicleExpenditu
 		sheet.getRange(newRow, 5).setNumberFormat("Rp #,##0");
 		sheet.getRange(range.startRow, 6).setNumberFormat("Rp #,##0");
 
+		const isLunas = getLunasPlateHashes().has(parsed.vehiclePlateHash);
+
 		// Apply borders and alignments to expanded vehicle block
-		formatVehicleRange(sheet, range.startRow, newNumRows);
+		formatVehicleRange(sheet, range.startRow, newNumRows, isLunas);
 
 		const updated = getExpenditures().find((v) => v.id === parsed.vehiclePlateHash);
 		if (!updated) {
@@ -408,8 +440,10 @@ export function deleteRepair(vehiclePlateHash: string, repairIndex: number): voi
 		sheet.getRange(range.startRow, 6).setFormula(`=SUM(E${range.startRow}:E${newEndRow})`);
 		sheet.getRange(range.startRow, 6).setNumberFormat("Rp #,##0");
 
+		const isLunas = getLunasPlateHashes().has(vehiclePlateHash);
+
 		// Apply borders and alignments to remaining vehicle block
-		formatVehicleRange(sheet, range.startRow, newNumRows);
+		formatVehicleRange(sheet, range.startRow, newNumRows, isLunas);
 	});
 }
 

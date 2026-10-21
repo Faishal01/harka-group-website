@@ -109,6 +109,7 @@ const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
 			{ id: "B 1234 ABC-r3", description: "Spooring & Balancing", cost: 350000 },
 		],
 		totalCost: 2400000,
+		isLunas: true,
 	},
 	{
 		id: hashPlate("D 5678 EFG"),
@@ -120,6 +121,7 @@ const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
 			{ id: "D 5678 EFG-r2", description: "Ganti Kampas Rem Depan", cost: 650000 },
 		],
 		totalCost: 2150000,
+		isLunas: false,
 	},
 	{
 		id: hashPlate("B 9999 XYZ"),
@@ -133,6 +135,7 @@ const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
 			{ id: "B 9999 XYZ-r4", description: "Cuci Kolong & Anti Karat", cost: 600000 },
 		],
 		totalCost: 3750000,
+		isLunas: false,
 	},
 ];
 
@@ -292,6 +295,9 @@ export function App() {
 			});
 		} else {
 			const plateHash = hashPlate(payload.plateNumber);
+			const isLunas = transactions.some(
+				(t) => (t.id || hashPlate(t.plateNumber)) === plateHash && t.status === "LUNAS",
+			);
 			const nextNo = expenditures.reduce((max, v) => Math.max(max, v.no), 0) + 1;
 			const newItem: VehicleExpenditureItem = {
 				id: plateHash,
@@ -304,6 +310,7 @@ export function App() {
 					cost: r.cost,
 				})),
 				totalCost: payload.repairs.reduce((acc, r) => acc + r.cost, 0),
+				isLunas,
 			};
 			setExpenditures([...expenditures, newItem]);
 			showToast("Pengeluaran unit berhasil dicatat (Dev Mock)", "success");
@@ -501,6 +508,7 @@ export function App() {
 				.withSuccessHandler(() => {
 					showToast(`Transaksi #${item.no} (${item.plateNumber}) berhasil dilunasi`, "success");
 					loadTransactions();
+					loadExpenditures();
 				})
 				.withFailureHandler((err: Error) => {
 					showToast(`Gagal melunasi: ${err.message}`, "error");
@@ -514,6 +522,7 @@ export function App() {
 						: t,
 				),
 			);
+			setExpenditures((prev) => prev.map((v) => (v.id === targetId ? { ...v, isLunas: true } : v)));
 			showToast(`Transaksi #${item.no} berhasil dilunasi (Dev Mock)`, "success");
 		}
 	};

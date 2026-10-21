@@ -310,6 +310,7 @@ export const VehicleExpenditureSchema = z.object({
 	plateNumber: z.string().min(1, "Plat mobil wajib diisi"),
 	repairs: z.array(RepairItemSchema).min(1, "Minimal harus ada 1 item perbaikan"),
 	totalCost: z.number().min(0),
+	isLunas: z.boolean().optional(),
 });
 
 export const VehicleExpenditureCreateSchema = z.object({

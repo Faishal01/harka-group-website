@@ -135,8 +135,14 @@ export function ExpenditureTable({
 										{/* Master Row */}
 										<tr
 											key={item.id}
-											className={`hover:bg-slate-50/80 transition-colors ${
-												isExpanded ? "bg-blue-50/20" : ""
+											className={`transition-colors ${
+												item.isLunas
+													? isExpanded
+														? "bg-amber-100/50"
+														: "bg-amber-50/40 hover:bg-amber-100/40"
+													: isExpanded
+														? "bg-blue-50/20 hover:bg-slate-50/80"
+														: "hover:bg-slate-50/80"
 											}`}
 										>
 											{/* Expand Chevron */}
@@ -167,21 +173,33 @@ export function ExpenditureTable({
 												</div>
 											</td>
 
-											{/* Plate Number */}
+											{/* Plate Number & Lunas Tag */}
 											<td className="py-3 px-4">
-												<div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-mono font-semibold text-[11px]">
-													<span>{item.plateNumber}</span>
-													<button
-														type="button"
-														onClick={() => handleCopyPlate(item.plateNumber)}
-														className="text-slate-400 hover:text-slate-600 cursor-pointer"
-														title="Salin plat"
-													>
-														<IconCopy className="w-3 h-3" />
-													</button>
-													{copiedPlate === item.plateNumber && (
-														<span className="text-[9px] text-blue-600 font-sans font-bold">
-															Disalin!
+												<div className="flex items-center gap-1.5 flex-wrap">
+													<div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-mono font-semibold text-[11px]">
+														<span>{item.plateNumber}</span>
+														<button
+															type="button"
+															onClick={() => handleCopyPlate(item.plateNumber)}
+															className="text-slate-400 hover:text-slate-600 cursor-pointer"
+															title="Salin plat"
+														>
+															<IconCopy className="w-3 h-3" />
+														</button>
+														{copiedPlate === item.plateNumber && (
+															<span className="text-[9px] text-blue-600 font-sans font-bold">
+																Disalin!
+															</span>
+														)}
+													</div>
+
+													{item.isLunas && (
+														<span
+															className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"
+															title="Mobil ini sudah lunas di Transaksi"
+														>
+															<span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+															<span>LUNAS</span>
 														</span>
 													)}
 												</div>

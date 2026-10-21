@@ -13,6 +13,7 @@ import {
 	TransactionStatus,
 	TransactionUpdateInput,
 } from "../shared/schema";
+import { syncVehicleLunasBackground } from "./expenditure";
 import { withDocumentLock } from "./lock";
 
 /**
@@ -67,6 +68,34 @@ export function findRowByPlateHash(
 	}
 
 	return -1;
+}
+
+/**
+ * Returns a Set of normalized plate hashes that have Status Transaksi = "LUNAS" in TRANSAKSI.
+ */
+export function getLunasPlateHashes(): Set<string> {
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getSheetByName(SHEET_NAME);
+	const set = new Set<string>();
+	if (!sheet) return set;
+
+	const lastRow = sheet.getLastRow();
+	if (lastRow < DATA_START_ROW_INDEX) return set;
+
+	const numRows = lastRow - DATA_START_ROW_INDEX + 1;
+	// Read Column D (Plat, index 4) through Column L (Status, index 12)
+	const values = sheet.getRange(DATA_START_ROW_INDEX, 4, numRows, 9).getValues();
+
+	for (let i = 0; i < values.length; i++) {
+		const plate = String(values[i][0] || "").trim();
+		const status = String(values[i][8] || "")
+			.trim()
+			.toUpperCase();
+		if (plate && status === "LUNAS") {
+			set.add(hashPlate(plate));
+		}
+	}
+	return set;
 }
 
 /**
@@ -192,6 +221,12 @@ export function appendTransaction(payload: TransactionCreateInput): {
 		];
 
 		sheet.appendRow(rowValues);
+
+		// Sync yellow background to PENGELUARAN PER UNIT if LUNAS
+		if (payload.status === "LUNAS") {
+			syncVehicleLunasBackground(plateHash, true);
+		}
+
 		return { success: true, id: plateHash, no: nextNo };
 	});
 }
@@ -238,6 +273,10 @@ export function updateTransaction(payload: TransactionUpdateInput): {
 		];
 
 		sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+
+		// Sync yellow background to PENGELUARAN PER UNIT
+		syncVehicleLunasBackground(targetHash, payload.status === "LUNAS");
+
 		return { success: true };
 	});
 }
@@ -255,6 +294,10 @@ export function deleteTransaction(id: string): { success: boolean } {
 		}
 
 		sheet.deleteRow(targetRow);
+
+		// Reset yellow background in PENGELUARAN PER UNIT
+		syncVehicleLunasBackground(id, false);
+
 		return { success: true };
 	});
 }
@@ -275,6 +318,9 @@ export function quickMarkLunas(id: string): { success: boolean } {
 		// Column 12: Status Transaksi (1-based index 12)
 		sheet.getRange(targetRow, 10).setValue(formatRp(0));
 		sheet.getRange(targetRow, 12).setValue("LUNAS");
+
+		// Sync yellow background to PENGELUARAN PER UNIT
+		syncVehicleLunasBackground(id, true);
 
 		return { success: true };
 	});
