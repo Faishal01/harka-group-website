@@ -332,7 +332,13 @@ export const AddRepairInputSchema = z.object({
 	cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
 });
 
+export const UpdateVehicleDescriptionInputSchema = z.object({
+	vehiclePlateHash: z.string().min(1, "ID kendaraan wajib ada"),
+	carDescription: z.string().trim().min(1, "Deskripsi mobil wajib diisi"),
+});
+
 export type RepairItem = z.infer<typeof RepairItemSchema>;
 export type VehicleExpenditureItem = z.infer<typeof VehicleExpenditureSchema>;
 export type VehicleExpenditureCreateInput = z.infer<typeof VehicleExpenditureCreateSchema>;
 export type AddRepairInput = z.infer<typeof AddRepairInputSchema>;
+export type UpdateVehicleDescriptionInput = z.infer<typeof UpdateVehicleDescriptionInputSchema>;

@@ -7,6 +7,7 @@ import {
 	TransactionCreateInput,
 	TransactionItem,
 	TransactionUpdateInput,
+	UpdateVehicleDescriptionInput,
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureItem,
 } from "../shared/schema";
@@ -14,6 +15,7 @@ import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { AddRepairModal } from "./components/expenditure/AddRepairModal";
 import { DeleteRepairConfirmModal } from "./components/expenditure/DeleteRepairConfirmModal";
 import { DeleteVehicleExpenditureModal } from "./components/expenditure/DeleteVehicleExpenditureModal";
+import { EditVehicleModal } from "./components/expenditure/EditVehicleModal";
 import { ExpenditureCreateModal } from "./components/expenditure/ExpenditureCreateModal";
 import { ExpenditureFiltersBar } from "./components/expenditure/ExpenditureFiltersBar";
 import { ExpenditureStatsCards } from "./components/expenditure/ExpenditureStatsCards";
@@ -203,6 +205,8 @@ export function App() {
 	} | null>(null);
 	const [deletingExpenditureVehicle, setDeletingExpenditureVehicle] =
 		useState<VehicleExpenditureItem | null>(null);
+	const [editingExpenditureVehicle, setEditingExpenditureVehicle] =
+		useState<VehicleExpenditureItem | null>(null);
 
 	// Expenditure filters & sorting
 	const [expenditureFilters, setExpenditureFilters] = useState<ExpenditureFilterState>({
@@ -355,6 +359,34 @@ export function App() {
 				}),
 			);
 			showToast("Item perbaikan berhasil ditambahkan (Dev Mock)", "success");
+		}
+	};
+
+	// Update vehicle description
+	const handleUpdateVehicleDescription = async (payload: UpdateVehicleDescriptionInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Deskripsi mobil berhasil diperbarui di Google Sheets", "success");
+						loadExpenditures();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.updateVehicleDescription(payload);
+			});
+		} else {
+			setExpenditures((prev) =>
+				prev.map((v) => {
+					if (v.id === payload.vehiclePlateHash) {
+						return { ...v, carDescription: payload.carDescription };
+					}
+					return v;
+				}),
+			);
+			showToast("Deskripsi mobil berhasil diperbarui (Dev Mock)", "success");
 		}
 	};
 
@@ -836,6 +868,7 @@ export function App() {
 						onSort={handleExpenditureSort}
 						isLoading={isExpenditureLoading}
 						onAddRepair={(vehicle) => setActiveAddRepairVehicle(vehicle)}
+						onEditVehicle={(vehicle) => setEditingExpenditureVehicle(vehicle)}
 						onDeleteRepair={(vehicle, repair, index) =>
 							setDeletingRepairTarget({ vehicle, repair, repairIndex: index })
 						}
@@ -931,6 +964,15 @@ export function App() {
 					vehicle={activeAddRepairVehicle}
 					onClose={() => setActiveAddRepairVehicle(null)}
 					onSubmit={handleAddRepair}
+				/>
+			)}
+
+			{/* Edit Vehicle Description Modal */}
+			{editingExpenditureVehicle && (
+				<EditVehicleModal
+					vehicle={editingExpenditureVehicle}
+					onClose={() => setEditingExpenditureVehicle(null)}
+					onSubmit={handleUpdateVehicleDescription}
 				/>
 			)}
 

@@ -7,6 +7,8 @@ import {
 	EXPENDITURE_SHEET_NAME,
 	hashPlate,
 	parseRp,
+	UpdateVehicleDescriptionInput,
+	UpdateVehicleDescriptionInputSchema,
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureCreateSchema,
 	VehicleExpenditureItem,
@@ -459,5 +461,33 @@ export function deleteVehicleExpenditure(vehiclePlateHash: string): void {
 		}
 
 		sheet.deleteRows(range.startRow, range.numRows);
+	});
+}
+
+/**
+ * Update the description of a vehicle in the PENGELUARAN PER UNIT worksheet.
+ * Updates the vertically merged Deskripsi Mobil cell (Column B) at startRow.
+ */
+export function updateVehicleDescription(
+	payload: UpdateVehicleDescriptionInput,
+): VehicleExpenditureItem {
+	return withDocumentLock(() => {
+		const sheet = getExpenditureSheet();
+		const validated = UpdateVehicleDescriptionInputSchema.parse(payload);
+		const range = findVehicleRowRange(sheet, validated.vehiclePlateHash);
+		if (!range) {
+			throw new Error("Kendaraan tidak ditemukan di spreadsheet.");
+		}
+
+		// Update Deskripsi Mobil (Column B)
+		sheet.getRange(range.startRow, 2).setValue(validated.carDescription);
+
+		const expenditures = getExpenditures();
+		const updated = expenditures.find((item) => item.id === validated.vehiclePlateHash);
+		if (!updated) {
+			throw new Error("Gagal mengambil data kendaraan setelah diperbarui.");
+		}
+
+		return updated;
 	});
 }

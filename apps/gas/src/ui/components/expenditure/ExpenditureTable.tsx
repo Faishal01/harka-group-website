@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import IconChevronDown from "~icons/lucide/chevron-down";
 import IconChevronRight from "~icons/lucide/chevron-right";
-import IconCopy from "~icons/lucide/copy";
+import IconPencil from "~icons/lucide/pencil";
 import IconPlus from "~icons/lucide/plus";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconTrash2 from "~icons/lucide/trash-2";
@@ -16,6 +16,7 @@ interface ExpenditureTableProps {
 	onSort: (col: ExpenditureSortColumn) => void;
 	isLoading: boolean;
 	onAddRepair: (vehicle: VehicleExpenditureItem) => void;
+	onEditVehicle: (vehicle: VehicleExpenditureItem) => void;
 	onDeleteRepair: (
 		vehicle: VehicleExpenditureItem,
 		repair: RepairItem,
@@ -31,11 +32,11 @@ export function ExpenditureTable({
 	onSort,
 	isLoading,
 	onAddRepair,
+	onEditVehicle,
 	onDeleteRepair,
 	onDeleteVehicle,
 }: ExpenditureTableProps) {
 	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-	const [copiedPlate, setCopiedPlate] = useState<string | null>(null);
 
 	// Toggle row expansion
 	const toggleExpand = (id: string) => {
@@ -48,15 +49,6 @@ export function ExpenditureTable({
 			}
 			return next;
 		});
-	};
-
-	// Copy plate number to clipboard
-	const handleCopyPlate = (plate: string) => {
-		if (navigator.clipboard) {
-			navigator.clipboard.writeText(plate);
-			setCopiedPlate(plate);
-			setTimeout(() => setCopiedPlate(null), 1500);
-		}
 	};
 
 	const renderSortIcon = (col: ExpenditureSortColumn) => {
@@ -176,22 +168,9 @@ export function ExpenditureTable({
 											{/* Plate Number & Lunas Tag */}
 											<td className="py-3 px-4">
 												<div className="flex items-center gap-1.5 flex-wrap">
-													<div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-mono font-semibold text-[11px]">
-														<span>{item.plateNumber}</span>
-														<button
-															type="button"
-															onClick={() => handleCopyPlate(item.plateNumber)}
-															className="text-slate-400 hover:text-slate-600 cursor-pointer"
-															title="Salin plat"
-														>
-															<IconCopy className="w-3 h-3" />
-														</button>
-														{copiedPlate === item.plateNumber && (
-															<span className="text-[9px] text-blue-600 font-sans font-bold">
-																Disalin!
-															</span>
-														)}
-													</div>
+													<span className="inline-block px-1.5 py-0.5 text-[11px] font-mono font-bold rounded bg-slate-100 text-slate-700 border border-slate-200">
+														{item.plateNumber}
+													</span>
 
 													{item.isLunas && (
 														<span
@@ -232,6 +211,15 @@ export function ExpenditureTable({
 
 													<button
 														type="button"
+														onClick={() => onEditVehicle(item)}
+														className="p-1 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors cursor-pointer"
+														title="Edit deskripsi mobil"
+													>
+														<IconPencil className="w-3.5 h-3.5" />
+													</button>
+
+													<button
+														type="button"
 														onClick={() => onDeleteVehicle(item)}
 														className="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
 														title="Hapus unit dan semua perbaikannya"
@@ -251,14 +239,6 @@ export function ExpenditureTable({
 															<span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
 																Rincian Perbaikan ({item.plateNumber})
 															</span>
-															<button
-																type="button"
-																onClick={() => onAddRepair(item)}
-																className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
-															>
-																<IconPlus className="w-3 h-3" />
-																<span>Tambah Item Perbaikan</span>
-															</button>
 														</div>
 
 														<div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-2xs">
