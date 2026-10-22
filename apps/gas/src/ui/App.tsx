@@ -1276,8 +1276,8 @@ export function App() {
 					{/* 8 Executive KPI Cards (2x4 Grid) */}
 					<ExecutiveStatsCards stats={dashboardStats} />
 
-					{/* Monthly Comparison Dual-Bar Chart */}
-					<IncomeExpenseChart stocks={stocks} />
+					{/* Adaptive Income & Expense Comparison Chart */}
+					<IncomeExpenseChart stocks={stocks} startDate={profitStartDate} endDate={profitEndDate} />
 
 					{/* Detailed P&L Breakdown Table */}
 					<ProfitBreakdownTable stocks={filteredProfitStocks} />
