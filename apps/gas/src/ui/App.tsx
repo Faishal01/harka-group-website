@@ -3,6 +3,7 @@ import {
 	AddRepairInput,
 	hashPlate,
 	parseDate,
+	parseDateUniversal,
 	RepairItem,
 	StockCarCreateInput,
 	StockCarItem,
@@ -14,6 +15,13 @@ import {
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureItem,
 } from "../shared/schema";
+import { DateRangeFilter } from "./components/dashboard/DateRangeFilter";
+import {
+	DashboardStatsData,
+	ExecutiveStatsCards,
+} from "./components/dashboard/ExecutiveStatsCards";
+import { IncomeExpenseChart } from "./components/dashboard/IncomeExpenseChart";
+import { ProfitBreakdownTable } from "./components/dashboard/ProfitBreakdownTable";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import { AddRepairModal } from "./components/expenditure/AddRepairModal";
 import { DeleteRepairConfirmModal } from "./components/expenditure/DeleteRepairConfirmModal";
@@ -24,7 +32,6 @@ import { ExpenditureFiltersBar } from "./components/expenditure/ExpenditureFilte
 import { ExpenditureStatsCards } from "./components/expenditure/ExpenditureStatsCards";
 import { ExpenditureTable } from "./components/expenditure/ExpenditureTable";
 import { FiltersBar } from "./components/FiltersBar";
-import { MonthlySalesChart } from "./components/MonthlySalesChart";
 import { StatsCards } from "./components/StatsCards";
 import { DeleteStockConfirmModal } from "./components/stock/DeleteStockConfirmModal";
 import { StockFiltersBar } from "./components/stock/StockFiltersBar";
@@ -154,8 +161,60 @@ const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
 
 const INITIAL_STOCK_DATA: StockCarItem[] = [
 	{
-		id: hashPlate("B 1234 ABC"),
+		id: hashPlate("B 1207 FFB"),
 		no: 1,
+		make: "DAIHATSU",
+		carDescription: "Daihatsu Terios TX 1.5 M/T Hitam 2008",
+		plateNumber: "B 1207 FFB",
+		documents: "BPKB,STNK,FAKTUR",
+		status: "Sold",
+		sellingPrice: 98000000,
+		capitalCost: 84000000,
+		serviceExpense: 8190000,
+		soldDate: "01/08/26",
+	},
+	{
+		id: hashPlate("B 1876 EYQ"),
+		no: 2,
+		make: "HONDA",
+		carDescription: "Honda Mobilio E 1.5 M/T Putih 2015",
+		plateNumber: "B 1876 EYQ",
+		documents: "BPKB,STNK,FAKTUR",
+		status: "Sold",
+		sellingPrice: 114700000,
+		capitalCost: 92500000,
+		serviceExpense: 8742000,
+		soldDate: "07/08/26",
+	},
+	{
+		id: hashPlate("B 2004 SXO"),
+		no: 3,
+		make: "TOYOTA",
+		carDescription: "Toyota Calya G 1.2 M/T Silver 2016",
+		plateNumber: "B 2004 SXO",
+		documents: "BPKB,STNK",
+		status: "Sold",
+		sellingPrice: 97500000,
+		capitalCost: 81500000,
+		serviceExpense: 11115000,
+		soldDate: "02/09/26",
+	},
+	{
+		id: hashPlate("B 2107 KFA"),
+		no: 4,
+		make: "DAIHATSU",
+		carDescription: "Daihatsu Sigra X 1.2 M/T Putih 2016",
+		plateNumber: "B 2107 KFA",
+		documents: "BPKB,STNK,FAKTUR",
+		status: "Sold",
+		sellingPrice: 97800000,
+		capitalCost: 82500000,
+		serviceExpense: 6250000,
+		soldDate: "16/09/26",
+	},
+	{
+		id: hashPlate("B 1234 ABC"),
+		no: 5,
 		make: "TOYOTA",
 		carDescription: "Toyota Innova Zenix 2.0 V CVT 2023 Putih",
 		plateNumber: "B 1234 ABC",
@@ -164,11 +223,11 @@ const INITIAL_STOCK_DATA: StockCarItem[] = [
 		sellingPrice: 425000000,
 		capitalCost: 380000000,
 		serviceExpense: 2400000,
-		soldDate: "2026-10-03",
+		soldDate: "03/10/26",
 	},
 	{
 		id: hashPlate("D 5678 EFG"),
-		no: 2,
+		no: 6,
 		make: "HONDA",
 		carDescription: "Honda CR-V 1.5 Turbo Prestige 2021 Hitam",
 		plateNumber: "D 5678 EFG",
@@ -181,7 +240,7 @@ const INITIAL_STOCK_DATA: StockCarItem[] = [
 	},
 	{
 		id: hashPlate("B 9999 XYZ"),
-		no: 3,
+		no: 7,
 		make: "MITSUBISHI",
 		carDescription: "Mitsubishi Pajero Sport 2.4 Dakar 4x2 AT 2022 Abu-abu",
 		plateNumber: "B 9999 XYZ",
@@ -194,7 +253,7 @@ const INITIAL_STOCK_DATA: StockCarItem[] = [
 	},
 	{
 		id: hashPlate("B 8888 QWE"),
-		no: 4,
+		no: 8,
 		make: "TOYOTA",
 		carDescription: "Toyota Fortuner 2.8 VRZ 4x2 AT 2023 Hitam",
 		plateNumber: "B 8888 QWE",
@@ -207,7 +266,7 @@ const INITIAL_STOCK_DATA: StockCarItem[] = [
 	},
 	{
 		id: hashPlate("B 1010 ION"),
-		no: 5,
+		no: 9,
 		make: "HYUNDAI",
 		carDescription: "Hyundai Ioniq 5 Signature Long Range 2023 Silver",
 		plateNumber: "B 1010 ION",
@@ -231,6 +290,12 @@ interface TabItem {
 }
 
 const DASHBOARD_TABS: TabItem[] = [
+	{
+		id: "keuntungan",
+		label: "Dashboard Utama",
+		sheetName: "LAPORAN KEUNTUNGAN",
+		isAvailable: true,
+	},
 	{ id: "transaksi", label: "Transaksi", sheetName: "TRANSAKSI", isAvailable: true },
 	{ id: "stok", label: "Stok Mobil", sheetName: "STOK MOBIL", isAvailable: true },
 	{
@@ -239,17 +304,10 @@ const DASHBOARD_TABS: TabItem[] = [
 		sheetName: "PENGELUARAN PER UNIT",
 		isAvailable: true,
 	},
-	{
-		id: "keuntungan",
-		label: "Laporan Keuntungan",
-		sheetName: "LAPORAN KEUNTUNGAN",
-		badge: "Segera",
-		isAvailable: false,
-	},
 ];
 
 export function App() {
-	const [activeTab, setActiveTab] = useState<DashboardTab>("transaksi");
+	const [activeTab, setActiveTab] = useState<DashboardTab>("keuntungan");
 	const [transactions, setTransactions] = useState<TransactionItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 
@@ -299,6 +357,10 @@ export function App() {
 	const [stockModalMode, setStockModalMode] = useState<ModalMode>(null);
 	const [activeStockCar, setActiveStockCar] = useState<StockCarItem | null>(null);
 	const [deletingStockCar, setDeletingStockCar] = useState<StockCarItem | null>(null);
+
+	// Dashboard Utama / Laporan Keuntungan state
+	const [profitStartDate, setProfitStartDate] = useState("");
+	const [profitEndDate, setProfitEndDate] = useState("");
 
 	// Lock background body scrolling whenever any modal is mounted
 	const isAnyModalOpen = Boolean(
@@ -901,39 +963,6 @@ export function App() {
 		return Array.from(set).sort((a, b) => a.localeCompare(b, "id-ID"));
 	}, [transactions]);
 
-	// Transactions filtered for the Monthly Sales Trend Chart:
-	// respects salesPerson, category, status, and searchQuery, but intentionally ignores month filter
-	// so the user can see the 12-month trajectory for that specific slice
-	const chartTransactions = useMemo(() => {
-		return transactions.filter((t) => {
-			if (filters.searchQuery.trim() !== "") {
-				const query = filters.searchQuery.toLowerCase();
-				const match =
-					t.carDescription.toLowerCase().includes(query) ||
-					t.plateNumber.toLowerCase().includes(query) ||
-					t.buyerName.toLowerCase().includes(query) ||
-					t.phoneNumber.toLowerCase().includes(query) ||
-					t.salesPerson.toLowerCase().includes(query) ||
-					String(t.no).includes(query);
-				if (!match) return false;
-			}
-			if (filters.status !== "ALL" && t.status !== filters.status) return false;
-			if (filters.category !== "ALL" && t.category !== filters.category) return false;
-			if (filters.salesPerson !== "ALL" && t.salesPerson !== filters.salesPerson) return false;
-			return true;
-		});
-	}, [transactions, filters.searchQuery, filters.status, filters.category, filters.salesPerson]);
-
-	const chartFilterLabel = useMemo(() => {
-		const activeFilters: string[] = [];
-		if (filters.salesPerson !== "ALL") activeFilters.push(`Sales: ${filters.salesPerson}`);
-		if (filters.category !== "ALL") activeFilters.push(`Kategori: ${filters.category}`);
-		if (filters.status !== "ALL") activeFilters.push(`Status: ${filters.status}`);
-		if (filters.searchQuery.trim() !== "")
-			activeFilters.push(`Cari: "${filters.searchQuery.trim()}"`);
-		return activeFilters.length > 0 ? activeFilters.join(" | ") : null;
-	}, [filters.salesPerson, filters.category, filters.status, filters.searchQuery]);
-
 	// Create stock car
 	const handleCreateStockCar = async (payload: StockCarCreateInput) => {
 		if (isGasEnv) {
@@ -1084,13 +1113,53 @@ export function App() {
 					return (a.serviceExpense - b.serviceExpense) * dir;
 				}
 				if (stockFilters.sortBy === "soldDate") {
-					const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
-					const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
-					return (dateA - dateB) * dir;
+					const dateA = a.soldDate ? (parseDateUniversal(a.soldDate)?.iso ?? "") : "";
+					const dateB = b.soldDate ? (parseDateUniversal(b.soldDate)?.iso ?? "") : "";
+					return dateA.localeCompare(dateB) * dir;
 				}
 				return 0;
 			});
 	}, [stocks, stockFilters]);
+
+	// Filtered Stocks for Dashboard Utama (Laporan Keuntungan)
+	const filteredProfitStocks = useMemo(() => {
+		return stocks.filter((car) => {
+			if (car.status !== "Sold") return false;
+			if (!profitStartDate && !profitEndDate) return true;
+			if (!car.soldDate) return false;
+			const parsed = parseDateUniversal(car.soldDate);
+			if (!parsed) return false;
+			if (profitStartDate && parsed.iso < profitStartDate) return false;
+			if (profitEndDate && parsed.iso > profitEndDate) return false;
+			return true;
+		});
+	}, [stocks, profitStartDate, profitEndDate]);
+
+	// 8 Executive KPI Card Statistics
+	const dashboardStats = useMemo<DashboardStatsData>(() => {
+		const totalRevenue = filteredProfitStocks.reduce((sum, c) => sum + (c.sellingPrice || 0), 0);
+		const totalCapitalCost = filteredProfitStocks.reduce((sum, c) => sum + (c.capitalCost || 0), 0);
+		const totalServiceExpense = filteredProfitStocks.reduce(
+			(sum, c) => sum + (c.serviceExpense || 0),
+			0,
+		);
+		const grossProfit = totalRevenue - totalCapitalCost;
+		const netProfit = totalRevenue - (totalCapitalCost + totalServiceExpense);
+		const soldCount = filteredProfitStocks.length;
+		const readyCount = stocks.filter((s) => s.status === "Ready").length;
+		const acquiredCount = stocks.length;
+
+		return {
+			grossProfit,
+			netProfit,
+			totalRevenue,
+			totalCapitalCost,
+			totalServiceExpense,
+			acquiredCount,
+			readyCount,
+			soldCount,
+		};
+	}, [filteredProfitStocks, stocks]);
 
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
@@ -1170,6 +1239,11 @@ export function App() {
 									{expenditures.length}
 								</span>
 							)}
+							{tab.id === "keuntungan" && stocks.filter((s) => s.status === "Sold").length > 0 && (
+								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-800 font-bold">
+									{stocks.filter((s) => s.status === "Sold").length}
+								</span>
+							)}
 							{tab.badge && (
 								<span className="px-1.5 py-0.2 rounded-full text-[9px] uppercase tracking-wider bg-slate-200/80 text-slate-600 font-medium">
 									{tab.badge}
@@ -1181,13 +1255,37 @@ export function App() {
 			</div>
 
 			{/* Tab Content */}
-			{activeTab === "transaksi" ? (
+			{activeTab === "keuntungan" ? (
+				<>
+					{/* Date Range Filter with Quick Presets */}
+					<DateRangeFilter
+						startDate={profitStartDate}
+						endDate={profitEndDate}
+						onChange={(start, end) => {
+							setProfitStartDate(start);
+							setProfitEndDate(end);
+						}}
+						onRefresh={() => {
+							loadStocks();
+							loadTransactions();
+							loadExpenditures();
+						}}
+						isLoading={isLoadingStocks}
+					/>
+
+					{/* 8 Executive KPI Cards (2x4 Grid) */}
+					<ExecutiveStatsCards stats={dashboardStats} />
+
+					{/* Monthly Comparison Dual-Bar Chart */}
+					<IncomeExpenseChart stocks={stocks} />
+
+					{/* Detailed P&L Breakdown Table */}
+					<ProfitBreakdownTable stocks={filteredProfitStocks} />
+				</>
+			) : activeTab === "transaksi" ? (
 				<>
 					{/* KPI Summary Cards */}
 					<StatsCards transactions={transactions} />
-
-					{/* Monthly Sales & Volume Trend Graph */}
-					<MonthlySalesChart transactions={chartTransactions} filterLabel={chartFilterLabel} />
 
 					{/* Filters & Actions Bar */}
 					<FiltersBar

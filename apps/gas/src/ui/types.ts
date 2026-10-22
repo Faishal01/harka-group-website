@@ -20,7 +20,7 @@ export interface ExpenditureFilterState {
 }
 
 export type StockSortColumn =
-	"no" | "make" | "car" | "status" | "sellingPrice" | "capitalCost" | "serviceExpense" | "soldDate";
+	"no" | "make" | "car" | "sellingPrice" | "capitalCost" | "serviceExpense" | "soldDate";
 
 export interface StockFilterState {
 	searchQuery: string;

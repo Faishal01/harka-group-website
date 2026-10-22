@@ -94,12 +94,7 @@ export function StockTable({
 							<th className="py-3 px-3 min-w-[220px]">Kelengkapan</th>
 
 							{/* 6. Kategori Transaksi (Status) */}
-							<th
-								onClick={() => onSort("status")}
-								className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
-							>
-								Status {renderSortIcon("status")}
-							</th>
+							<th className="py-3 px-3 text-center whitespace-nowrap">Status</th>
 
 							{/* 7. Harga Jual */}
 							<th

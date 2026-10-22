@@ -7,6 +7,40 @@ export const MAJOR = 0;
 export const PATCH = 0;
 
 /**
+ * Retrieves the current git branch name.
+ * Sanitizes slashes and special characters for semver tag compatibility.
+ */
+export function getGitBranch(): string {
+	try {
+		const branch = execSync("git branch --show-current", {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+		if (branch) return branch;
+	} catch {
+		// Ignore git errors
+	}
+
+	try {
+		const ref = execSync("git rev-parse --abbrev-ref HEAD", {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+		if (ref && ref !== "HEAD") return ref;
+	} catch {
+		// Ignore git errors
+	}
+
+	return (
+		process.env.GIT_BRANCH ||
+		process.env.BRANCH_NAME ||
+		process.env.CF_PAGES_BRANCH ||
+		process.env.GITHUB_REF_NAME ||
+		""
+	);
+}
+
+/**
  * Derives the MINOR version dynamically from the latest clasp version number + 1.
  * Google Apps Script versions increment monotonically without the 20-deployment cap.
  * Falls back gracefully to cache if clasp is unreachable or offline.
@@ -67,4 +101,7 @@ export function getMinorVersion(): number {
 }
 
 export const MINOR = getMinorVersion();
-export const APP_VERSION = `v${MAJOR}.${MINOR}.${PATCH}`;
+export const BRANCH = getGitBranch();
+const branchTag = BRANCH ? `-${BRANCH.replace(/[^a-zA-Z0-9.-]/g, "-")}` : "";
+
+export const APP_VERSION = `v${MAJOR}.${MINOR}.${PATCH}${branchTag}`;

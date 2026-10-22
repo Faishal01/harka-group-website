@@ -170,16 +170,64 @@ export function formatDateToDDMMYY(date: Date = new Date()): string {
  */
 export function ddmmyyToIsoDate(dStr: string): string {
 	if (!dStr) return "";
-	const parts = dStr.split("/");
-	if (parts.length === 3) {
-		const day = parts[0].padStart(2, "0");
-		const month = parts[1].padStart(2, "0");
-		let year = parseInt(parts[2], 10);
-		if (isNaN(year)) return "";
-		if (year < 100) year += 2000;
-		return `${year}-${month}-${day}`;
+	const universal = parseDateUniversal(dStr);
+	return universal ? universal.iso : "";
+}
+
+/**
+ * Universal date parser that handles:
+ * - YYYY-MM-DD (ISO)
+ * - D/M/YY or DD/MM/YYYY (Spreadsheet format)
+ * - Date string / timestamp
+ * Returns normalized { year, month: 0..11, day, iso: YYYY-MM-DD } or null.
+ */
+export function parseDateUniversal(dStr?: string): {
+	year: number;
+	month: number;
+	day: number;
+	iso: string;
+} | null {
+	if (!dStr) return null;
+	const trimmed = String(dStr).trim();
+	if (!trimmed) return null;
+
+	// Check YYYY-MM-DD
+	if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+		const parts = trimmed.split(/[-T ]/);
+		const year = parseInt(parts[0], 10);
+		const month = parseInt(parts[1], 10);
+		const day = parseInt(parts[2], 10);
+		if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+			const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+			return { year, month: month - 1, day, iso };
+		}
 	}
-	return "";
+
+	// Check D/M/YY or DD/MM/YYYY
+	if (trimmed.includes("/")) {
+		const parts = trimmed.split("/");
+		if (parts.length === 3) {
+			const day = parseInt(parts[0], 10);
+			const month = parseInt(parts[1], 10);
+			let year = parseInt(parts[2], 10);
+			if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+			if (year < 100) year += 2000;
+			const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+			return { year, month: month - 1, day, iso };
+		}
+	}
+
+	// Try standard Date parse
+	const parsed = new Date(trimmed);
+	if (!isNaN(parsed.getTime())) {
+		const year = parsed.getFullYear();
+		const month = parsed.getMonth();
+		const day = parsed.getDate();
+		const iso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+		return { year, month, day, iso };
+	}
+
+	return null;
 }
 
 /**
@@ -195,89 +243,6 @@ export function isoDateToDdmmyy(isoStr: string): string {
 		return `${day}/${month}/${year}`;
 	}
 	return "";
-}
-
-export interface MonthlySalesData {
-	key: string;
-	label: string;
-	fullLabel: string;
-	sales: number;
-	count: number;
-}
-
-const SHORT_MONTH_NAMES = [
-	"Jan",
-	"Feb",
-	"Mar",
-	"Apr",
-	"Mei",
-	"Jun",
-	"Jul",
-	"Agu",
-	"Sep",
-	"Okt",
-	"Nov",
-	"Des",
-];
-
-const FULL_MONTH_NAMES = [
-	"Januari",
-	"Februari",
-	"Maret",
-	"April",
-	"Mei",
-	"Juni",
-	"Juli",
-	"Agustus",
-	"September",
-	"Oktober",
-	"November",
-	"Desember",
-];
-
-/**
- * Aggregates transactions by month, chronologically sorted up to maxMonths (default 12).
- */
-export function aggregateMonthlySales(
-	transactions: TransactionItem[],
-	maxMonths: number = 12,
-): MonthlySalesData[] {
-	const map = new Map<string, { year: number; month: number; sales: number; count: number }>();
-
-	for (const t of transactions) {
-		if (!t.transactionDate || !t.transactionDate.includes("/")) continue;
-		const parts = t.transactionDate.split("/");
-		if (parts.length !== 3) continue;
-
-		const monthIdx = parseInt(parts[1], 10) - 1;
-		let year = parseInt(parts[2], 10);
-		if (isNaN(monthIdx) || isNaN(year) || monthIdx < 0 || monthIdx > 11) continue;
-		if (year < 100) year += 2000;
-
-		const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
-		const existing = map.get(key) || { year, month: monthIdx, sales: 0, count: 0 };
-		existing.sales += t.sellingPrice || 0;
-		existing.count += 1;
-		map.set(key, existing);
-	}
-
-	// Sort chronologically
-	const sorted = Array.from(map.entries()).sort((a, b) => {
-		const valA = a[1].year * 100 + a[1].month;
-		const valB = b[1].year * 100 + b[1].month;
-		return valA - valB;
-	});
-
-	// Take the latest maxMonths
-	const sliced = sorted.length > maxMonths ? sorted.slice(-maxMonths) : sorted;
-
-	return sliced.map(([key, data]) => ({
-		key,
-		label: `${SHORT_MONTH_NAMES[data.month]} ${String(data.year).slice(-2)}`,
-		fullLabel: `${FULL_MONTH_NAMES[data.month]} ${data.year}`,
-		sales: data.sales,
-		count: data.count,
-	}));
 }
 
 // -------------------------------------------------------------
