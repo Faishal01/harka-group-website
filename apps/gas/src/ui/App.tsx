@@ -301,7 +301,7 @@ const DASHBOARD_TABS: TabItem[] = [
 	{ id: "stok", label: "Stok Mobil", sheetName: "STOK MOBIL", isAvailable: true },
 	{
 		id: "pengeluaran",
-		label: "Pengeluaran Unit",
+		label: "Pengeluaran Per Unit",
 		sheetName: "PENGELUARAN PER UNIT",
 		isAvailable: true,
 	},

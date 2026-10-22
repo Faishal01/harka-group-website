@@ -221,10 +221,10 @@ export function StockTable({
 													const rawTarget = totalCost * 1.12;
 													return (
 														<span
-															className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs select-none"
+															className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-blue-50 text-blue-900 border border-blue-200/90 shadow-2xs select-none"
 															title={`Rekomendasi 112% Total Modal (${formatRp(totalCost)}): ${formatRp(rawTarget)}`}
 														>
-															<span className="text-[9px] font-sans font-bold uppercase tracking-wider text-amber-700 bg-amber-100/80 px-1 py-0.2 rounded">
+															<span className="text-[9px] font-sans font-bold uppercase tracking-wider text-blue-700 bg-blue-100/80 px-1 py-0.2 rounded">
 																Target
 															</span>
 															<span>{formatRp(targetPrice)}</span>

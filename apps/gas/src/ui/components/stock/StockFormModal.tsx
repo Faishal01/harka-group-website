@@ -417,7 +417,7 @@ export function StockFormModal({
 							<div className="flex flex-wrap items-center justify-between gap-1 text-[11px] mt-1.5 font-mono">
 								<span className="text-slate-500 font-medium">Modal: {formatRp(capitalCost)}</span>
 								<span
-									className="text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80"
+									className="text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/80"
 									title="Rekomendasi harga jual minimum 112% dari total modal"
 								>
 									🎯 Target (112%):{" "}
@@ -457,7 +457,7 @@ export function StockFormModal({
 									{initialData.capitalCost > 0 && (
 										<div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60 font-mono">
 											<span className="text-slate-600">Target Jual (112%):</span>
-											<span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+											<span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/80">
 												{formatRp(
 													calculateTargetSellingPrice(
 														initialData.capitalCost,
