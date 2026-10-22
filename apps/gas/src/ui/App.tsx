@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import {
 	AddRepairInput,
+	calculateTargetSellingPrice,
 	hashPlate,
 	parseDate,
 	parseDateUniversal,
@@ -1104,7 +1105,15 @@ export function App() {
 					return a.carDescription.localeCompare(b.carDescription, "id-ID") * dir;
 				}
 				if (stockFilters.sortBy === "sellingPrice") {
-					return (a.sellingPrice - b.sellingPrice) * dir;
+					const priceA =
+						a.status === "Ready"
+							? calculateTargetSellingPrice(a.capitalCost, a.serviceExpense)
+							: a.sellingPrice || 0;
+					const priceB =
+						b.status === "Ready"
+							? calculateTargetSellingPrice(b.capitalCost, b.serviceExpense)
+							: b.sellingPrice || 0;
+					return (priceA - priceB) * dir;
 				}
 				if (stockFilters.sortBy === "capitalCost") {
 					return (a.capitalCost - b.capitalCost) * dir;

@@ -9,6 +9,8 @@ interface DatePickerProps {
 	onChange: (value: string) => void;
 	error?: string;
 	placeholder?: string;
+	align?: "left" | "right";
+	size?: "sm" | "md";
 }
 
 const MONTH_NAMES = [
@@ -42,7 +44,14 @@ function parseDDMMYY(dStr: string): Date {
 	return new Date();
 }
 
-export function DatePicker({ value, onChange, error, placeholder }: DatePickerProps) {
+export function DatePicker({
+	value,
+	onChange,
+	error,
+	placeholder,
+	align = "left",
+	size = "md",
+}: DatePickerProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const initialDate = parseDDMMYY(value);
@@ -138,13 +147,16 @@ export function DatePicker({ value, onChange, error, placeholder }: DatePickerPr
 		}
 	}
 
+	const paddingClass = size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-xs";
+	const alignClass = align === "right" ? "right-0" : "left-0";
+
 	return (
 		<div ref={containerRef} className="relative">
 			{/* Trigger Button styled like input */}
 			<button
 				type="button"
 				onClick={() => setIsOpen(!isOpen)}
-				className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 flex items-center justify-between cursor-pointer transition-colors hover:bg-slate-100/60 ${
+				className={`w-full ${paddingClass} bg-slate-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 flex items-center justify-between cursor-pointer transition-colors hover:bg-slate-100/60 ${
 					error
 						? "border-rose-400"
 						: isOpen
@@ -152,17 +164,23 @@ export function DatePicker({ value, onChange, error, placeholder }: DatePickerPr
 							: "border-slate-200"
 				}`}
 			>
-				<span className="font-mono font-medium tracking-wide">
-					{value || placeholder || "Pilih Tanggal (DD/MM/YY)"}
+				<span
+					className={`font-mono tracking-wide ${
+						value ? "font-semibold text-slate-800" : "font-normal text-slate-400"
+					}`}
+				>
+					{value || placeholder || "Pilih Tanggal"}
 				</span>
 				<div className="flex items-center gap-1.5 text-blue-600">
-					<IconCalendar className="w-4 h-4" />
+					<IconCalendar className="w-3.5 h-3.5" />
 				</div>
 			</button>
 
 			{/* Floating Custom Calendar Popover */}
 			{isOpen && (
-				<div className="absolute left-0 top-full mt-1.5 z-40 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-3.5 animate-in fade-in zoom-in-95 duration-150">
+				<div
+					className={`absolute ${alignClass} top-full mt-1.5 z-40 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-3.5 animate-in fade-in zoom-in-95 duration-150`}
+				>
 					{/* Header: Month / Year + Arrows */}
 					<div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
 						<button
@@ -242,13 +260,30 @@ export function DatePicker({ value, onChange, error, placeholder }: DatePickerPr
 
 					{/* Footer Quick Action */}
 					<div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-100">
-						<button
-							type="button"
-							onClick={handleSetToday}
-							className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-						>
-							Pilih Hari Ini
-						</button>
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={handleSetToday}
+								className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+							>
+								Hari Ini
+							</button>
+							{value && (
+								<>
+									<span className="text-slate-300">•</span>
+									<button
+										type="button"
+										onClick={() => {
+											onChange("");
+											setIsOpen(false);
+										}}
+										className="text-[11px] font-medium text-rose-500 hover:text-rose-700 hover:underline cursor-pointer"
+									>
+										Hapus
+									</button>
+								</>
+							)}
+						</div>
 						<button
 							type="button"
 							onClick={() => setIsOpen(false)}

@@ -1,7 +1,7 @@
 import IconCar from "~icons/lucide/car";
 import IconPencil from "~icons/lucide/pencil";
 import IconTrash2 from "~icons/lucide/trash-2";
-import { formatRp, StockCarItem } from "../../../shared/schema";
+import { calculateTargetSellingPrice, formatRp, StockCarItem } from "../../../shared/schema";
 import { SortDirection, StockSortColumn } from "../../types";
 
 interface StockTableProps {
@@ -209,8 +209,37 @@ export function StockTable({
 									</td>
 
 									{/* 7. Harga Jual */}
-									<td className="py-2.5 px-3 text-right font-mono font-semibold text-slate-900 whitespace-nowrap">
-										{car.sellingPrice > 0 ? formatRp(car.sellingPrice) : "-"}
+									<td className="py-2.5 px-3 text-right whitespace-nowrap">
+										{car.status === "Ready" ? (
+											(() => {
+												const targetPrice = calculateTargetSellingPrice(
+													car.capitalCost,
+													car.serviceExpense,
+												);
+												const totalCost = (car.capitalCost || 0) + (car.serviceExpense || 0);
+												if (targetPrice > 0) {
+													const rawTarget = totalCost * 1.12;
+													return (
+														<span
+															className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200/90 shadow-2xs select-none"
+															title={`Rekomendasi 112% Total Modal (${formatRp(totalCost)}): ${formatRp(rawTarget)}`}
+														>
+															<span className="text-[9px] font-sans font-bold uppercase tracking-wider text-amber-700 bg-amber-100/80 px-1 py-0.2 rounded">
+																Target
+															</span>
+															<span>{formatRp(targetPrice)}</span>
+														</span>
+													);
+												}
+												return <span className="text-slate-400 font-mono text-[11px]">-</span>;
+											})()
+										) : car.sellingPrice > 0 ? (
+											<span className="font-mono font-semibold text-slate-900">
+												{formatRp(car.sellingPrice)}
+											</span>
+										) : (
+											<span className="text-slate-400 font-mono text-[11px]">-</span>
+										)}
 									</td>
 
 									{/* 8. Modal */}

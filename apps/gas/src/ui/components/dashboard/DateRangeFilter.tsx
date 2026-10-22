@@ -1,5 +1,6 @@
-import IconCalendar from "~icons/lucide/calendar";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
+import { ddmmyyToIsoDate, isoDateToDdmmyy } from "../../../shared/schema";
+import { DatePicker } from "../DatePicker";
 
 interface DateRangeFilterProps {
 	startDate: string; // YYYY-MM-DD
@@ -99,17 +100,16 @@ export function DateRangeFilter({
 
 			{/* Date Interval & Presets Row */}
 			<div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3">
-				{/* Custom Date Inputs */}
+				{/* Custom Date Inputs via Custom DatePicker */}
 				<div className="flex flex-wrap items-center gap-2.5">
 					<div className="flex items-center gap-1.5">
 						<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Dari:</label>
-						<div className="relative">
-							<IconCalendar className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-							<input
-								type="date"
-								value={startDate}
-								onChange={(e) => onChange((e.target as HTMLInputElement).value, endDate)}
-								className="pl-8 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 cursor-pointer"
+						<div className="w-36 sm:w-40">
+							<DatePicker
+								value={isoDateToDdmmyy(startDate)}
+								onChange={(dStr) => onChange(ddmmyyToIsoDate(dStr), endDate)}
+								placeholder="Dari Tanggal"
+								size="sm"
 							/>
 						</div>
 					</div>
@@ -118,13 +118,13 @@ export function DateRangeFilter({
 						<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">
 							Sampai:
 						</label>
-						<div className="relative">
-							<IconCalendar className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-							<input
-								type="date"
-								value={endDate}
-								onChange={(e) => onChange(startDate, (e.target as HTMLInputElement).value)}
-								className="pl-8 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 cursor-pointer"
+						<div className="w-36 sm:w-40">
+							<DatePicker
+								value={isoDateToDdmmyy(endDate)}
+								onChange={(dStr) => onChange(startDate, ddmmyyToIsoDate(dStr))}
+								placeholder="Sampai Tanggal"
+								size="sm"
+								align="right"
 							/>
 						</div>
 					</div>

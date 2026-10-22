@@ -140,6 +140,19 @@ export function parseRp(val: unknown): number {
 }
 
 /**
+ * Calculates recommended selling price based on 112% of total modal (capital + service),
+ * rounded to the nearest Rp 100,000.
+ */
+export function calculateTargetSellingPrice(
+	capitalCost: number = 0,
+	serviceExpense: number = 0,
+): number {
+	const totalCost = (capitalCost || 0) + (serviceExpense || 0);
+	if (totalCost <= 0) return 0;
+	return Math.round((totalCost * 1.12) / 100_000) * 100_000;
+}
+
+/**
  * Parse date string into timestamp for sorting.
  */
 export function parseDate(dStr: string): number {
