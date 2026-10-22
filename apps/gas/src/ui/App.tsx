@@ -4,6 +4,9 @@ import {
 	hashPlate,
 	parseDate,
 	RepairItem,
+	StockCarCreateInput,
+	StockCarItem,
+	StockCarUpdateInput,
 	TransactionCreateInput,
 	TransactionItem,
 	TransactionUpdateInput,
@@ -23,6 +26,11 @@ import { ExpenditureTable } from "./components/expenditure/ExpenditureTable";
 import { FiltersBar } from "./components/FiltersBar";
 import { MonthlySalesChart } from "./components/MonthlySalesChart";
 import { StatsCards } from "./components/StatsCards";
+import { DeleteStockConfirmModal } from "./components/stock/DeleteStockConfirmModal";
+import { StockFiltersBar } from "./components/stock/StockFiltersBar";
+import { StockFormModal } from "./components/stock/StockFormModal";
+import { StockStatsCards } from "./components/stock/StockStatsCards";
+import { StockTable } from "./components/stock/StockTable";
 import { Toast } from "./components/Toast";
 import { TransactionFormModal } from "./components/TransactionFormModal";
 import { TransactionTable } from "./components/TransactionTable";
@@ -33,6 +41,8 @@ import {
 	FilterState,
 	ModalMode,
 	SortColumn,
+	StockFilterState,
+	StockSortColumn,
 	ToastState,
 } from "./types";
 
@@ -142,6 +152,74 @@ const INITIAL_MOCK_EXPENDITURES: VehicleExpenditureItem[] = [
 	},
 ];
 
+const INITIAL_STOCK_DATA: StockCarItem[] = [
+	{
+		id: hashPlate("B 1234 ABC"),
+		no: 1,
+		make: "TOYOTA",
+		carDescription: "Toyota Innova Zenix 2.0 V CVT 2023 Putih",
+		plateNumber: "B 1234 ABC",
+		documents: "BPKB,STNK,FAKTUR,Kunci Serep",
+		status: "Sold",
+		sellingPrice: 425000000,
+		capitalCost: 380000000,
+		serviceExpense: 2400000,
+		soldDate: "2026-10-03",
+	},
+	{
+		id: hashPlate("D 5678 EFG"),
+		no: 2,
+		make: "HONDA",
+		carDescription: "Honda CR-V 1.5 Turbo Prestige 2021 Hitam",
+		plateNumber: "D 5678 EFG",
+		documents: "BPKB,STNK,FAKTUR",
+		status: "Ter-DP",
+		sellingPrice: 480000000,
+		capitalCost: 430000000,
+		serviceExpense: 2150000,
+		soldDate: undefined,
+	},
+	{
+		id: hashPlate("B 9999 XYZ"),
+		no: 3,
+		make: "MITSUBISHI",
+		carDescription: "Mitsubishi Pajero Sport 2.4 Dakar 4x2 AT 2022 Abu-abu",
+		plateNumber: "B 9999 XYZ",
+		documents: "BPKB,STNK,FAKTUR,Buku Service",
+		status: "Ready",
+		sellingPrice: 530000000,
+		capitalCost: 485000000,
+		serviceExpense: 3750000,
+		soldDate: undefined,
+	},
+	{
+		id: hashPlate("B 8888 QWE"),
+		no: 4,
+		make: "TOYOTA",
+		carDescription: "Toyota Fortuner 2.8 VRZ 4x2 AT 2023 Hitam",
+		plateNumber: "B 8888 QWE",
+		documents: "BPKB,STNK,FAKTUR,Kunci Serep,Buku Manual",
+		status: "Ready",
+		sellingPrice: 565000000,
+		capitalCost: 515000000,
+		serviceExpense: 0,
+		soldDate: undefined,
+	},
+	{
+		id: hashPlate("B 1010 ION"),
+		no: 5,
+		make: "HYUNDAI",
+		carDescription: "Hyundai Ioniq 5 Signature Long Range 2023 Silver",
+		plateNumber: "B 1010 ION",
+		documents: "BPKB,STNK,FAKTUR,Kunci Serep",
+		status: "Ready",
+		sellingPrice: 620000000,
+		capitalCost: 570000000,
+		serviceExpense: 0,
+		soldDate: undefined,
+	},
+];
+
 export type DashboardTab = "transaksi" | "stok" | "pengeluaran" | "keuntungan";
 
 interface TabItem {
@@ -154,7 +232,7 @@ interface TabItem {
 
 const DASHBOARD_TABS: TabItem[] = [
 	{ id: "transaksi", label: "Transaksi", sheetName: "TRANSAKSI", isAvailable: true },
-	{ id: "stok", label: "Stok Mobil", sheetName: "STOK MOBIL", badge: "Segera", isAvailable: false },
+	{ id: "stok", label: "Stok Mobil", sheetName: "STOK MOBIL", isAvailable: true },
 	{
 		id: "pengeluaran",
 		label: "Pengeluaran Unit",
@@ -208,6 +286,20 @@ export function App() {
 	const [editingExpenditureVehicle, setEditingExpenditureVehicle] =
 		useState<VehicleExpenditureItem | null>(null);
 
+	// Stock state
+	const [stocks, setStocks] = useState<StockCarItem[]>([]);
+	const [isLoadingStocks, setIsLoadingStocks] = useState(false);
+	const [stockFilters, setStockFilters] = useState<StockFilterState>({
+		searchQuery: "",
+		status: "ALL",
+		make: "ALL",
+		sortBy: "no",
+		sortDirection: "asc",
+	});
+	const [stockModalMode, setStockModalMode] = useState<ModalMode>(null);
+	const [activeStockCar, setActiveStockCar] = useState<StockCarItem | null>(null);
+	const [deletingStockCar, setDeletingStockCar] = useState<StockCarItem | null>(null);
+
 	// Lock background body scrolling whenever any modal is mounted
 	const isAnyModalOpen = Boolean(
 		modalMode ||
@@ -216,7 +308,9 @@ export function App() {
 		activeAddRepairVehicle ||
 		editingExpenditureVehicle ||
 		deletingRepairTarget ||
-		deletingExpenditureVehicle,
+		deletingExpenditureVehicle ||
+		stockModalMode ||
+		deletingStockCar,
 	);
 
 	useEffect(() => {
@@ -299,9 +393,33 @@ export function App() {
 		}
 	};
 
+	// Fetch stocks data
+	const loadStocks = () => {
+		setIsLoadingStocks(true);
+		if (isGasEnv) {
+			google.script.run
+				.withSuccessHandler((data: StockCarItem[]) => {
+					setStocks(data || []);
+					setIsLoadingStocks(false);
+				})
+				.withFailureHandler((err: Error) => {
+					showToast(`Gagal memuat data stok: ${err.message}`, "error");
+					setIsLoadingStocks(false);
+				})
+				.getStocks();
+		} else {
+			// Mock in dev
+			setTimeout(() => {
+				setStocks(INITIAL_STOCK_DATA);
+				setIsLoadingStocks(false);
+			}, 300);
+		}
+	};
+
 	useEffect(() => {
 		loadTransactions();
 		loadExpenditures();
+		loadStocks();
 	}, []);
 
 	// Create vehicle expenditure
@@ -312,6 +430,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast("Pengeluaran unit berhasil dicatat ke Google Sheets", "success");
 						loadExpenditures();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -325,6 +444,7 @@ export function App() {
 				(t) => (t.id || hashPlate(t.plateNumber)) === plateHash && t.status === "LUNAS",
 			);
 			const nextNo = expenditures.reduce((max, v) => Math.max(max, v.no), 0) + 1;
+			const totalCost = payload.repairs.reduce((acc, r) => acc + r.cost, 0);
 			const newItem: VehicleExpenditureItem = {
 				id: plateHash,
 				no: nextNo,
@@ -335,10 +455,13 @@ export function App() {
 					description: r.description,
 					cost: r.cost,
 				})),
-				totalCost: payload.repairs.reduce((acc, r) => acc + r.cost, 0),
+				totalCost,
 				isLunas,
 			};
 			setExpenditures([...expenditures, newItem]);
+			setStocks((prev) =>
+				prev.map((s) => (s.id === plateHash ? { ...s, serviceExpense: totalCost } : s)),
+			);
 			showToast("Pengeluaran unit berhasil dicatat (Dev Mock)", "success");
 		}
 	};
@@ -351,6 +474,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast("Item perbaikan berhasil ditambahkan", "success");
 						loadExpenditures();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -370,10 +494,16 @@ export function App() {
 								cost: payload.cost,
 							},
 						];
+						const newTotal = newRepairs.reduce((sum, r) => sum + r.cost, 0);
+						setStocks((sPrev) =>
+							sPrev.map((s) =>
+								s.id === payload.vehiclePlateHash ? { ...s, serviceExpense: newTotal } : s,
+							),
+						);
 						return {
 							...v,
 							repairs: newRepairs,
-							totalCost: newRepairs.reduce((sum, r) => sum + r.cost, 0),
+							totalCost: newTotal,
 						};
 					}
 					return v;
@@ -419,6 +549,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast("Item perbaikan berhasil dihapus", "success");
 						loadExpenditures();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -432,11 +563,20 @@ export function App() {
 					.map((v) => {
 						if (v.id === targetHash) {
 							const newRepairs = v.repairs.filter((_, idx) => idx !== repairIndex);
-							if (newRepairs.length === 0) return null;
+							if (newRepairs.length === 0) {
+								setStocks((sPrev) =>
+									sPrev.map((s) => (s.id === targetHash ? { ...s, serviceExpense: 0 } : s)),
+								);
+								return null;
+							}
+							const newTotal = newRepairs.reduce((sum, r) => sum + r.cost, 0);
+							setStocks((sPrev) =>
+								sPrev.map((s) => (s.id === targetHash ? { ...s, serviceExpense: newTotal } : s)),
+							);
 							return {
 								...v,
 								repairs: newRepairs,
-								totalCost: newRepairs.reduce((sum, r) => sum + r.cost, 0),
+								totalCost: newTotal,
 							};
 						}
 						return v;
@@ -455,6 +595,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast("Unit pengeluaran berhasil dihapus dari Google Sheets", "success");
 						loadExpenditures();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -464,14 +605,10 @@ export function App() {
 			});
 		} else {
 			setExpenditures((prev) => prev.filter((v) => v.id !== targetHash));
+			setStocks((prev) => prev.map((s) => (s.id === targetHash ? { ...s, serviceExpense: 0 } : s)));
 			showToast("Unit pengeluaran berhasil dihapus (Dev Mock)", "success");
 		}
 	};
-
-	useEffect(() => {
-		loadTransactions();
-		loadExpenditures();
-	}, []);
 
 	// Create transaction
 	const handleCreate = async (payload: TransactionCreateInput) => {
@@ -481,6 +618,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast("Transaksi baru berhasil ditambahkan ke Google Sheets", "success");
 						loadTransactions();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -500,6 +638,27 @@ export function App() {
 				no: nextNo,
 			};
 			setTransactions([newItem, ...transactions]);
+
+			// Sync stock in dev mock
+			setStocks((prev) =>
+				prev.map((s) => {
+					if (s.id === plateHash) {
+						if (payload.status === "LUNAS") {
+							return {
+								...s,
+								status: "Sold",
+								sellingPrice: payload.sellingPrice,
+								soldDate: payload.transactionDate,
+							};
+						}
+						if (payload.downPayment && payload.downPayment > 0) {
+							return { ...s, status: "Ter-DP", sellingPrice: payload.sellingPrice };
+						}
+					}
+					return s;
+				}),
+			);
+
 			showToast("Transaksi baru berhasil ditambahkan (Dev Mock)", "success");
 		}
 	};
@@ -512,6 +671,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast(`Transaksi #${payload.no} berhasil diperbarui di Google Sheets`, "success");
 						loadTransactions();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -536,6 +696,7 @@ export function App() {
 					.withSuccessHandler(() => {
 						showToast(`Transaksi #${item.no} (${item.plateNumber}) berhasil dihapus`, "success");
 						loadTransactions();
+						loadStocks();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -545,6 +706,9 @@ export function App() {
 			});
 		} else {
 			setTransactions(transactions.filter((t) => (t.id || hashPlate(t.plateNumber)) !== targetId));
+			setStocks((prev) =>
+				prev.map((s) => (s.id === targetId ? { ...s, status: "Ready", soldDate: undefined } : s)),
+			);
 			showToast(
 				`Transaksi #${item.no} (${item.plateNumber}) berhasil dihapus (Dev Mock)`,
 				"success",
@@ -563,6 +727,7 @@ export function App() {
 					showToast(`Transaksi #${item.no} (${item.plateNumber}) berhasil dilunasi`, "success");
 					loadTransactions();
 					loadExpenditures();
+					loadStocks();
 				})
 				.withFailureHandler((err: Error) => {
 					showToast(`Gagal melunasi: ${err.message}`, "error");
@@ -577,6 +742,18 @@ export function App() {
 				),
 			);
 			setExpenditures((prev) => prev.map((v) => (v.id === targetId ? { ...v, isLunas: true } : v)));
+			setStocks((prev) =>
+				prev.map((s) =>
+					s.id === targetId
+						? {
+								...s,
+								status: "Sold",
+								sellingPrice: item.sellingPrice,
+								soldDate: item.transactionDate,
+							}
+						: s,
+				),
+			);
 			showToast(`Transaksi #${item.no} berhasil dilunasi (Dev Mock)`, "success");
 		}
 	};
@@ -757,6 +934,164 @@ export function App() {
 		return activeFilters.length > 0 ? activeFilters.join(" | ") : null;
 	}, [filters.salesPerson, filters.category, filters.status, filters.searchQuery]);
 
+	// Create stock car
+	const handleCreateStockCar = async (payload: StockCarCreateInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Unit baru berhasil ditambahkan ke Stok Mobil", "success");
+						loadStocks();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.appendStockCar(payload);
+			});
+		} else {
+			const plateHash = hashPlate(payload.plateNumber);
+			if (stocks.some((s) => (s.id || hashPlate(s.plateNumber)) === plateHash)) {
+				throw new Error(
+					`Mobil dengan plat "${payload.plateNumber.toUpperCase()}" sudah terdaftar.`,
+				);
+			}
+			const nextNo = stocks.reduce((max, s) => Math.max(max, s.no), 0) + 1;
+			const newItem: StockCarItem = {
+				...payload,
+				id: plateHash,
+				no: nextNo,
+				status: "Ready",
+				sellingPrice: 0,
+				serviceExpense: 0,
+				soldDate: undefined,
+			};
+			setStocks([newItem, ...stocks]);
+			showToast("Unit baru berhasil ditambahkan ke Stok (Dev Mock)", "success");
+		}
+	};
+
+	// Update stock car
+	const handleUpdateStockCar = async (payload: StockCarUpdateInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Data unit stok berhasil diperbarui", "success");
+						loadStocks();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.updateStockCar(payload);
+			});
+		} else {
+			setStocks(stocks.map((s) => (s.id === payload.id ? { ...s, ...payload } : s)));
+			showToast("Data unit stok berhasil diperbarui (Dev Mock)", "success");
+		}
+	};
+
+	// Delete stock car
+	const handleDeleteStockCar = async (plateHash: string) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast("Unit berhasil dihapus dari Stok Mobil", "success");
+						loadStocks();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.deleteStockCar(plateHash);
+			});
+		} else {
+			const hasTrx = transactions.some((t) => (t.id || hashPlate(t.plateNumber)) === plateHash);
+			const hasExp = expenditures.some((e) => (e.id || hashPlate(e.plateNumber)) === plateHash);
+			if (hasTrx || hasExp) {
+				throw new Error(
+					"Mobil ini masih tercatat di sheet lain. Hapus transaksi/pengeluaran terkait terlebih dahulu.",
+				);
+			}
+			setStocks(stocks.filter((s) => (s.id || hashPlate(s.plateNumber)) !== plateHash));
+			showToast("Unit berhasil dihapus dari Stok (Dev Mock)", "success");
+		}
+	};
+
+	// Stock Sort toggle
+	const handleStockSort = (col: StockSortColumn) => {
+		if (stockFilters.sortBy === col) {
+			setStockFilters({
+				...stockFilters,
+				sortDirection: stockFilters.sortDirection === "asc" ? "desc" : "asc",
+			});
+		} else {
+			setStockFilters({
+				...stockFilters,
+				sortBy: col,
+				sortDirection: col === "no" ? "asc" : "desc",
+			});
+		}
+	};
+
+	// Filtered & Sorted Stocks
+	const filteredStocks = useMemo(() => {
+		const q = stockFilters.searchQuery.trim().toLowerCase();
+		const dir = stockFilters.sortDirection === "asc" ? 1 : -1;
+
+		return stocks
+			.filter((item) => {
+				if (q) {
+					const matchCar = item.carDescription.toLowerCase().includes(q);
+					const matchPlate = item.plateNumber.toLowerCase().includes(q);
+					const matchMake = item.make.toLowerCase().includes(q);
+					const matchNo = String(item.no).includes(q);
+					const matchDocs = (item.documents || "").toLowerCase().includes(q);
+					if (!matchCar && !matchPlate && !matchMake && !matchNo && !matchDocs) {
+						return false;
+					}
+				}
+				if (stockFilters.status !== "ALL" && item.status !== stockFilters.status) {
+					return false;
+				}
+				if (
+					stockFilters.make !== "ALL" &&
+					item.make.toUpperCase() !== stockFilters.make.toUpperCase()
+				) {
+					return false;
+				}
+				return true;
+			})
+			.sort((a, b) => {
+				if (stockFilters.sortBy === "no") {
+					return (a.no - b.no) * dir;
+				}
+				if (stockFilters.sortBy === "make") {
+					return a.make.localeCompare(b.make, "id-ID") * dir;
+				}
+				if (stockFilters.sortBy === "car") {
+					return a.carDescription.localeCompare(b.carDescription, "id-ID") * dir;
+				}
+				if (stockFilters.sortBy === "sellingPrice") {
+					return (a.sellingPrice - b.sellingPrice) * dir;
+				}
+				if (stockFilters.sortBy === "capitalCost") {
+					return (a.capitalCost - b.capitalCost) * dir;
+				}
+				if (stockFilters.sortBy === "serviceExpense") {
+					return (a.serviceExpense - b.serviceExpense) * dir;
+				}
+				if (stockFilters.sortBy === "soldDate") {
+					const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
+					const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
+					return (dateA - dateB) * dir;
+				}
+				return 0;
+			});
+	}, [stocks, stockFilters]);
+
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
 			{/* Top Bar */}
@@ -825,6 +1160,11 @@ export function App() {
 									{transactions.length}
 								</span>
 							)}
+							{tab.id === "stok" && stocks.length > 0 && (
+								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">
+									{stocks.length}
+								</span>
+							)}
 							{tab.id === "pengeluaran" && expenditures.length > 0 && (
 								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
 									{expenditures.length}
@@ -875,6 +1215,38 @@ export function App() {
 						onDelete={(item) => setDeletingItem(item)}
 						onQuickLunas={handleQuickLunas}
 						isLoading={isLoading}
+					/>
+				</>
+			) : activeTab === "stok" ? (
+				<>
+					{/* Stock KPI Summary Cards */}
+					<StockStatsCards stocks={stocks} />
+
+					{/* Stock Filters Bar */}
+					<StockFiltersBar
+						filters={stockFilters}
+						onChange={setStockFilters}
+						stocks={stocks}
+						onAddNew={() => {
+							setActiveStockCar(null);
+							setStockModalMode("create");
+						}}
+						onRefresh={loadStocks}
+						isLoading={isLoadingStocks}
+					/>
+
+					{/* Stock Table */}
+					<StockTable
+						stocks={filteredStocks}
+						sortBy={stockFilters.sortBy}
+						sortDirection={stockFilters.sortDirection}
+						onSort={handleStockSort}
+						isLoading={isLoadingStocks}
+						onEdit={(item) => {
+							setActiveStockCar(item);
+							setStockModalMode("edit");
+						}}
+						onDelete={(item) => setDeletingStockCar(item)}
 					/>
 				</>
 			) : activeTab === "pengeluaran" ? (
@@ -964,6 +1336,7 @@ export function App() {
 					mode={modalMode}
 					initialData={activeItem}
 					existingSales={existingSales}
+					availableStocks={stocks}
 					onClose={() => {
 						setModalMode(null);
 						setActiveItem(null);
@@ -981,11 +1354,46 @@ export function App() {
 				/>
 			)}
 
+			{/* Stock Form Modal */}
+			{stockModalMode && (
+				<StockFormModal
+					mode={stockModalMode === "edit" ? "edit" : "create"}
+					initialData={activeStockCar}
+					existingStocks={stocks}
+					onClose={() => {
+						setStockModalMode(null);
+						setActiveStockCar(null);
+					}}
+					onSubmit={async (payload) => {
+						if (stockModalMode === "edit") {
+							await handleUpdateStockCar(payload as StockCarUpdateInput);
+						} else {
+							await handleCreateStockCar(payload as StockCarCreateInput);
+						}
+					}}
+				/>
+			)}
+
+			{/* Delete Stock Confirm Modal */}
+			{deletingStockCar && (
+				<DeleteStockConfirmModal
+					car={deletingStockCar}
+					transactions={transactions}
+					expenditures={expenditures}
+					onClose={() => setDeletingStockCar(null)}
+					onConfirm={async (hash) => {
+						await handleDeleteStockCar(hash);
+						setDeletingStockCar(null);
+					}}
+				/>
+			)}
+
 			{/* Expenditure Create Modal */}
 			{isCreateExpenditureOpen && (
 				<ExpenditureCreateModal
 					existingExpenditures={expenditures}
 					transactionCars={transactions}
+					stockCars={stocks}
 					existingRepairDescriptions={existingRepairDescriptions}
 					onClose={() => setIsCreateExpenditureOpen(false)}
 					onSubmit={handleCreateExpenditure}

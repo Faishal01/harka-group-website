@@ -22,3 +22,4 @@ export function openDialog() {
 // Re-export sheet operations
 export * from "./transaction";
 export * from "./expenditure";
+export * from "./stock";

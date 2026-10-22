@@ -342,3 +342,90 @@ export type VehicleExpenditureItem = z.infer<typeof VehicleExpenditureSchema>;
 export type VehicleExpenditureCreateInput = z.infer<typeof VehicleExpenditureCreateSchema>;
 export type AddRepairInput = z.infer<typeof AddRepairInputSchema>;
 export type UpdateVehicleDescriptionInput = z.infer<typeof UpdateVehicleDescriptionInputSchema>;
+
+// -------------------------------------------------------------
+// STOK MOBIL (Master Car Inventory Database)
+// -------------------------------------------------------------
+
+export const STOCK_SHEET_NAME = "STOK MOBIL";
+export const STOCK_HEADER_ROW_INDEX = 2;
+export const STOCK_DATA_START_ROW_INDEX = 3;
+
+export const STOCK_COLUMNS = [
+	"No",
+	"MEREK",
+	"DESKRIPSI MOBIL",
+	"Plat Mobil/ No Polisi",
+	"Kelengkapan",
+	"Kategori Transaksi",
+	"Harga Jual",
+	"Modal",
+	"Pengeluaran Service",
+	"Tanggal Terjual",
+] as const;
+
+export const STOCK_STATUS_OPTIONS = ["Ready", "Ter-DP", "Sold"] as const;
+export type StockStatus = (typeof STOCK_STATUS_OPTIONS)[number];
+
+export const DEFAULT_MAKES = [
+	"TOYOTA",
+	"DAIHATSU",
+	"HONDA",
+	"SUZUKI",
+	"HYUNDAI",
+	"MITSUBISHI",
+	"NISSAN",
+	"MAZDA",
+	"WULING",
+] as const;
+
+export const DEFAULT_DOCUMENTS = [
+	"BPKB",
+	"STNK",
+	"FAKTUR",
+	"Kunci Serep",
+	"Buku Service",
+	"Buku Manual",
+	"SPH",
+	"Kuitansi Blangko",
+] as const;
+
+export const StockCarItemSchema = z.object({
+	id: z.string().min(1), // hashPlate(plateNumber)
+	no: z.number().int().positive("No harus berupa angka positif"),
+	make: z.string().min(1, "Merek mobil wajib diisi"),
+	carDescription: z.string().min(1, "Deskripsi mobil wajib diisi"),
+	plateNumber: z.string().min(1, "Plat mobil wajib diisi"),
+	documents: z.string().default(""), // comma-separated e.g. "BPKB,STNK,FAKTUR"
+	status: z.enum(STOCK_STATUS_OPTIONS).default("Ready"),
+	sellingPrice: z.number().min(0).default(0),
+	capitalCost: z.number().min(0, "Modal beli harus berupa angka positif"),
+	serviceExpense: z.number().min(0).default(0), // from Col I formula
+	soldDate: z.string().optional(), // M/D/YY or YYYY-MM-DD
+});
+
+export const StockCarCreateSchema = z.object({
+	make: z.string().trim().min(1, "Merek mobil wajib diisi"),
+	carDescription: z.string().trim().min(1, "Deskripsi mobil wajib diisi"),
+	plateNumber: z.string().trim().min(1, "Plat mobil wajib diisi"),
+	documents: z.string().default(""),
+	status: z.enum(STOCK_STATUS_OPTIONS).default("Ready"),
+	sellingPrice: z.number().min(0).default(0),
+	capitalCost: z.number().min(0, "Modal beli harus berupa angka positif"),
+	soldDate: z.string().optional(),
+});
+
+export const StockCarUpdateSchema = z.object({
+	id: z.string().min(1, "ID kendaraan wajib ada"),
+	make: z.string().trim().min(1, "Merek mobil wajib diisi"),
+	carDescription: z.string().trim().min(1, "Deskripsi mobil wajib diisi"),
+	documents: z.string().default(""),
+	status: z.enum(STOCK_STATUS_OPTIONS).default("Ready"),
+	sellingPrice: z.number().min(0).default(0),
+	capitalCost: z.number().min(0, "Modal beli harus berupa angka positif"),
+	soldDate: z.string().optional(),
+});
+
+export type StockCarItem = z.infer<typeof StockCarItemSchema>;
+export type StockCarCreateInput = z.infer<typeof StockCarCreateSchema>;
+export type StockCarUpdateInput = z.infer<typeof StockCarUpdateSchema>;

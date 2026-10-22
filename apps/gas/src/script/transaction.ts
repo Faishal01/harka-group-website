@@ -15,6 +15,7 @@ import {
 } from "../shared/schema";
 import { syncVehicleLunasBackground } from "./expenditure";
 import { withDocumentLock } from "./lock";
+import { revertStockStatusOnTransactionDelete, syncStockStatusFromTransaction } from "./stock";
 
 /**
  * Get or initialize the TRANSAKSI worksheet.
@@ -227,6 +228,14 @@ export function appendTransaction(payload: TransactionCreateInput): {
 			syncVehicleLunasBackground(plateHash, true);
 		}
 
+		// Sync status and pricing to STOK MOBIL
+		syncStockStatusFromTransaction(
+			plateHash,
+			payload.status,
+			payload.sellingPrice,
+			payload.transactionDate,
+		);
+
 		return { success: true, id: plateHash, no: nextNo };
 	});
 }
@@ -277,6 +286,14 @@ export function updateTransaction(payload: TransactionUpdateInput): {
 		// Sync yellow background to PENGELUARAN PER UNIT
 		syncVehicleLunasBackground(targetHash, payload.status === "LUNAS");
 
+		// Sync status and pricing to STOK MOBIL
+		syncStockStatusFromTransaction(
+			targetHash,
+			payload.status,
+			payload.sellingPrice,
+			payload.transactionDate,
+		);
+
 		return { success: true };
 	});
 }
@@ -297,6 +314,9 @@ export function deleteTransaction(id: string): { success: boolean } {
 
 		// Reset yellow background in PENGELUARAN PER UNIT
 		syncVehicleLunasBackground(id, false);
+
+		// Revert status in STOK MOBIL back to Ready
+		revertStockStatusOnTransactionDelete(id);
 
 		return { success: true };
 	});
@@ -321,6 +341,9 @@ export function quickMarkLunas(id: string): { success: boolean } {
 
 		// Sync yellow background to PENGELUARAN PER UNIT
 		syncVehicleLunasBackground(id, true);
+
+		// Sync status in STOK MOBIL to Sold
+		syncStockStatusFromTransaction(id, "LUNAS", 0, "");
 
 		return { success: true };
 	});

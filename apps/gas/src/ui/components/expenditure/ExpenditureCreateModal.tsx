@@ -8,6 +8,8 @@ import IconX from "~icons/lucide/x";
 import {
 	formatRp,
 	hashPlate,
+	normalizePlate,
+	StockCarItem,
 	TransactionItem,
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureItem,
@@ -17,6 +19,7 @@ import { RepairCombobox } from "./RepairCombobox";
 interface ExpenditureCreateModalProps {
 	existingExpenditures: VehicleExpenditureItem[];
 	transactionCars: TransactionItem[];
+	stockCars?: StockCarItem[];
 	existingRepairDescriptions?: string[];
 	onClose: () => void;
 	onSubmit: (payload: VehicleExpenditureCreateInput) => Promise<void>;
@@ -30,6 +33,7 @@ interface RepairLineDraft {
 export function ExpenditureCreateModal({
 	existingExpenditures,
 	transactionCars,
+	stockCars = [],
 	existingRepairDescriptions,
 	onClose,
 	onSubmit,
@@ -44,20 +48,36 @@ export function ExpenditureCreateModal({
 
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	// Deduplicated list of available cars from TRANSAKSI
+	// Deduplicated list of available cars: prioritized from STOK MOBIL, fallback to TRANSAKSI
 	const uniqueCars = useMemo(() => {
 		const map = new Map<string, { carDescription: string; plateNumber: string }>();
-		for (const t of transactionCars) {
-			const cleanPlate = (t.plateNumber || "").trim().toUpperCase();
-			if (cleanPlate && !map.has(cleanPlate)) {
-				map.set(cleanPlate, {
-					carDescription: t.carDescription || "",
-					plateNumber: cleanPlate,
-				});
+
+		if (stockCars && stockCars.length > 0) {
+			for (const s of stockCars) {
+				const cleanPlate = normalizePlate(s.plateNumber);
+				if (cleanPlate && !map.has(cleanPlate)) {
+					map.set(cleanPlate, {
+						carDescription: s.carDescription || "",
+						plateNumber: cleanPlate,
+					});
+				}
 			}
 		}
+
+		if (map.size === 0 && transactionCars) {
+			for (const t of transactionCars) {
+				const cleanPlate = normalizePlate(t.plateNumber);
+				if (cleanPlate && !map.has(cleanPlate)) {
+					map.set(cleanPlate, {
+						carDescription: t.carDescription || "",
+						plateNumber: cleanPlate,
+					});
+				}
+			}
+		}
+
 		return Array.from(map.values());
-	}, [transactionCars]);
+	}, [stockCars, transactionCars]);
 
 	// Filtered cars based on search input
 	const filteredCars = useMemo(() => {

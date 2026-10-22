@@ -8,6 +8,7 @@ interface DatePickerProps {
 	value: string; // format: "DD/MM/YY"
 	onChange: (value: string) => void;
 	error?: string;
+	placeholder?: string;
 }
 
 const MONTH_NAMES = [
@@ -41,7 +42,7 @@ function parseDDMMYY(dStr: string): Date {
 	return new Date();
 }
 
-export function DatePicker({ value, onChange, error }: DatePickerProps) {
+export function DatePicker({ value, onChange, error, placeholder }: DatePickerProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
 	const initialDate = parseDDMMYY(value);
@@ -152,7 +153,7 @@ export function DatePicker({ value, onChange, error }: DatePickerProps) {
 				}`}
 			>
 				<span className="font-mono font-medium tracking-wide">
-					{value || "Pilih Tanggal (DD/MM/YY)"}
+					{value || placeholder || "Pilih Tanggal (DD/MM/YY)"}
 				</span>
 				<div className="flex items-center gap-1.5 text-blue-600">
 					<IconCalendar className="w-4 h-4" />

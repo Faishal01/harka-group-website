@@ -19,6 +19,17 @@ export interface ExpenditureFilterState {
 	sortDirection: SortDirection;
 }
 
+export type StockSortColumn =
+	"no" | "make" | "car" | "status" | "sellingPrice" | "capitalCost" | "serviceExpense" | "soldDate";
+
+export interface StockFilterState {
+	searchQuery: string;
+	status: string; // "ALL" | "Ready" | "Ter-DP" | "Sold"
+	make: string; // "ALL" | specific make
+	sortBy: StockSortColumn;
+	sortDirection: SortDirection;
+}
+
 export interface ToastState {
 	show: boolean;
 	message: string;
