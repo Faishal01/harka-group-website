@@ -60,7 +60,16 @@ export function EditVehicleModal({ vehicle, onClose, onSubmit }: EditVehicleModa
 					</button>
 				</div>
 
-				<form onSubmit={handleSubmit} className="p-6 space-y-4">
+				<form
+					onSubmit={handleSubmit}
+					onKeyDown={(e) => {
+						const target = e.target as HTMLElement;
+						if (e.key === "Enter" && target.tagName !== "TEXTAREA" && target.tagName !== "BUTTON") {
+							e.preventDefault();
+						}
+					}}
+					className="p-6 space-y-4"
+				>
 					{error && (
 						<div className="p-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg">
 							{error}

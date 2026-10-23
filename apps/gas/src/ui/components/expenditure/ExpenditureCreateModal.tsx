@@ -229,6 +229,12 @@ export function ExpenditureCreateModal({
 
 				<form
 					onSubmit={handleSubmit}
+					onKeyDown={(e) => {
+						const target = e.target as HTMLElement;
+						if (e.key === "Enter" && target.tagName !== "TEXTAREA" && target.tagName !== "BUTTON") {
+							e.preventDefault();
+						}
+					}}
 					className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-5"
 				>
 					{error && (

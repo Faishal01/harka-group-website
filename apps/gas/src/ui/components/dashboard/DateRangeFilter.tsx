@@ -1,5 +1,7 @@
+import { useMemo } from "preact/hooks";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import { ddmmyyToIsoDate, isoDateToDdmmyy } from "../../../shared/schema";
+import { CustomSelect } from "../CustomSelect";
 import { DatePicker } from "../DatePicker";
 
 interface DateRangeFilterProps {
@@ -17,6 +19,63 @@ export function DateRangeFilter({
 	onRefresh,
 	isLoading,
 }: DateRangeFilterProps) {
+	// Generate exactly the last 24 months descending from current month
+	const monthsList = useMemo(() => {
+		const list: { label: string; value: string; start: string; end: string }[] = [];
+		const now = new Date();
+		const curYear = now.getFullYear();
+		const curMonth = now.getMonth();
+
+		const monthNames = [
+			"Januari",
+			"Februari",
+			"Maret",
+			"April",
+			"Mei",
+			"Juni",
+			"Juli",
+			"Agustus",
+			"September",
+			"Oktober",
+			"November",
+			"Desember",
+		];
+
+		for (let i = 0; i < 24; i++) {
+			const targetDate = new Date(curYear, curMonth - i, 1);
+			const y = targetDate.getFullYear();
+			const m = targetDate.getMonth();
+			const mStr = String(m + 1).padStart(2, "0");
+			const lastDay = new Date(y, m + 1, 0).getDate();
+			const start = `${y}-${mStr}-01`;
+			const end = `${y}-${mStr}-${String(lastDay).padStart(2, "0")}`;
+			list.push({
+				label: `${monthNames[m]} ${y}`,
+				value: `${y}-${mStr}`,
+				start,
+				end,
+			});
+		}
+		return list;
+	}, []);
+
+	// Active month if current startDate and endDate match a full month in the list
+	const activeMonthValue = useMemo(() => {
+		const match = monthsList.find((m) => m.start === startDate && m.end === endDate);
+		return match ? match.value : "";
+	}, [startDate, endDate, monthsList]);
+
+	const handleMonthSelect = (val: string) => {
+		if (!val) {
+			onChange("", "");
+			return;
+		}
+		const found = monthsList.find((m) => m.value === val);
+		if (found) {
+			onChange(found.start, found.end);
+		}
+	};
+
 	// Preset handlers
 	const handlePreset = (
 		preset: "ALL" | "THIS_MONTH" | "LAST_MONTH" | "THIS_QUARTER" | "THIS_YEAR",
@@ -98,88 +157,124 @@ export function DateRangeFilter({
 				</div>
 			</div>
 
-			{/* Date Interval & Presets Row */}
-			<div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-3">
-				{/* Custom Date Inputs via Custom DatePicker */}
-				<div className="flex flex-wrap items-center gap-2.5">
-					<div className="flex items-center gap-1.5">
-						<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">Dari:</label>
-						<div className="w-36 sm:w-40">
-							<DatePicker
-								value={isoDateToDdmmyy(startDate)}
-								onChange={(dStr) => onChange(ddmmyyToIsoDate(dStr), endDate)}
-								placeholder="Dari Tanggal"
-								size="sm"
-							/>
-						</div>
+			{/* Filter Section: 2 Structured Rows (Pilihan Cepat & Rentang Kustom) */}
+			<div className="pt-2.5 border-t border-slate-100 space-y-2.5">
+				{/* Baris 1: Pilihan Cepat (Bulan dropdown + Presets pill) */}
+				<div className="flex flex-wrap items-center gap-2">
+					<span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider min-w-[54px]">
+						Periode:
+					</span>
+
+					{/* Month Selector via Custom Popover */}
+					<div className="w-44 sm:w-48">
+						<CustomSelect
+							value={activeMonthValue}
+							onChange={handleMonthSelect}
+							options={[
+								{ label: "Pilih Bulan...", value: "" },
+								...monthsList.map((m) => ({ label: m.label, value: m.value })),
+							]}
+							headerTitle="24 Bulan Terakhir"
+							placeholder="Pilih Bulan..."
+							size="sm"
+							menuWidth="w-48 sm:w-52"
+						/>
 					</div>
 
-					<div className="flex items-center gap-1.5">
-						<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">
-							Sampai:
-						</label>
-						<div className="w-36 sm:w-40">
-							<DatePicker
-								value={isoDateToDdmmyy(endDate)}
-								onChange={(dStr) => onChange(startDate, ddmmyyToIsoDate(dStr))}
-								placeholder="Sampai Tanggal"
-								size="sm"
-								align="right"
-							/>
-						</div>
-					</div>
+					<span className="text-[11px] font-semibold text-slate-300 mx-0.5 hidden sm:inline">
+						|
+					</span>
 
-					{(startDate || endDate) && (
+					<div className="flex flex-wrap items-center gap-1.5">
 						<button
-							onClick={() => onChange("", "")}
 							type="button"
-							className="text-xs text-blue-600 hover:text-blue-800 font-medium cursor-pointer ml-1"
+							onClick={() => handlePreset("THIS_MONTH")}
+							className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+						>
+							Bulan Ini
+						</button>
+						<button
+							type="button"
+							onClick={() => handlePreset("LAST_MONTH")}
+							className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+						>
+							Bulan Lalu
+						</button>
+						<button
+							type="button"
+							onClick={() => handlePreset("THIS_QUARTER")}
+							className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+						>
+							Kuartal Ini
+						</button>
+						<button
+							type="button"
+							onClick={() => handlePreset("THIS_YEAR")}
+							className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+						>
+							Tahun Ini
+						</button>
+						<button
+							type="button"
+							onClick={() => handlePreset("ALL")}
+							className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+						>
+							Semua
+						</button>
+					</div>
+				</div>
+
+				{/* Baris 2: Rentang Tanggal Kustom (Dari & Sampai + Reset halus) */}
+				<div className="flex flex-wrap items-center gap-2">
+					<span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider min-w-[54px]">
+						Kustom:
+					</span>
+
+					<div className="flex flex-wrap items-center gap-2">
+						<div className="flex items-center gap-1.5">
+							<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+								Dari:
+							</label>
+							<div className="w-36 sm:w-40">
+								<DatePicker
+									value={isoDateToDdmmyy(startDate)}
+									onChange={(dStr) => onChange(ddmmyyToIsoDate(dStr), endDate)}
+									placeholder="Dari Tanggal"
+									size="sm"
+								/>
+							</div>
+						</div>
+
+						<div className="flex items-center gap-1.5">
+							<label className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+								Sampai:
+							</label>
+							<div className="w-36 sm:w-40">
+								<DatePicker
+									value={isoDateToDdmmyy(endDate)}
+									onChange={(dStr) => onChange(startDate, ddmmyyToIsoDate(dStr))}
+									placeholder="Sampai Tanggal"
+									size="sm"
+									align="left"
+								/>
+							</div>
+						</div>
+
+						{/* Reset Button (tetap ada di DOM agar tidak terjadi layout shift) */}
+						<button
+							type="button"
+							disabled={!startDate && !endDate}
+							onClick={() => onChange("", "")}
+							className={`text-xs font-medium px-2 py-1 rounded-lg transition-all ml-1 ${
+								startDate || endDate
+									? "text-blue-600 hover:text-blue-800 hover:bg-blue-50 cursor-pointer opacity-100"
+									: "text-slate-300 cursor-not-allowed opacity-0 pointer-events-none"
+							}`}
+							title={startDate || endDate ? "Reset filter tanggal" : ""}
 						>
 							Reset Tanggal
 						</button>
-					)}
-				</div>
-
-				{/* Quick Presets */}
-				<div className="flex flex-wrap items-center gap-1.5">
-					<span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
-						Periode:
-					</span>
-					<button
-						type="button"
-						onClick={() => handlePreset("THIS_MONTH")}
-						className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-					>
-						Bulan Ini
-					</button>
-					<button
-						type="button"
-						onClick={() => handlePreset("LAST_MONTH")}
-						className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-					>
-						Bulan Lalu
-					</button>
-					<button
-						type="button"
-						onClick={() => handlePreset("THIS_QUARTER")}
-						className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-					>
-						Kuartal Ini
-					</button>
-					<button
-						type="button"
-						onClick={() => handlePreset("THIS_YEAR")}
-						className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-					>
-						Tahun Ini
-					</button>
-					<button
-						type="button"
-						onClick={() => handlePreset("ALL")}
-						className="px-2.5 py-1 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-					>
-						Semua
-					</button>
+					</div>
 				</div>
 			</div>
 		</div>

@@ -21,14 +21,23 @@ Chart.register(CategoryScale, LinearScale, BarElement, BarController, Tooltip, L
 
 export interface IncomeExpenseBucket {
 	key: string;
-	label: string; // "1-7 Okt" or "Agu 26"
-	fullLabel: string; // "Minggu 1 (1 - 7 Oktober 2026)" or "Agustus 2026"
+	label: string; // "Okt 26"
+	fullLabel: string; // "Oktober 2026"
+	prevFullLabel: string; // "Oktober 2025"
 	startIso: string;
 	endIso: string;
+	prevStartIso: string;
+	prevEndIso: string;
+	// Current Year Period
 	revenue: number; // Pemasukan (Omzet)
 	expense: number; // Pengeluaran (Modal + Service)
 	profit: number; // Laba Bersih
 	count: number;
+	// Prior Year Period (YoY Shadow)
+	prevRevenue: number;
+	prevExpense: number;
+	prevProfit: number;
+	prevCount: number;
 }
 
 interface IncomeExpenseChartProps {
@@ -67,70 +76,6 @@ const FULL_MONTH_NAMES = [
 	"Desember",
 ];
 
-function getDaysDiff(startIso: string, endIso: string): number {
-	const d1 = new Date(startIso);
-	const d2 = new Date(endIso);
-	if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
-	return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-}
-
-function generateWeeklyBuckets(startIso: string, endIso: string): IncomeExpenseBucket[] {
-	const buckets: IncomeExpenseBucket[] = [];
-	const startDate = new Date(startIso);
-	const endDate = new Date(endIso);
-
-	const toIso = (d: Date) => {
-		const y = d.getFullYear();
-		const m = String(d.getMonth() + 1).padStart(2, "0");
-		const day = String(d.getDate()).padStart(2, "0");
-		return `${y}-${m}-${day}`;
-	};
-
-	let currStart = new Date(startDate);
-	let weekNum = 1;
-
-	while (currStart <= endDate) {
-		const currEnd = new Date(currStart);
-		currEnd.setDate(currEnd.getDate() + 6);
-		if (currEnd > endDate) {
-			currEnd.setTime(endDate.getTime());
-		}
-
-		const startStr = toIso(currStart);
-		const endStr = toIso(currEnd);
-
-		const startDay = currStart.getDate();
-		const endDay = currEnd.getDate();
-		const monthIdx = currEnd.getMonth();
-		const year = currEnd.getFullYear();
-
-		const shortMonth = SHORT_MONTH_NAMES[monthIdx];
-		const fullMonth = FULL_MONTH_NAMES[monthIdx];
-
-		const label = `${startDay}-${endDay} ${shortMonth}`;
-		const fullLabel = `Minggu ${weekNum} (${startDay} - ${endDay} ${fullMonth} ${year})`;
-
-		buckets.push({
-			key: `${startStr}_${endStr}`,
-			label,
-			fullLabel,
-			startIso: startStr,
-			endIso: endStr,
-			revenue: 0,
-			expense: 0,
-			profit: 0,
-			count: 0,
-		});
-
-		const nextStart = new Date(currEnd);
-		nextStart.setDate(nextStart.getDate() + 1);
-		currStart = nextStart;
-		weekNum += 1;
-	}
-
-	return buckets;
-}
-
 function generateMonthlyBuckets(
 	startIso?: string,
 	endIso?: string,
@@ -165,34 +110,26 @@ function generateMonthlyBuckets(
 		startY = sDate.getFullYear();
 		startM = sDate.getMonth();
 	} else {
-		// "Semua": derive from soldCars or rolling 12 months up to latest
-		const dates = soldCars
+		// "Semua": Scope to available data this year only (starting from earliest month with sales this year)
+		const now = new Date();
+		const currentYear = now.getFullYear();
+		const currentMonth = now.getMonth();
+
+		const thisYearDates = soldCars
 			.map((c) => parseDateUniversal(c.soldDate))
-			.filter((p): p is NonNullable<typeof p> => p !== null);
+			.filter((p): p is NonNullable<typeof p> => p !== null && p.year === currentYear);
 
-		if (dates.length === 0) {
-			const now = new Date();
-			startY = now.getFullYear();
-			startM = now.getMonth();
-			endY = startY;
-			endM = startM;
+		if (thisYearDates.length === 0) {
+			startY = currentYear;
+			startM = currentMonth;
+			endY = currentYear;
+			endM = currentMonth;
 		} else {
-			const sorted = dates.sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month));
-			const first = sorted[0];
-			const last = sorted[sorted.length - 1];
-
-			if (last.year * 12 + last.month - (first.year * 12 + first.month) >= 12) {
-				endY = last.year;
-				endM = last.month;
-				const sDate = new Date(endY, endM - 11, 1);
-				startY = sDate.getFullYear();
-				startM = sDate.getMonth();
-			} else {
-				startY = first.year;
-				startM = first.month;
-				endY = last.year;
-				endM = last.month;
-			}
+			const sorted = thisYearDates.sort((a, b) => a.month - b.month);
+			startY = currentYear;
+			startM = sorted[0].month;
+			endY = currentYear;
+			endM = Math.max(sorted[sorted.length - 1].month, currentMonth);
 		}
 	}
 
@@ -205,16 +142,28 @@ function generateMonthlyBuckets(
 		const startIsoStr = `${currY}-${String(currM + 1).padStart(2, "0")}-01`;
 		const endIsoStr = `${currY}-${String(currM + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
+		const prevY = currY - 1;
+		const prevLastDay = new Date(prevY, currM + 1, 0).getDate();
+		const prevStartIsoStr = `${prevY}-${String(currM + 1).padStart(2, "0")}-01`;
+		const prevEndIsoStr = `${prevY}-${String(currM + 1).padStart(2, "0")}-${String(prevLastDay).padStart(2, "0")}`;
+
 		buckets.push({
 			key,
 			label: `${SHORT_MONTH_NAMES[currM]} ${String(currY).slice(-2)}`,
 			fullLabel: `${FULL_MONTH_NAMES[currM]} ${currY}`,
+			prevFullLabel: `${FULL_MONTH_NAMES[currM]} ${prevY}`,
 			startIso: startIsoStr,
 			endIso: endIsoStr,
+			prevStartIso: prevStartIsoStr,
+			prevEndIso: prevEndIsoStr,
 			revenue: 0,
 			expense: 0,
 			profit: 0,
 			count: 0,
+			prevRevenue: 0,
+			prevExpense: 0,
+			prevProfit: 0,
+			prevCount: 0,
 		});
 
 		currM++;
@@ -231,50 +180,53 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const chartInstanceRef = useRef<Chart | null>(null);
 
-	// Adaptive buckets and granularity mode
-	const { buckets, granularityMode } = useMemo(() => {
+	// Monthly buckets with prior year (YoY) metrics
+	const buckets = useMemo(() => {
 		const soldCars = stocks.filter((s) => s.status === "Sold" && s.soldDate);
 
-		let mode: "weekly" | "monthly" = "monthly";
+		const generatedBuckets: IncomeExpenseBucket[] = generateMonthlyBuckets(
+			startDate,
+			endDate,
+			soldCars,
+		);
 
-		if (startDate && endDate) {
-			const diffDays = getDaysDiff(startDate, endDate);
-			if (diffDays <= 31) {
-				mode = "weekly";
-			}
-		}
-
-		const generatedBuckets: IncomeExpenseBucket[] =
-			mode === "weekly"
-				? generateWeeklyBuckets(startDate!, endDate!)
-				: generateMonthlyBuckets(startDate, endDate, soldCars);
-
-		// Aggregate car data into matching buckets
-		for (const car of soldCars) {
-			const parsed = parseDateUniversal(car.soldDate);
-			if (!parsed) continue;
-
-			if (startDate && parsed.iso < startDate) continue;
-			if (endDate && parsed.iso > endDate) continue;
-
-			const bucket = generatedBuckets.find(
-				(b) => parsed.iso >= b.startIso && parsed.iso <= b.endIso,
-			);
-
-			if (bucket) {
+		// Pre-parse all sold cars for fast aggregation
+		const parsedSoldCars = soldCars
+			.map((car) => {
+				const parsed = parseDateUniversal(car.soldDate);
+				if (!parsed) return null;
 				const revenue = car.sellingPrice || 0;
 				const expense = (car.capitalCost || 0) + (car.serviceExpense || 0);
-				bucket.revenue += revenue;
-				bucket.expense += expense;
-				bucket.count += 1;
+				return { iso: parsed.iso, revenue, expense };
+			})
+			.filter((c): c is NonNullable<typeof c> => c !== null);
+
+		// Aggregate car data into matching buckets (Current year & Prior year)
+		for (const bucket of generatedBuckets) {
+			for (const car of parsedSoldCars) {
+				// Current year matching
+				if (car.iso >= bucket.startIso && car.iso <= bucket.endIso) {
+					// Respect user sub-month boundary if custom date range was supplied
+					if ((!startDate || car.iso >= startDate) && (!endDate || car.iso <= endDate)) {
+						bucket.revenue += car.revenue;
+						bucket.expense += car.expense;
+						bucket.count += 1;
+					}
+				}
+
+				// Prior year (YoY) matching
+				if (car.iso >= bucket.prevStartIso && car.iso <= bucket.prevEndIso) {
+					bucket.prevRevenue += car.revenue;
+					bucket.prevExpense += car.expense;
+					bucket.prevCount += 1;
+				}
 			}
+
+			bucket.profit = bucket.revenue - bucket.expense;
+			bucket.prevProfit = bucket.prevRevenue - bucket.prevExpense;
 		}
 
-		for (const b of generatedBuckets) {
-			b.profit = b.revenue - b.expense;
-		}
-
-		return { buckets: generatedBuckets, granularityMode: mode };
+		return generatedBuckets;
 	}, [stocks, startDate, endDate]);
 
 	const totalWindowRevenue = useMemo(() => {
@@ -300,31 +252,67 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 		if (!ctx) return;
 
 		const labels = buckets.map((d) => d.label);
-		const revenueData = buckets.map((d) => d.revenue);
-		const expenseData = buckets.map((d) => d.expense);
 
 		chartInstanceRef.current = new Chart(ctx, {
 			type: "bar",
 			data: {
 				labels,
 				datasets: [
+					// 1. Pemasukan (Tahun Lalu - Background Pillar)
 					{
-						label: "Pemasukan (Omzet)",
-						data: revenueData,
-						backgroundColor: "rgba(16, 185, 129, 0.85)", // emerald-500
-						borderColor: "#10b981",
-						borderWidth: 1,
+						label: "Pemasukan (Tahun Lalu)",
+						data: buckets.map((d) => d.prevRevenue),
+						stack: "income",
+						backgroundColor: "rgba(16, 185, 129, 0.25)",
+						borderColor: "rgba(16, 185, 129, 0.80)",
+						borderWidth: 1.5,
 						borderRadius: 6,
-						hoverBackgroundColor: "#059669",
+						hoverBackgroundColor: "rgba(16, 185, 129, 0.38)",
+						categoryPercentage: 0.84,
+						barPercentage: 0.96,
+						maxBarThickness: 130,
 					},
+					// 2. Pemasukan (Tahun Ini - Foreground Inner Bar)
 					{
-						label: "Pengeluaran (Modal + Service)",
-						data: expenseData,
-						backgroundColor: "rgba(245, 158, 11, 0.85)", // amber-500
-						borderColor: "#f59e0b",
-						borderWidth: 1,
+						label: "Pemasukan (Tahun Ini)",
+						data: buckets.map((d) => d.revenue),
+						stack: "income",
+						backgroundColor: "rgba(16, 185, 129, 0.9)",
+						borderColor: "#10b981",
+						borderWidth: 1.5,
+						borderRadius: 4,
+						hoverBackgroundColor: "#059669",
+						categoryPercentage: 0.84,
+						barPercentage: 0.6,
+						maxBarThickness: 82,
+					},
+					// 3. Pengeluaran (Tahun Lalu - Background Pillar)
+					{
+						label: "Pengeluaran (Tahun Lalu)",
+						data: buckets.map((d) => d.prevExpense),
+						stack: "expense",
+						backgroundColor: "rgba(245, 158, 11, 0.25)",
+						borderColor: "rgba(245, 158, 11, 0.80)",
+						borderWidth: 1.5,
 						borderRadius: 6,
+						hoverBackgroundColor: "rgba(245, 158, 11, 0.38)",
+						categoryPercentage: 0.84,
+						barPercentage: 0.96,
+						maxBarThickness: 130,
+					},
+					// 4. Pengeluaran (Tahun Ini - Foreground Inner Bar)
+					{
+						label: "Pengeluaran (Tahun Ini)",
+						data: buckets.map((d) => d.expense),
+						stack: "expense",
+						backgroundColor: "rgba(245, 158, 11, 0.9)",
+						borderColor: "#f59e0b",
+						borderWidth: 1.5,
+						borderRadius: 4,
 						hoverBackgroundColor: "#d97706",
+						categoryPercentage: 0.84,
+						barPercentage: 0.6,
+						maxBarThickness: 82,
 					},
 				],
 			},
@@ -348,25 +336,51 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 						padding: 12,
 						cornerRadius: 8,
 						boxPadding: 4,
+						displayColors: false,
 						callbacks: {
 							title: (items) => {
 								if (!items || items.length === 0) return "";
 								const index = items[0].dataIndex;
-								return `${buckets[index].fullLabel} (${buckets[index].count} unit)`;
+								const b = buckets[index];
+								return `${b.fullLabel}  vs  ${b.prevFullLabel}`;
 							},
-							label: (context) => {
-								const val = context.raw as number;
-								return ` ${context.dataset.label}: ${formatRp(val)}`;
-							},
+							label: () => "",
 							afterBody: (items) => {
 								if (!items || items.length === 0) return [];
 								const index = items[0].dataIndex;
-								const item = buckets[index];
-								const roi =
-									item.expense > 0 ? ((item.profit / item.expense) * 100).toFixed(1) : "0.0";
+								const b = buckets[index];
+
+								const calcGrowth = (curr: number, prev: number) => {
+									if (prev === 0) {
+										return curr > 0 ? "N/A (Baru)" : "0.0%";
+									}
+									const diff = ((curr - prev) / Math.abs(prev)) * 100;
+									return `${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%`;
+								};
+
+								const revGrowth = calcGrowth(b.revenue, b.prevRevenue);
+								const expGrowth = calcGrowth(b.expense, b.prevExpense);
+								const profitGrowth = calcGrowth(b.profit, b.prevProfit);
+
+								const roiCurr = b.expense > 0 ? ((b.profit / b.expense) * 100).toFixed(1) : "0.0";
+								const roiPrev =
+									b.prevExpense > 0 ? ((b.prevProfit / b.prevExpense) * 100).toFixed(1) : "0.0";
+
 								return [
-									"",
-									` 💰 Laba Bersih: ${formatRp(item.profit)} (${item.profit >= 0 ? "+" : ""}${roi}%)`,
+									`🟢 PEMASUKAN:`,
+									`  • Tahun Ini: ${formatRp(b.revenue)} (${b.count} unit)`,
+									`  • Tahun Lalu: ${formatRp(b.prevRevenue)} (${b.prevCount} unit)`,
+									`  • YoY Growth: ${revGrowth}`,
+									``,
+									`🟠 PENGELUARAN:`,
+									`  • Tahun Ini: ${formatRp(b.expense)}`,
+									`  • Tahun Lalu: ${formatRp(b.prevExpense)}`,
+									`  • YoY Growth: ${expGrowth}`,
+									``,
+									`💰 LABA BERSIH:`,
+									`  • Tahun Ini: ${formatRp(b.profit)} (ROI: ${roiCurr}%)`,
+									`  • Tahun Lalu: ${formatRp(b.prevProfit)} (ROI: ${roiPrev}%)`,
+									`  • YoY Growth: ${profitGrowth}`,
 								];
 							},
 						},
@@ -374,6 +388,7 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 				},
 				scales: {
 					x: {
+						stacked: true,
 						grid: {
 							display: false,
 						},
@@ -383,6 +398,7 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 						},
 					},
 					y: {
+						stacked: false,
 						beginAtZero: true,
 						grid: {
 							color: "rgba(226, 232, 240, 0.8)",
@@ -436,26 +452,42 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 						</h3>
 					</div>
 					<p className="text-xs text-slate-500 mt-0.5 ml-9">
-						Perbandingan arus kas omzet masuk vs modal keluar
+						Perbandingan arus kas omzet masuk vs modal keluar (dengan komparasi tahun lalu)
 					</p>
 				</div>
 
 				{/* Legend & Summary Badges */}
-				<div className="flex flex-wrap items-center gap-3">
-					{/* Mode Badge (Mingguan / Bulanan) */}
-					<span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200/80 select-none">
-						{granularityMode === "weekly" ? "Mingguan" : "Bulanan"}
+				<div className="flex flex-wrap items-center gap-2.5">
+					{/* YoY Badge */}
+					<span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/80 select-none">
+						Komparasi YoY
 					</span>
 
-					{/* Legend Indicator */}
-					<div className="flex items-center gap-3 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 text-[11px]">
+					{/* Bullet Overlay Legend Indicator */}
+					<div className="flex flex-wrap items-center gap-3 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/80 text-[11px]">
 						<div className="flex items-center gap-1.5">
-							<span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+							{/* Nested bullet overlay swatch */}
+							<div
+								className="relative w-4 h-3.5 flex items-center justify-center shrink-0"
+								title="Solid: Tahun Ini, Background Siluet: Tahun Lalu"
+							>
+								<span className="absolute inset-0 rounded-xs bg-emerald-500/25 border border-emerald-500/80" />
+								<span className="relative w-2 h-full rounded-xs bg-emerald-500" />
+							</div>
 							<span className="font-medium text-slate-700">Pemasukan</span>
+							<span className="text-[10px] text-slate-400 font-normal">(vs Thn Lalu)</span>
 						</div>
-						<div className="flex items-center gap-1.5">
-							<span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
+						<div className="flex items-center gap-1.5 border-l border-slate-200 pl-2.5">
+							{/* Nested bullet overlay swatch */}
+							<div
+								className="relative w-4 h-3.5 flex items-center justify-center shrink-0"
+								title="Solid: Tahun Ini, Background Siluet: Tahun Lalu"
+							>
+								<span className="absolute inset-0 rounded-xs bg-amber-500/25 border border-amber-500/80" />
+								<span className="relative w-2 h-full rounded-xs bg-amber-500" />
+							</div>
 							<span className="font-medium text-slate-700">Pengeluaran</span>
+							<span className="text-[10px] text-slate-400 font-normal">(vs Thn Lalu)</span>
 						</div>
 					</div>
 

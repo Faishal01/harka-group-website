@@ -207,7 +207,16 @@ export function TransactionFormModal({
 				</div>
 
 				{/* Modal Form */}
-				<form onSubmit={handleSubmit} className="p-6 space-y-4">
+				<form
+					onSubmit={handleSubmit}
+					onKeyDown={(e) => {
+						const target = e.target as HTMLElement;
+						if (e.key === "Enter" && target.tagName !== "TEXTAREA" && target.tagName !== "BUTTON") {
+							e.preventDefault();
+						}
+					}}
+					className="p-6 space-y-4"
+				>
 					{errors.submit && (
 						<div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs font-medium text-rose-700">
 							{errors.submit}
