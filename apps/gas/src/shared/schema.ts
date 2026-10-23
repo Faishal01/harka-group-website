@@ -407,3 +407,80 @@ export const StockCarUpdateSchema = z.object({
 export type StockCarItem = z.infer<typeof StockCarItemSchema>;
 export type StockCarCreateInput = z.infer<typeof StockCarCreateSchema>;
 export type StockCarUpdateInput = z.infer<typeof StockCarUpdateSchema>;
+
+/* ==========================================================================
+   INVENTORY SHOWROOM MODULE SCHEMAS & TYPES
+   ========================================================================== */
+
+export const INVENTORY_SHEET_NAME = "Inventory Showroom";
+export const INVENTORY_HEADER_ROW_INDEX = 2;
+export const INVENTORY_DATA_START_ROW_INDEX = 3;
+export const INVENTORY_COLUMNS = [
+	"No",
+	"Nama Barang",
+	"Harga",
+	"Stok Awal",
+	"Terpakai",
+	"Tersedia",
+	"Status",
+	"Ditujukan",
+] as const;
+
+export const INVENTORY_STATUS_OPTIONS = ["AMAN", "PERLU RESTOCK"] as const;
+export type InventoryStatus = (typeof INVENTORY_STATUS_OPTIONS)[number];
+
+export const InventoryItemSchema = z.object({
+	no: z.number().int().positive("No harus berupa angka positif"),
+	namaBarang: z.string().trim().min(1, "Nama barang wajib diisi"),
+	harga: z.number().min(0).default(0), // unit price (0 if not priced)
+	stokAwal: z.number().int().min(0, "Stok awal minimal 0").default(0),
+	terpakai: z.number().int().min(0, "Terpakai minimal 0").default(0),
+	tersedia: z.number().int().default(0), // from D - E
+	status: z.enum(INVENTORY_STATUS_OPTIONS).default("AMAN"),
+	threshold: z.number().int().min(0).default(2), // alert limit for restock formula
+	ditujukan: z.string().default(""), // comma-separated cars or notes
+});
+
+export const InventoryCreateSchema = z.object({
+	namaBarang: z.string().trim().min(1, "Nama barang wajib diisi"),
+	harga: z.number().min(0).default(0),
+	stokAwal: z.number().int().min(0, "Stok awal minimal 0").default(0),
+	threshold: z.number().int().min(0).default(2),
+	ditujukan: z.string().default(""),
+});
+
+export const InventoryUpdateSchema = z.object({
+	no: z.number().int().positive("No wajib diisi"),
+	namaBarang: z.string().trim().min(1, "Nama barang wajib diisi"),
+	harga: z.number().min(0).default(0),
+	stokAwal: z.number().int().min(0, "Stok awal minimal 0").default(0),
+	terpakai: z.number().int().min(0, "Terpakai minimal 0").default(0),
+	threshold: z.number().int().min(0).default(2),
+	ditujukan: z.string().default(""),
+});
+
+export const InventoryConsumeSchema = z.object({
+	no: z.number().int().positive("No item wajib dipilih"),
+	qty: z.number().int().positive("Jumlah pakai minimal 1"),
+	carName: z.string().trim().min(1, "Alokasi pemakaian wajib diisi"),
+});
+
+export type InventoryItem = z.infer<typeof InventoryItemSchema>;
+export type InventoryCreateInput = z.infer<typeof InventoryCreateSchema>;
+export type InventoryUpdateInput = z.infer<typeof InventoryUpdateSchema>;
+export type InventoryConsumeInput = z.infer<typeof InventoryConsumeSchema>;
+
+export type InventorySortColumn = "no" | "namaBarang";
+
+export interface InventoryStatsData {
+	totalItems: number;
+	restockCount: number;
+	outOfStockCount: number;
+}
+
+export interface InventoryFilterState {
+	search: string;
+	status: "ALL" | "PERLU_RESTOCK" | "OUT_OF_STOCK" | "AMAN";
+	sortBy: InventorySortColumn;
+	sortDirection: "asc" | "desc";
+}

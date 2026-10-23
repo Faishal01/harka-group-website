@@ -21,3 +21,4 @@ export function openDialog() {
 export * from "./transaction";
 export * from "./expenditure";
 export * from "./stock";
+export * from "./inventory";

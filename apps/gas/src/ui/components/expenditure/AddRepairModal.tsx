@@ -51,9 +51,9 @@ export function AddRepairModal({
 
 	return (
 		<div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-md my-auto animate-in fade-in zoom-in-95 duration-150">
 				{/* Modal Header */}
-				<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+				<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
 					<div className="flex items-center gap-3">
 						<div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
 							<IconWrench className="w-4 h-4" />

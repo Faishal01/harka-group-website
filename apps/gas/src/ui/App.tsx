@@ -3,6 +3,12 @@ import {
 	AddRepairInput,
 	calculateTargetSellingPrice,
 	hashPlate,
+	InventoryConsumeInput,
+	InventoryCreateInput,
+	InventoryFilterState,
+	InventoryItem,
+	InventorySortColumn,
+	InventoryUpdateInput,
 	parseDate,
 	parseDateUniversal,
 	RepairItem,
@@ -33,6 +39,12 @@ import { ExpenditureFiltersBar } from "./components/expenditure/ExpenditureFilte
 import { ExpenditureStatsCards } from "./components/expenditure/ExpenditureStatsCards";
 import { ExpenditureTable } from "./components/expenditure/ExpenditureTable";
 import { FiltersBar } from "./components/FiltersBar";
+import { DeleteInventoryConfirmModal } from "./components/inventory/DeleteInventoryConfirmModal";
+import { InventoryConsumeModal } from "./components/inventory/InventoryConsumeModal";
+import { InventoryFiltersBar } from "./components/inventory/InventoryFiltersBar";
+import { InventoryFormModal } from "./components/inventory/InventoryFormModal";
+import { InventoryStatsCards } from "./components/inventory/InventoryStatsCards";
+import { InventoryTable } from "./components/inventory/InventoryTable";
 import { StatsCards } from "./components/StatsCards";
 import { DeleteStockConfirmModal } from "./components/stock/DeleteStockConfirmModal";
 import { StockFiltersBar } from "./components/stock/StockFiltersBar";
@@ -280,7 +292,142 @@ const INITIAL_STOCK_DATA: StockCarItem[] = [
 	},
 ];
 
-export type DashboardTab = "transaksi" | "stok" | "pengeluaran" | "keuntungan";
+const INITIAL_MOCK_INVENTORY: InventoryItem[] = [
+	{
+		no: 1,
+		namaBarang: "KARBU CLEANER (TURBO CARB)",
+		harga: 40000,
+		stokAwal: 12,
+		terpakai: 7,
+		tersedia: 5,
+		status: "AMAN",
+		threshold: 2,
+		ditujukan: "HYUNDAI TRAJET, BRIO ABU ABU, FREED 2012",
+	},
+	{
+		no: 2,
+		namaBarang: "FOGGING (GLODWAY)",
+		harga: 55000,
+		stokAwal: 6,
+		terpakai: 0,
+		tersedia: 6,
+		status: "AMAN",
+		threshold: 2,
+		ditujukan: "",
+	},
+	{
+		no: 3,
+		namaBarang: "OLI POWER STEERING (ATF)",
+		harga: 0,
+		stokAwal: 1,
+		terpakai: 1,
+		tersedia: 0,
+		status: "PERLU RESTOCK",
+		threshold: 2,
+		ditujukan: "XENIA XI 2010",
+	},
+	{
+		no: 4,
+		namaBarang: "OLI REM (SEIKEN)/ MINYAK REM",
+		harga: 80000,
+		stokAwal: 3,
+		terpakai: 1,
+		tersedia: 2,
+		status: "PERLU RESTOCK",
+		threshold: 2,
+		ditujukan: "CALYA SILVER 2018",
+	},
+	{
+		no: 5,
+		namaBarang: "ENGINE FLUSH (PRESTONE)",
+		harga: 43000,
+		stokAwal: 12,
+		terpakai: 5,
+		tersedia: 7,
+		status: "AMAN",
+		threshold: 2,
+		ditujukan: "MOBILIO CVT 2014, AVANZA VELOZ 2012, XENIA 2014",
+	},
+	{
+		no: 6,
+		namaBarang: "OLI MESIN (FASTRON ECO GREEN)",
+		harga: 250000,
+		stokAwal: 15,
+		terpakai: 7,
+		tersedia: 8,
+		status: "AMAN",
+		threshold: 1,
+		ditujukan: "CALYA G HITAM 2016, SIGRA PUTIH 2016, BRIO E 2014",
+	},
+	{
+		no: 7,
+		namaBarang: "SHOCK BREAKER (LUMINAIRE)",
+		harga: 450000,
+		stokAwal: 2,
+		terpakai: 1,
+		tersedia: 1,
+		status: "PERLU RESTOCK",
+		threshold: 1,
+		ditujukan: "XENIA X SILVER 2013",
+	},
+	{
+		no: 8,
+		namaBarang: "DOUBLE DIM",
+		harga: 0,
+		stokAwal: 3,
+		terpakai: 3,
+		tersedia: 0,
+		status: "PERLU RESTOCK",
+		threshold: 1,
+		ditujukan: "ERTIGA GL ABU2 2014, XENIA X HITAM 2012",
+	},
+	{
+		no: 9,
+		namaBarang: "VELG CALYA 2020",
+		harga: 1700000,
+		stokAwal: 4,
+		terpakai: 0,
+		tersedia: 4,
+		status: "AMAN",
+		threshold: 1,
+		ditujukan: "",
+	},
+	{
+		no: 10,
+		namaBarang: "BOLA PHILIPS H4 12 V",
+		harga: 30000,
+		stokAwal: 10,
+		terpakai: 0,
+		tersedia: 10,
+		status: "AMAN",
+		threshold: 1,
+		ditujukan: "",
+	},
+	{
+		no: 11,
+		namaBarang: "FILTER OLI HONDA",
+		harga: 30000,
+		stokAwal: 4,
+		terpakai: 1,
+		tersedia: 3,
+		status: "AMAN",
+		threshold: 1,
+		ditujukan: "MOBILIO CVT 2014",
+	},
+	{
+		no: 12,
+		namaBarang: "AIR RADIATOR MERAH (COOLANT)",
+		harga: 65000,
+		stokAwal: 2,
+		terpakai: 2,
+		tersedia: 0,
+		status: "PERLU RESTOCK",
+		threshold: 1,
+		ditujukan: "MIRAGE SILVER 2014",
+	},
+];
+
+export type DashboardTab = "transaksi" | "stok" | "pengeluaran" | "keuntungan" | "inventory";
 
 interface TabItem {
 	id: DashboardTab;
@@ -303,6 +450,12 @@ const DASHBOARD_TABS: TabItem[] = [
 		id: "pengeluaran",
 		label: "Pengeluaran Per Unit",
 		sheetName: "PENGELUARAN PER UNIT",
+		isAvailable: true,
+	},
+	{
+		id: "inventory",
+		label: "Inventaris Showroom",
+		sheetName: "Inventory Showroom",
 		isAvailable: true,
 	},
 ];
@@ -359,6 +512,20 @@ export function App() {
 	const [activeStockCar, setActiveStockCar] = useState<StockCarItem | null>(null);
 	const [deletingStockCar, setDeletingStockCar] = useState<StockCarItem | null>(null);
 
+	// Inventory state
+	const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+	const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+	const [inventoryFilters, setInventoryFilters] = useState<InventoryFilterState>({
+		search: "",
+		status: "ALL",
+		sortBy: "no",
+		sortDirection: "asc",
+	});
+	const [inventoryModalMode, setInventoryModalMode] = useState<ModalMode>(null);
+	const [activeInventoryItem, setActiveInventoryItem] = useState<InventoryItem | null>(null);
+	const [consumingInventoryItem, setConsumingInventoryItem] = useState<InventoryItem | null>(null);
+	const [deletingInventoryItem, setDeletingInventoryItem] = useState<InventoryItem | null>(null);
+
 	// Dashboard Utama / Laporan Keuntungan state
 	const [profitStartDate, setProfitStartDate] = useState("");
 	const [profitEndDate, setProfitEndDate] = useState("");
@@ -373,7 +540,10 @@ export function App() {
 		deletingRepairTarget ||
 		deletingExpenditureVehicle ||
 		stockModalMode ||
-		deletingStockCar,
+		deletingStockCar ||
+		inventoryModalMode ||
+		consumingInventoryItem ||
+		deletingInventoryItem,
 	);
 
 	useEffect(() => {
@@ -479,10 +649,34 @@ export function App() {
 		}
 	};
 
+	// Fetch inventory data
+	const loadInventory = () => {
+		setIsLoadingInventory(true);
+		if (isGasEnv) {
+			google.script.run
+				.withSuccessHandler((data: InventoryItem[]) => {
+					setInventoryItems(data || []);
+					setIsLoadingInventory(false);
+				})
+				.withFailureHandler((err: Error) => {
+					showToast(`Gagal memuat data inventaris: ${err.message}`, "error");
+					setIsLoadingInventory(false);
+				})
+				.getInventoryItems();
+		} else {
+			// Mock in dev
+			setTimeout(() => {
+				setInventoryItems(INITIAL_MOCK_INVENTORY);
+				setIsLoadingInventory(false);
+			}, 300);
+		}
+	};
+
 	useEffect(() => {
 		loadTransactions();
 		loadExpenditures();
 		loadStocks();
+		loadInventory();
 	}, []);
 
 	// Create vehicle expenditure
@@ -1178,6 +1372,223 @@ export function App() {
 		};
 	}, [filteredProfitStocks, stocks]);
 
+	// Inventory Restock Count Badge
+	const inventoryRestockCount = useMemo(() => {
+		return inventoryItems.filter((i) => i.status === "PERLU RESTOCK").length;
+	}, [inventoryItems]);
+
+	// Available car suggestions for quick consumption autocomplete
+	const availableCarSuggestions = useMemo(() => {
+		const map = new Map<string, { plateNumber: string; carDescription: string }>();
+		for (const s of stocks) {
+			if (s.plateNumber) {
+				map.set(s.plateNumber.toUpperCase(), {
+					plateNumber: s.plateNumber,
+					carDescription: s.carDescription,
+				});
+			}
+		}
+		for (const t of transactions) {
+			if (t.plateNumber && !map.has(t.plateNumber.toUpperCase())) {
+				map.set(t.plateNumber.toUpperCase(), {
+					plateNumber: t.plateNumber,
+					carDescription: t.carDescription,
+				});
+			}
+		}
+		for (const e of expenditures) {
+			if (e.plateNumber && !map.has(e.plateNumber.toUpperCase())) {
+				map.set(e.plateNumber.toUpperCase(), {
+					plateNumber: e.plateNumber,
+					carDescription: e.carDescription,
+				});
+			}
+		}
+		return Array.from(map.values()).sort((a, b) =>
+			a.carDescription.localeCompare(b.carDescription, "id-ID"),
+		);
+	}, [stocks, transactions, expenditures]);
+
+	// Inventory Sort Toggle
+	const handleInventorySort = (column: InventorySortColumn) => {
+		if (inventoryFilters.sortBy === column) {
+			setInventoryFilters({
+				...inventoryFilters,
+				sortDirection: inventoryFilters.sortDirection === "asc" ? "desc" : "asc",
+			});
+		} else {
+			setInventoryFilters({
+				...inventoryFilters,
+				sortBy: column,
+				sortDirection: "asc",
+			});
+		}
+	};
+
+	// Filtered & Sorted Inventory Items
+	const filteredInventoryItems = useMemo(() => {
+		const q = inventoryFilters.search.trim().toLowerCase();
+		const dir = inventoryFilters.sortDirection === "asc" ? 1 : -1;
+
+		return inventoryItems
+			.filter((item) => {
+				// Search filter
+				if (q) {
+					const matchName = item.namaBarang.toLowerCase().includes(q);
+					const matchTarget = item.ditujukan.toLowerCase().includes(q);
+					const matchNo = String(item.no).includes(q);
+					if (!matchName && !matchTarget && !matchNo) return false;
+				}
+
+				// Status filter
+				if (inventoryFilters.status === "PERLU_RESTOCK") {
+					if (item.status !== "PERLU RESTOCK") return false;
+				} else if (inventoryFilters.status === "OUT_OF_STOCK") {
+					if (item.tersedia > 0) return false;
+				} else if (inventoryFilters.status === "AMAN") {
+					if (item.status !== "AMAN" || item.tersedia <= 0) return false;
+				}
+
+				return true;
+			})
+			.sort((a, b) => {
+				if (inventoryFilters.sortBy === "no") {
+					return (a.no - b.no) * dir;
+				}
+				if (inventoryFilters.sortBy === "namaBarang") {
+					return a.namaBarang.localeCompare(b.namaBarang, "id-ID") * dir;
+				}
+				return 0;
+			});
+	}, [inventoryItems, inventoryFilters]);
+
+	// Save Inventory Item (Add or Edit)
+	const handleSaveInventoryItem = async (payload: InventoryCreateInput | InventoryUpdateInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				if ("no" in payload) {
+					google.script.run
+						.withSuccessHandler((updated: InventoryItem) => {
+							showToast(`Barang #${updated.no} berhasil diperbarui`, "success");
+							loadInventory();
+							resolve();
+						})
+						.withFailureHandler((err: Error) => {
+							reject(err);
+						})
+						.updateInventoryItem(payload);
+				} else {
+					google.script.run
+						.withSuccessHandler((created: InventoryItem) => {
+							showToast(`Barang #${created.no} berhasil ditambahkan`, "success");
+							loadInventory();
+							resolve();
+						})
+						.withFailureHandler((err: Error) => {
+							reject(err);
+						})
+						.appendInventoryItem(payload);
+				}
+			});
+		} else {
+			// Mock in dev
+			if ("no" in payload) {
+				const tersedia = Math.max(0, payload.stokAwal - payload.terpakai);
+				const status = tersedia <= payload.threshold ? "PERLU RESTOCK" : "AMAN";
+				setInventoryItems((prev) =>
+					prev.map((i) =>
+						i.no === payload.no
+							? {
+									...i,
+									...payload,
+									tersedia,
+									status,
+								}
+							: i,
+					),
+				);
+				showToast(`Barang #${payload.no} berhasil diperbarui (Mock)`, "success");
+			} else {
+				const nextNo =
+					inventoryItems.length > 0 ? Math.max(...inventoryItems.map((i) => i.no)) + 1 : 1;
+				const newItem: InventoryItem = {
+					no: nextNo,
+					namaBarang: payload.namaBarang,
+					harga: payload.harga,
+					stokAwal: payload.stokAwal,
+					terpakai: 0,
+					tersedia: payload.stokAwal,
+					status: payload.stokAwal <= payload.threshold ? "PERLU RESTOCK" : "AMAN",
+					threshold: payload.threshold,
+					ditujukan: payload.ditujukan,
+				};
+				setInventoryItems((prev) => [...prev, newItem]);
+				showToast(`Barang #${nextNo} berhasil ditambahkan (Mock)`, "success");
+			}
+		}
+	};
+
+	// Consume Inventory Item (Pakai Barang)
+	const handleConsumeInventoryItem = async (payload: InventoryConsumeInput) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler((updated: InventoryItem) => {
+						showToast(`Pemakaian ${updated.namaBarang} berhasil dicatat`, "success");
+						loadInventory();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.useInventoryItem(payload);
+			});
+		} else {
+			// Mock in dev
+			setInventoryItems((prev) =>
+				prev.map((i) => {
+					if (i.no !== payload.no) return i;
+					const newTerpakai = i.terpakai + payload.qty;
+					const newTersedia = Math.max(0, i.stokAwal - newTerpakai);
+					const updatedDitujukan = i.ditujukan
+						? `${i.ditujukan}, ${payload.carName}`
+						: payload.carName;
+					const status = newTersedia <= i.threshold ? "PERLU RESTOCK" : "AMAN";
+					return {
+						...i,
+						terpakai: newTerpakai,
+						tersedia: newTersedia,
+						ditujukan: updatedDitujukan,
+						status,
+					};
+				}),
+			);
+			showToast(`Pemakaian barang berhasil dicatat (Mock)`, "success");
+		}
+	};
+
+	// Delete Inventory Item
+	const handleDeleteInventoryItem = async (no: number) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast(`Barang #${no} berhasil dihapus dari inventaris`, "success");
+						loadInventory();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.deleteInventoryItem(no);
+			});
+		} else {
+			// Mock in dev
+			setInventoryItems((prev) => prev.filter((i) => i.no !== no));
+			showToast(`Barang #${no} berhasil dihapus (Mock)`, "success");
+		}
+	};
+
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
 			{/* Top Bar */}
@@ -1261,6 +1672,11 @@ export function App() {
 									{stocks.filter((s) => s.status === "Sold").length}
 								</span>
 							)}
+							{tab.id === "inventory" && inventoryRestockCount > 0 && (
+								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
+									{inventoryRestockCount}
+								</span>
+							)}
 							{tab.badge && (
 								<span className="px-1.5 py-0.2 rounded-full text-[9px] uppercase tracking-wider bg-slate-200/80 text-slate-600 font-medium">
 									{tab.badge}
@@ -1286,6 +1702,7 @@ export function App() {
 							loadStocks();
 							loadTransactions();
 							loadExpenditures();
+							loadInventory();
 						}}
 						isLoading={isLoadingStocks}
 					/>
@@ -1393,6 +1810,37 @@ export function App() {
 							setDeletingRepairTarget({ vehicle, repair, repairIndex: index })
 						}
 						onDeleteVehicle={(vehicle) => setDeletingExpenditureVehicle(vehicle)}
+					/>
+				</>
+			) : activeTab === "inventory" ? (
+				<>
+					{/* 3 Stock Status KPI Cards */}
+					<InventoryStatsCards items={inventoryItems} />
+
+					{/* Inventory Filters Bar */}
+					<InventoryFiltersBar
+						filters={inventoryFilters}
+						onChange={setInventoryFilters}
+						onAddNew={() => {
+							setActiveInventoryItem(null);
+							setInventoryModalMode("create");
+						}}
+						onRefresh={loadInventory}
+						isLoading={isLoadingInventory}
+					/>
+
+					{/* Inventory Table */}
+					<InventoryTable
+						items={filteredInventoryItems}
+						filters={inventoryFilters}
+						onSort={handleInventorySort}
+						isLoading={isLoadingInventory}
+						onEdit={(item) => {
+							setActiveInventoryItem(item);
+							setInventoryModalMode("edit");
+						}}
+						onConsume={(item) => setConsumingInventoryItem(item)}
+						onDelete={(item) => setDeletingInventoryItem(item)}
 					/>
 				</>
 			) : (
@@ -1558,6 +2006,38 @@ export function App() {
 					onConfirm={async () => {
 						await handleDeleteExpenditureVehicle(deletingExpenditureVehicle.id);
 					}}
+				/>
+			)}
+
+			{/* Inventory Form Modal (Add / Edit) */}
+			{inventoryModalMode && (
+				<InventoryFormModal
+					mode={inventoryModalMode}
+					initialData={activeInventoryItem}
+					onClose={() => {
+						setInventoryModalMode(null);
+						setActiveInventoryItem(null);
+					}}
+					onSubmit={handleSaveInventoryItem}
+				/>
+			)}
+
+			{/* Quick Inventory Consume Modal (Pakai Barang) */}
+			{consumingInventoryItem && (
+				<InventoryConsumeModal
+					item={consumingInventoryItem}
+					availableCars={availableCarSuggestions}
+					onClose={() => setConsumingInventoryItem(null)}
+					onSubmit={handleConsumeInventoryItem}
+				/>
+			)}
+
+			{/* Delete Inventory Item Confirmation Modal */}
+			{deletingInventoryItem && (
+				<DeleteInventoryConfirmModal
+					item={deletingInventoryItem}
+					onClose={() => setDeletingInventoryItem(null)}
+					onConfirm={handleDeleteInventoryItem}
 				/>
 			)}
 
