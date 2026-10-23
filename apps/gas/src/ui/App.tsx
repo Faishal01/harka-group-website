@@ -1132,12 +1132,20 @@ export function App() {
 
 	// Filtered Stocks for Dashboard Utama (Laporan Keuntungan)
 	const filteredProfitStocks = useMemo(() => {
+		const currentYear = new Date().getFullYear();
+
 		return stocks.filter((car) => {
 			if (car.status !== "Sold") return false;
-			if (!profitStartDate && !profitEndDate) return true;
 			if (!car.soldDate) return false;
 			const parsed = parseDateUniversal(car.soldDate);
 			if (!parsed) return false;
+
+			// When "Semua" (empty date filter) is active, scope to current year only
+			// (aligning with IncomeExpenseChart's current-year trim)
+			if (!profitStartDate && !profitEndDate) {
+				return parsed.year === currentYear;
+			}
+
 			if (profitStartDate && parsed.iso < profitStartDate) return false;
 			if (profitEndDate && parsed.iso > profitEndDate) return false;
 			return true;
