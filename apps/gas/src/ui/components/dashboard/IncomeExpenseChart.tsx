@@ -443,15 +443,15 @@ export function IncomeExpenseChart({ stocks, startDate, endDate }: IncomeExpense
 									const profitGrowth = calcGrowth(b.profit, b.prevProfit);
 
 									lines.push(
-										`🟢 Pemasukan: ${formatCompactRp(b.revenue)} (Lalu: ${formatCompactRp(b.prevRevenue)} • ${revGrowth})`,
-										`🟠 Pengeluaran: ${formatCompactRp(b.expense)} (Lalu: ${formatCompactRp(b.prevExpense)} • ${expGrowth})`,
-										`💰 Laba: ${formatCompactRp(b.profit)} (Lalu: ${formatCompactRp(b.prevProfit)} • ${profitGrowth} • ROI: ${roiCurr}%)`,
+										`🟢 Pemasukan: ${formatCompactRp(b.revenue)} (YoY: ${formatCompactRp(b.prevRevenue)} • ${revGrowth})`,
+										`🟠 Pengeluaran: ${formatCompactRp(b.expense)} (YoY: ${formatCompactRp(b.prevExpense)} • ${expGrowth})`,
+										`💰 Laba: ${formatCompactRp(b.profit)} (YoY: ${formatCompactRp(b.prevProfit)} • ${profitGrowth} • ROI: ${roiCurr}%)`,
 									);
 
 									if (showVolumeLine) {
 										const countGrowth = calcGrowth(b.count, b.prevCount);
 										lines.push(
-											`🚗 Unit Terjual: ${b.count} unit (Lalu: ${b.prevCount} unit • ${countGrowth})`,
+											`🚗 Unit Terjual: ${b.count} unit (YoY: ${b.prevCount} unit • ${countGrowth})`,
 										);
 									}
 								} else {
