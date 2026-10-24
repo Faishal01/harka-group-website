@@ -484,3 +484,109 @@ export interface InventoryFilterState {
 	sortBy: InventorySortColumn;
 	sortDirection: "asc" | "desc";
 }
+
+/* ==========================================================================
+   KAS OPERASIONAL (PENGELUARAN KAS) MODULE SCHEMAS & TYPES
+   ========================================================================== */
+
+export const CASH_SHEET_NAME = "PENGELUARAN KAS";
+export const CASH_HEADER_ROW_INDEX = 3;
+export const CASH_DATA_START_ROW_INDEX = 4;
+export const CASH_COLUMNS = [
+	"Tanggal",
+	"Keterangan",
+	"Kategori",
+	"Uang Masuk",
+	"Uang Keluar",
+	"Sisa",
+	"Ket",
+] as const;
+
+export const CASH_EXPENSE_CATEGORIES = [
+	"PENGELUARAN SERVICE",
+	"OPERASIONAL KANTOR",
+	"PELUNASAN DRIVER",
+	"LAINNYA",
+] as const;
+
+export const CASH_INCOME_CATEGORIES = ["PEMASUKAN KAS", "LAINNYA"] as const;
+
+export const CashTransactionItemSchema = z.object({
+	rowIdx: z.number().int().positive("Index baris tidak valid"),
+	date: z.string().trim().min(1, "Tanggal transaksi wajib diisi"), // DD/MM/YY
+	description: z.string().trim().min(1, "Keterangan transaksi wajib diisi"),
+	category: z.string().trim().min(1, "Kategori transaksi wajib diisi"),
+	type: z.enum(["IN", "OUT"]),
+	amount: z.number().positive("Nominal harus lebih dari 0"),
+	cashIn: z.number().min(0).default(0),
+	cashOut: z.number().min(0).default(0),
+	balance: z.number().default(0),
+	notes: z.string().default(""), // file name or note
+	attachmentUrl: z.string().optional(), // Google Drive file URI
+	attachmentType: z.enum(["pdf", "image", "file"]).optional(),
+});
+
+export const CashTransactionCreateSchema = z.object({
+	type: z.enum(["IN", "OUT"], {
+		error: "Pilih jenis transaksi (Pengeluaran atau Pemasukan)",
+	}),
+	date: z.string().trim().min(1, "Tanggal transaksi wajib diisi"),
+	description: z.string().trim().min(1, "Keterangan transaksi wajib diisi"),
+	category: z.string().trim().min(1, "Kategori transaksi wajib diisi"),
+	amount: z.number().positive("Nominal transaksi harus lebih dari 0"),
+	notes: z.string().default(""),
+	fileId: z.string().optional(),
+	fileName: z.string().optional(),
+	fileUrl: z.string().optional(),
+});
+
+export const CashTransactionUpdateSchema = z.object({
+	rowIdx: z.number().int().positive("Index baris wajib ada"),
+	type: z.enum(["IN", "OUT"]),
+	date: z.string().trim().min(1, "Tanggal transaksi wajib diisi"),
+	description: z.string().trim().min(1, "Keterangan transaksi wajib diisi"),
+	category: z.string().trim().min(1, "Kategori transaksi wajib diisi"),
+	amount: z.number().positive("Nominal transaksi harus lebih dari 0"),
+	notes: z.string().default(""),
+	fileId: z.string().optional(),
+	fileName: z.string().optional(),
+	fileUrl: z.string().optional(),
+	preserveAttachment: z.boolean().default(false),
+});
+
+export type CashTransactionItem = z.infer<typeof CashTransactionItemSchema>;
+export type CashTransactionCreateInput = z.infer<typeof CashTransactionCreateSchema>;
+export type CashTransactionUpdateInput = z.infer<typeof CashTransactionUpdateSchema>;
+
+export type CashSortColumn = "date" | "description" | "cashIn" | "cashOut" | "balance";
+
+export interface CashFilterState {
+	searchQuery: string;
+	month: string; // "ALL" | "MM/YY"
+	category: string; // "ALL" | category name
+	type: "ALL" | "IN" | "OUT";
+	sortBy: CashSortColumn;
+	sortDirection: "asc" | "desc";
+}
+
+export interface CashflowStatsData {
+	currentBalance: number;
+	totalExpenseMonth: number;
+	totalIncomeMonth: number;
+	transactionCountMonth: number;
+}
+
+export interface PickerConfig {
+	oauthToken: string;
+	folderId?: string;
+	appId?: string;
+	developerKey?: string;
+}
+
+export const UploadReceiptInputSchema = z.object({
+	fileName: z.string().min(1, "Nama file wajib ada"),
+	mimeType: z.string().min(1, "Mime type wajib ada"),
+	base64Data: z.string().min(1, "Data file wajib ada"),
+});
+
+export type UploadReceiptInput = z.infer<typeof UploadReceiptInputSchema>;

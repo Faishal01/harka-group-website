@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import {
 	AddRepairInput,
 	calculateTargetSellingPrice,
+	CashFilterState,
+	CashTransactionCreateInput,
+	CashTransactionItem,
+	CashTransactionUpdateInput,
 	hashPlate,
 	InventoryConsumeInput,
 	InventoryCreateInput,
@@ -11,6 +15,7 @@ import {
 	InventoryUpdateInput,
 	parseDate,
 	parseDateUniversal,
+	PickerConfig,
 	RepairItem,
 	StockCarCreateInput,
 	StockCarItem,
@@ -22,6 +27,11 @@ import {
 	VehicleExpenditureCreateInput,
 	VehicleExpenditureItem,
 } from "../shared/schema";
+import { CashflowFiltersBar } from "./components/cashflow/CashflowFiltersBar";
+import { CashflowFormModal } from "./components/cashflow/CashflowFormModal";
+import { CashflowStatsCards } from "./components/cashflow/CashflowStatsCards";
+import { CashflowTable } from "./components/cashflow/CashflowTable";
+import { DeleteCashConfirmModal } from "./components/cashflow/DeleteCashConfirmModal";
 import { DateRangeFilter } from "./components/dashboard/DateRangeFilter";
 import {
 	DashboardStatsData,
@@ -427,7 +437,108 @@ const INITIAL_MOCK_INVENTORY: InventoryItem[] = [
 	},
 ];
 
-export type DashboardTab = "transaksi" | "stok" | "pengeluaran" | "keuntungan" | "inventory";
+const INITIAL_MOCK_CASH_TRANSACTIONS: CashTransactionItem[] = [
+	{
+		rowIdx: 4,
+		date: "25/08/25",
+		description: "B 1152 SSF Service ac bersihin evaporator + ganti magnetic clutch",
+		category: "PENGELUARAN SERVICE",
+		type: "OUT",
+		amount: 1150000,
+		cashIn: 0,
+		cashOut: 1150000,
+		balance: 18850000,
+		notes: "Kuitansi AC Jaya.pdf",
+		attachmentUrl: "https://drive.google.com/file/d/mock-1/view",
+		attachmentType: "pdf",
+	},
+	{
+		rowIdx: 5,
+		date: "25/08/25",
+		description: "Beli sabun cuci mobil, sampo kit & busa poles showroom",
+		category: "OPERASIONAL KANTOR",
+		type: "OUT",
+		amount: 125000,
+		cashIn: 0,
+		cashOut: 125000,
+		balance: 18725000,
+		notes: "Nota Toko Berkah.jpg",
+		attachmentUrl: "https://drive.google.com/file/d/mock-2/view",
+		attachmentType: "image",
+	},
+	{
+		rowIdx: 6,
+		date: "26/08/25",
+		description: "Setoran Tambahan Kas Operasional Showroom",
+		category: "PEMASUKAN KAS",
+		type: "IN",
+		amount: 10000000,
+		cashIn: 10000000,
+		cashOut: 0,
+		balance: 28725000,
+		notes: "Bukti Transfer BCA.pdf",
+		attachmentUrl: "https://drive.google.com/file/d/mock-3/view",
+		attachmentType: "pdf",
+	},
+	{
+		rowIdx: 7,
+		date: "28/08/25",
+		description: "B 2041 PQR Ganti ban serep & balancing roda",
+		category: "PENGELUARAN SERVICE",
+		type: "OUT",
+		amount: 850000,
+		cashIn: 0,
+		cashOut: 850000,
+		balance: 27875000,
+		notes: "Nota Bengkel Utama.pdf",
+		attachmentUrl: "https://drive.google.com/file/d/mock-4/view",
+		attachmentType: "pdf",
+	},
+	{
+		rowIdx: 8,
+		date: "02/09/25",
+		description: "Ongkos kirim unit & bensin driver antar mobil ke Cikarang",
+		category: "PELUNASAN DRIVER",
+		type: "OUT",
+		amount: 300000,
+		cashIn: 0,
+		cashOut: 300000,
+		balance: 27575000,
+		notes: "Kuitansi Driver Budi.jpg",
+		attachmentUrl: "https://drive.google.com/file/d/mock-5/view",
+		attachmentType: "image",
+	},
+	{
+		rowIdx: 9,
+		date: "05/09/25",
+		description: "Konsumsi rapat koordinasi bulanan tim showroom & air galon",
+		category: "OPERASIONAL KANTOR",
+		type: "OUT",
+		amount: 180000,
+		cashIn: 0,
+		cashOut: 180000,
+		balance: 27395000,
+		notes: "",
+		attachmentUrl: undefined,
+	},
+	{
+		rowIdx: 10,
+		date: "10/09/25",
+		description: "B 1892 KLO Ganti oli mesin Fastron Eco & filter oli Honda",
+		category: "PENGELUARAN SERVICE",
+		type: "OUT",
+		amount: 450000,
+		cashIn: 0,
+		cashOut: 450000,
+		balance: 26945000,
+		notes: "Nota Bengkel Sentosa.pdf",
+		attachmentUrl: "https://drive.google.com/file/d/mock-6/view",
+		attachmentType: "pdf",
+	},
+];
+
+export type DashboardTab =
+	"transaksi" | "stok" | "pengeluaran" | "keuntungan" | "inventory" | "kas";
 
 interface TabItem {
 	id: DashboardTab;
@@ -456,6 +567,12 @@ const DASHBOARD_TABS: TabItem[] = [
 		id: "inventory",
 		label: "Inventaris Showroom",
 		sheetName: "Inventory Showroom",
+		isAvailable: true,
+	},
+	{
+		id: "kas",
+		label: "Kas Operasional",
+		sheetName: "PENGELUARAN KAS",
 		isAvailable: true,
 	},
 ];
@@ -526,6 +643,22 @@ export function App() {
 	const [consumingInventoryItem, setConsumingInventoryItem] = useState<InventoryItem | null>(null);
 	const [deletingInventoryItem, setDeletingInventoryItem] = useState<InventoryItem | null>(null);
 
+	// Cashflow (Kas Operasional) state
+	const [cashTransactions, setCashTransactions] = useState<CashTransactionItem[]>([]);
+	const [isLoadingCash, setIsLoadingCash] = useState(false);
+	const [cashFilters, setCashFilters] = useState<CashFilterState>({
+		searchQuery: "",
+		month: "ALL",
+		category: "ALL",
+		type: "ALL",
+		sortBy: "date",
+		sortDirection: "desc",
+	});
+	const [cashModalMode, setCashModalMode] = useState<"create" | "edit" | null>(null);
+	const [activeCashItem, setActiveCashItem] = useState<CashTransactionItem | null>(null);
+	const [deletingCashItem, setDeletingCashItem] = useState<CashTransactionItem | null>(null);
+	const [pickerConfig, setPickerConfig] = useState<PickerConfig | undefined>(undefined);
+
 	// Dashboard Utama / Laporan Keuntungan state
 	const [profitStartDate, setProfitStartDate] = useState("");
 	const [profitEndDate, setProfitEndDate] = useState("");
@@ -543,7 +676,9 @@ export function App() {
 		deletingStockCar ||
 		inventoryModalMode ||
 		consumingInventoryItem ||
-		deletingInventoryItem,
+		deletingInventoryItem ||
+		cashModalMode ||
+		deletingCashItem,
 	);
 
 	useEffect(() => {
@@ -672,11 +807,44 @@ export function App() {
 		}
 	};
 
+	// Fetch cashflow transactions
+	const loadCashTransactions = () => {
+		setIsLoadingCash(true);
+		if (isGasEnv) {
+			google.script.run
+				.withSuccessHandler((data: CashTransactionItem[]) => {
+					setCashTransactions(data || []);
+					setIsLoadingCash(false);
+				})
+				.withFailureHandler((err: Error) => {
+					showToast(`Gagal memuat kas operasional: ${err.message}`, "error");
+					setIsLoadingCash(false);
+				})
+				.getCashTransactions();
+
+			google.script.run
+				.withSuccessHandler((config: PickerConfig) => {
+					setPickerConfig(config);
+				})
+				.withFailureHandler((err: Error) => {
+					console.warn("Could not load PickerConfig:", err);
+				})
+				.getPickerConfig();
+		} else {
+			// Mock in dev
+			setTimeout(() => {
+				setCashTransactions(INITIAL_MOCK_CASH_TRANSACTIONS);
+				setIsLoadingCash(false);
+			}, 300);
+		}
+	};
+
 	useEffect(() => {
 		loadTransactions();
 		loadExpenditures();
 		loadStocks();
 		loadInventory();
+		loadCashTransactions();
 	}, []);
 
 	// Create vehicle expenditure
@@ -1589,6 +1757,176 @@ export function App() {
 		}
 	};
 
+	// Filtered Cashflow Items (Strictly sorted by Date descending, then rowIdx descending)
+	const filteredCashTransactions = useMemo(() => {
+		const q = cashFilters.searchQuery.trim().toLowerCase();
+
+		return cashTransactions
+			.filter((item) => {
+				// Search filter
+				if (q) {
+					const matchDesc = (item.description || "").toLowerCase().includes(q);
+					const matchCat = (item.category || "").toLowerCase().includes(q);
+					const matchNotes = (item.notes || "").toLowerCase().includes(q);
+					const matchDate = (item.date || "").toLowerCase().includes(q);
+					if (!matchDesc && !matchCat && !matchNotes && !matchDate) return false;
+				}
+
+				// Month filter
+				if (cashFilters.month !== "ALL") {
+					const parts = (item.date || "").split("/");
+					if (parts.length === 3) {
+						const m = `${parts[1]}/${parts[2]}`;
+						if (m !== cashFilters.month) return false;
+					} else {
+						return false;
+					}
+				}
+
+				// Type filter
+				if (cashFilters.type !== "ALL" && item.type !== cashFilters.type) {
+					return false;
+				}
+
+				// Category filter
+				if (cashFilters.category !== "ALL" && item.category !== cashFilters.category) {
+					return false;
+				}
+
+				return true;
+			})
+			.sort((a, b) => {
+				const ta = parseDate(a.date);
+				const tb = parseDate(b.date);
+				return tb - ta || b.rowIdx - a.rowIdx;
+			});
+	}, [cashTransactions, cashFilters]);
+
+	// Save Cashflow Transaction (Add / Update)
+	const handleSaveCashTransaction = async (
+		payload: CashTransactionCreateInput | CashTransactionUpdateInput,
+	) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				if ("rowIdx" in payload) {
+					google.script.run
+						.withSuccessHandler((updated: CashTransactionItem) => {
+							showToast(`Transaksi kas baris #${updated.rowIdx} berhasil diperbarui`, "success");
+							loadCashTransactions();
+							resolve();
+						})
+						.withFailureHandler((err: Error) => {
+							reject(err);
+						})
+						.updateCashTransaction(payload);
+				} else {
+					google.script.run
+						.withSuccessHandler((created: CashTransactionItem) => {
+							showToast(
+								`Transaksi kas baru berhasil dicatat pada baris #${created.rowIdx}`,
+								"success",
+							);
+							loadCashTransactions();
+							resolve();
+						})
+						.withFailureHandler((err: Error) => {
+							reject(err);
+						})
+						.appendCashTransaction(payload);
+				}
+			});
+		} else {
+			// Mock in dev
+			if ("rowIdx" in payload) {
+				setCashTransactions((prev) =>
+					prev.map((item) => {
+						if (item.rowIdx !== payload.rowIdx) return item;
+						const cashIn = payload.type === "IN" ? payload.amount : 0;
+						const cashOut = payload.type === "OUT" ? payload.amount : 0;
+						return {
+							...item,
+							date: payload.date,
+							description: payload.description,
+							category: payload.category,
+							type: payload.type,
+							amount: payload.amount,
+							cashIn,
+							cashOut,
+							notes: payload.fileName || payload.notes || item.notes,
+							attachmentUrl:
+								payload.fileUrl || (payload.preserveAttachment ? item.attachmentUrl : undefined),
+						};
+					}),
+				);
+				showToast(`Transaksi baris #${payload.rowIdx} berhasil diperbarui (Mock)`, "success");
+			} else {
+				const nextRow =
+					cashTransactions.length > 0 ? Math.max(...cashTransactions.map((t) => t.rowIdx)) + 1 : 4;
+				const prevBalance =
+					cashTransactions.length > 0 ? cashTransactions[cashTransactions.length - 1].balance : 0;
+				const cashIn = payload.type === "IN" ? payload.amount : 0;
+				const cashOut = payload.type === "OUT" ? payload.amount : 0;
+				const newBalance = prevBalance + cashIn - cashOut;
+
+				const newItem: CashTransactionItem = {
+					rowIdx: nextRow,
+					date: payload.date,
+					description: payload.description,
+					category: payload.category,
+					type: payload.type,
+					amount: payload.amount,
+					cashIn,
+					cashOut,
+					balance: newBalance,
+					notes: payload.fileName || payload.notes || "",
+					attachmentUrl: payload.fileUrl,
+					attachmentType: payload.fileUrl?.includes(".pdf")
+						? "pdf"
+						: payload.fileUrl?.includes(".jpg") || payload.fileUrl?.includes(".png")
+							? "image"
+							: payload.fileUrl
+								? "file"
+								: undefined,
+				};
+				setCashTransactions((prev) => [...prev, newItem]);
+				showToast(`Transaksi baru baris #${nextRow} berhasil ditambahkan (Mock)`, "success");
+			}
+		}
+	};
+
+	// Delete Cashflow Transaction
+	const handleDeleteCashTransaction = async (item: CashTransactionItem) => {
+		if (isGasEnv) {
+			return new Promise<void>((resolve, reject) => {
+				google.script.run
+					.withSuccessHandler(() => {
+						showToast(`Transaksi baris #${item.rowIdx} berhasil dihapus`, "success");
+						loadCashTransactions();
+						resolve();
+					})
+					.withFailureHandler((err: Error) => {
+						reject(err);
+					})
+					.deleteCashTransaction(item.rowIdx);
+			});
+		} else {
+			// Mock in dev: delete row and recalculate running balances
+			setCashTransactions((prev) => {
+				const filtered = prev.filter((t) => t.rowIdx !== item.rowIdx);
+				let running = 0;
+				return filtered.map((t, idx) => {
+					running = running + t.cashIn - t.cashOut;
+					return {
+						...t,
+						rowIdx: 4 + idx,
+						balance: running,
+					};
+				});
+			});
+			showToast(`Transaksi kas baris #${item.rowIdx} berhasil dihapus (Mock)`, "success");
+		}
+	};
+
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
 			{/* Top Bar */}
@@ -1675,6 +2013,11 @@ export function App() {
 							{tab.id === "inventory" && inventoryRestockCount > 0 && (
 								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
 									{inventoryRestockCount}
+								</span>
+							)}
+							{tab.id === "kas" && cashTransactions.length > 0 && (
+								<span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-800 font-bold">
+									{cashTransactions.length}
 								</span>
 							)}
 							{tab.badge && (
@@ -1841,6 +2184,35 @@ export function App() {
 						}}
 						onConsume={(item) => setConsumingInventoryItem(item)}
 						onDelete={(item) => setDeletingInventoryItem(item)}
+					/>
+				</>
+			) : activeTab === "kas" ? (
+				<>
+					{/* 4 Cashflow Stats Cards (Cumulative All-Time) */}
+					<CashflowStatsCards allItems={cashTransactions} />
+
+					{/* Cashflow Filters Bar */}
+					<CashflowFiltersBar
+						filters={cashFilters}
+						onChange={setCashFilters}
+						items={cashTransactions}
+						onAddNew={() => {
+							setActiveCashItem(null);
+							setCashModalMode("create");
+						}}
+						onRefresh={loadCashTransactions}
+						isLoading={isLoadingCash}
+					/>
+
+					{/* Cashflow Table (Fixed Sort: Date desc, RowIdx desc) */}
+					<CashflowTable
+						items={filteredCashTransactions}
+						isLoading={isLoadingCash}
+						onEdit={(item) => {
+							setActiveCashItem(item);
+							setCashModalMode("edit");
+						}}
+						onDelete={(item) => setDeletingCashItem(item)}
 					/>
 				</>
 			) : (
@@ -2038,6 +2410,30 @@ export function App() {
 					item={deletingInventoryItem}
 					onClose={() => setDeletingInventoryItem(null)}
 					onConfirm={handleDeleteInventoryItem}
+				/>
+			)}
+
+			{/* Cashflow Form Modal (Add / Edit) */}
+			{cashModalMode && (
+				<CashflowFormModal
+					mode={cashModalMode === "edit" ? "edit" : "add"}
+					initialData={activeCashItem}
+					availableCars={availableCarSuggestions}
+					pickerConfig={pickerConfig}
+					onClose={() => {
+						setCashModalMode(null);
+						setActiveCashItem(null);
+					}}
+					onSubmit={handleSaveCashTransaction}
+				/>
+			)}
+
+			{/* Delete Cashflow Item Confirmation Modal */}
+			{deletingCashItem && (
+				<DeleteCashConfirmModal
+					item={deletingCashItem}
+					onClose={() => setDeletingCashItem(null)}
+					onConfirm={handleDeleteCashTransaction}
 				/>
 			)}
 
