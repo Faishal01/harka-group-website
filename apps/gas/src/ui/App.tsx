@@ -1930,7 +1930,7 @@ export function App() {
 	return (
 		<div className="bg-slate-50 min-h-screen text-slate-800 font-sans p-6 antialiased flex flex-col">
 			{/* Top Bar */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-3">
+			<div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
 				<div className="flex items-center gap-3">
 					<div className="w-11 h-11 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center shadow-md shadow-blue-500/20 text-xl">
 						H
@@ -1949,20 +1949,6 @@ export function App() {
 							Sistem Manajemen Showroom Terintegrasi Google Sheets
 						</p>
 					</div>
-				</div>
-
-				<div className="flex items-center gap-2">
-					<button
-						onClick={() => {
-							if (typeof google !== "undefined" && google.script?.host) {
-								google.script.host.close();
-							}
-						}}
-						type="button"
-						className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-					>
-						<span>Tutup Dialog</span>
-					</button>
 				</div>
 			</div>
 
@@ -2418,7 +2404,7 @@ export function App() {
 				<CashflowFormModal
 					mode={cashModalMode === "edit" ? "edit" : "add"}
 					initialData={activeCashItem}
-					availableCars={availableCarSuggestions}
+					existingItems={cashTransactions}
 					pickerConfig={pickerConfig}
 					onClose={() => {
 						setCashModalMode(null);

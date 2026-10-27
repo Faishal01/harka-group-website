@@ -87,6 +87,7 @@ export function getPickerConfig(): PickerConfig {
 		oauthToken,
 		folderId: folderId || undefined,
 		developerKey: developerKey || undefined,
+		appId: "714475522924",
 	};
 }
 
@@ -437,25 +438,33 @@ export function appendCashTransaction(input: CashTransactionCreateInput): CashTr
 
 		const cashIn = parsed.type === "IN" ? parsed.amount : 0;
 		const cashOut = parsed.type === "OUT" ? parsed.amount : 0;
-		const cashInVal = parsed.type === "IN" ? parsed.amount : null;
-		const cashOutVal = parsed.type === "OUT" ? parsed.amount : null;
 
-		// 1. Set A..E values (null keeps empty cell for non-applicable cash flow)
+		// 1. Set A..C values (Tanggal, Keterangan, Kategori)
 		sheet
-			.getRange(targetRow, 1, 1, 5)
-			.setValues([[parsed.date, parsed.description, parsed.category, cashInVal, cashOutVal]]);
+			.getRange(targetRow, 1, 1, 3)
+			.setValues([[parsed.date, parsed.description, parsed.category]]);
 
-		// 2. Set Column F (Sisa) running balance formula
+		// 2. Set Uang Masuk (Col D) & Uang Keluar (Col E)
+		// Explicitly clear the non-applicable column so it remains completely empty ({}) rather than zero
+		if (parsed.type === "IN") {
+			sheet.getRange(targetRow, 4).setValue(parsed.amount);
+			sheet.getRange(targetRow, 5).clearContent();
+		} else {
+			sheet.getRange(targetRow, 4).clearContent();
+			sheet.getRange(targetRow, 5).setValue(parsed.amount);
+		}
+
+		// 3. Set Column F (Sisa) running balance formula
 		const balanceFormula =
 			targetRow === CASH_DATA_START_ROW_INDEX
 				? "=D4-E4"
 				: `=F${targetRow - 1}+D${targetRow}-E${targetRow}`;
 		sheet.getRange(targetRow, 6).setFormula(balanceFormula);
 
-		// 3. Set Column G (Ket) with Smart Chip or notes
+		// 4. Set Column G (Ket) with Smart Chip or notes
 		setCellSmartChip(sheet, targetRow, parsed.fileUrl, parsed.fileName, parsed.notes);
 
-		// 4. Format row styling (yellow #ffff00 background, black borders, Poppins 11pt, currency format)
+		// 5. Format row styling (yellow #ffff00 background, black borders, Poppins 11pt, currency format)
 		formatCashRow(sheet, targetRow);
 
 		SpreadsheetApp.flush();
@@ -509,15 +518,23 @@ export function updateCashTransaction(input: CashTransactionUpdateInput): CashTr
 		const targetRow = parsed.rowIdx;
 		const cashIn = parsed.type === "IN" ? parsed.amount : 0;
 		const cashOut = parsed.type === "OUT" ? parsed.amount : 0;
-		const cashInVal = parsed.type === "IN" ? parsed.amount : null;
-		const cashOutVal = parsed.type === "OUT" ? parsed.amount : null;
 
-		// 1. Update A..E values
+		// 1. Update A..C values
 		sheet
-			.getRange(targetRow, 1, 1, 5)
-			.setValues([[parsed.date, parsed.description, parsed.category, cashInVal, cashOutVal]]);
+			.getRange(targetRow, 1, 1, 3)
+			.setValues([[parsed.date, parsed.description, parsed.category]]);
 
-		// 2. Ensure running balance formula on F
+		// 2. Update Uang Masuk (Col D) & Uang Keluar (Col E)
+		// Explicitly clear the non-applicable column so it remains completely empty ({}) rather than zero
+		if (parsed.type === "IN") {
+			sheet.getRange(targetRow, 4).setValue(parsed.amount);
+			sheet.getRange(targetRow, 5).clearContent();
+		} else {
+			sheet.getRange(targetRow, 4).clearContent();
+			sheet.getRange(targetRow, 5).setValue(parsed.amount);
+		}
+
+		// 3. Ensure running balance formula on F
 		const balanceFormula =
 			targetRow === CASH_DATA_START_ROW_INDEX
 				? "=D4-E4"

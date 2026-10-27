@@ -76,8 +76,7 @@ export function DeleteCashConfirmModal({ item, onClose, onConfirm }: DeleteCashC
 					</div>
 
 					<div className="p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-xl text-left text-[11px] text-amber-800 leading-relaxed">
-						<strong>Catatan Integritas Formula:</strong> Sistem akan otomatis memperbarui rumus
-						saldo berjalan pada baris-baris setelahnya agar tidak terjadi error <code>#REF!</code>.
+						Tindakan ini permanen. Saldo kas akan otomatis disesuaikan.
 					</div>
 
 					{error && (
