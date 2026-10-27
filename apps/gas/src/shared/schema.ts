@@ -270,7 +270,8 @@ export const EXPENDITURE_COLUMNS = [
 	"No",
 	"Deskripsi Mobil",
 	"Plat Mobil",
-	"Deskripsi Perbaikan",
+	"Deskripsi perbaikan",
+	"Kuantitas",
 	"Biaya",
 	"Total",
 ] as const;
@@ -278,6 +279,7 @@ export const EXPENDITURE_COLUMNS = [
 export const RepairItemSchema = z.object({
 	id: z.string().min(1),
 	description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+	quantity: z.number().int().positive().nullable().optional(),
 	cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
 });
 
@@ -298,6 +300,7 @@ export const VehicleExpenditureCreateSchema = z.object({
 		.array(
 			z.object({
 				description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+				quantity: z.number().int().positive().nullable().optional(),
 				cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
 			}),
 		)
@@ -307,6 +310,7 @@ export const VehicleExpenditureCreateSchema = z.object({
 export const AddRepairInputSchema = z.object({
 	vehiclePlateHash: z.string().min(1, "ID kendaraan wajib ada"),
 	description: z.string().min(1, "Deskripsi perbaikan wajib diisi"),
+	quantity: z.number().int().positive().nullable().optional(),
 	cost: z.number().min(0, "Biaya perbaikan harus berupa angka positif"),
 });
 

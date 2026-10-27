@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import IconAlertTriangle from "~icons/lucide/alert-triangle";
 import IconCar from "~icons/lucide/car";
 import IconCheck from "~icons/lucide/check";
 import IconChevronDown from "~icons/lucide/chevron-down";
@@ -8,6 +9,7 @@ import IconX from "~icons/lucide/x";
 import {
 	formatRp,
 	hashPlate,
+	InventoryItem,
 	normalizePlate,
 	StockCarItem,
 	TransactionItem,
@@ -21,12 +23,14 @@ interface ExpenditureCreateModalProps {
 	transactionCars: TransactionItem[];
 	stockCars?: StockCarItem[];
 	existingRepairDescriptions?: string[];
+	inventoryItems?: InventoryItem[];
 	onClose: () => void;
 	onSubmit: (payload: VehicleExpenditureCreateInput) => Promise<void>;
 }
 
 interface RepairLineDraft {
 	description: string;
+	quantity: number | "";
 	cost: number | "";
 }
 
@@ -35,18 +39,31 @@ export function ExpenditureCreateModal({
 	transactionCars,
 	stockCars = [],
 	existingRepairDescriptions,
+	inventoryItems = [],
 	onClose,
 	onSubmit,
 }: ExpenditureCreateModalProps) {
 	const [carQuery, setCarQuery] = useState("");
 	const [carDescription, setCarDescription] = useState("");
 	const [plateNumber, setPlateNumber] = useState("");
-	const [repairs, setRepairs] = useState<RepairLineDraft[]>([{ description: "", cost: "" }]);
+	const [repairs, setRepairs] = useState<RepairLineDraft[]>([
+		{ description: "", quantity: 1, cost: "" },
+	]);
 	const [isCarDropdownOpen, setIsCarDropdownOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	// Lookup map for Inventory Showroom items
+	const inventoryMap = useMemo(() => {
+		const map = new Map<string, InventoryItem>();
+		for (const item of inventoryItems) {
+			const key = item.namaBarang.trim().toLowerCase();
+			if (key) map.set(key, item);
+		}
+		return map;
+	}, [inventoryItems]);
 
 	// Deduplicated list of available cars: prioritized from STOK MOBIL, fallback to TRANSAKSI
 	const uniqueCars = useMemo(() => {
@@ -116,7 +133,7 @@ export function ExpenditureCreateModal({
 
 	// Add new repair line
 	const handleAddRepairLine = () => {
-		setRepairs([...repairs, { description: "", cost: "" }]);
+		setRepairs([...repairs, { description: "", quantity: 1, cost: "" }]);
 	};
 
 	// Remove repair line
@@ -128,22 +145,77 @@ export function ExpenditureCreateModal({
 	// Update repair line field
 	const handleUpdateRepairLine = (
 		index: number,
-		field: "description" | "cost",
+		field: "description" | "quantity" | "cost",
 		value: string | number | "",
 	) => {
 		const updated = [...repairs];
 		if (field === "description") {
-			updated[index].description = String(value);
+			const nextDesc = String(value);
+			updated[index].description = nextDesc;
+			const inv = inventoryMap.get(nextDesc.trim().toLowerCase());
+			if (inv) {
+				const qty =
+					typeof updated[index].quantity === "number" && updated[index].quantity > 0
+						? updated[index].quantity
+						: 1;
+				updated[index].quantity = qty;
+				if (inv.harga > 0) {
+					updated[index].cost = qty * inv.harga;
+				}
+			}
+		} else if (field === "quantity") {
+			const parsedQty = value === "" ? "" : Math.max(0, parseInt(String(value), 10) || 0);
+			updated[index].quantity = parsedQty;
+			const inv = inventoryMap.get(updated[index].description.trim().toLowerCase());
+			if (inv && inv.harga > 0 && typeof parsedQty === "number" && parsedQty > 0) {
+				updated[index].cost = parsedQty * inv.harga;
+			}
 		} else {
 			updated[index].cost = value === "" ? "" : Math.max(0, parseInt(String(value), 10) || 0);
 		}
 		setRepairs(updated);
 	};
 
+	// Helper to get effective cost of a repair line
+	const getLineEffectiveCost = (r: RepairLineDraft): number => {
+		const inv = inventoryMap.get(r.description.trim().toLowerCase());
+		if (inv && inv.harga > 0) {
+			const qty = typeof r.quantity === "number" && r.quantity > 0 ? r.quantity : 1;
+			return qty * inv.harga;
+		}
+		return typeof r.cost === "number" ? r.cost : 0;
+	};
+
+	// Check if any line has an inventory stock violation
+	const stockViolation = useMemo<string | null>(() => {
+		// Sum requested quantities per inventory item across all lines
+		const requestedByItem = new Map<string, { item: InventoryItem; totalQty: number }>();
+
+		for (const r of repairs) {
+			const inv = inventoryMap.get(r.description.trim().toLowerCase());
+			if (!inv) continue;
+			if (inv.tersedia <= 0) {
+				return `Stok "${inv.namaBarang}" di Inventory Showroom sedang HABIS (0).`;
+			}
+			const qty = typeof r.quantity === "number" ? r.quantity : 0;
+			if (qty <= 0) {
+				return `Kuantitas untuk "${inv.namaBarang}" minimal 1 unit.`;
+			}
+			const key = inv.namaBarang.trim().toLowerCase();
+			const prev = requestedByItem.get(key);
+			const nextTotal = (prev?.totalQty || 0) + qty;
+			if (nextTotal > inv.tersedia) {
+				return `Kuantitas "${inv.namaBarang}" (${nextTotal} unit) melebihi stok tersedia (${inv.tersedia} unit).`;
+			}
+			requestedByItem.set(key, { item: inv, totalQty: nextTotal });
+		}
+		return null;
+	}, [repairs, inventoryMap]);
+
 	// Calculate total cost
 	const totalCost = useMemo(() => {
-		return repairs.reduce((acc, r) => acc + (typeof r.cost === "number" ? r.cost : 0), 0);
-	}, [repairs]);
+		return repairs.reduce((acc, r) => acc + getLineEffectiveCost(r), 0);
+	}, [repairs, inventoryMap]);
 
 	const handleSelectCar = (car: { carDescription: string; plateNumber: string }) => {
 		setCarDescription(car.carDescription);
@@ -155,6 +227,11 @@ export function ExpenditureCreateModal({
 	const handleSubmit = async (e: Event) => {
 		e.preventDefault();
 		setError(null);
+
+		if (stockViolation) {
+			setError(stockViolation);
+			return;
+		}
 
 		const cleanPlate = plateNumber.trim().toUpperCase();
 		const cleanCar = carDescription.trim();
@@ -177,10 +254,18 @@ export function ExpenditureCreateModal({
 
 		// Validate repair items
 		const validRepairs = repairs
-			.map((r) => ({
-				description: r.description.trim(),
-				cost: typeof r.cost === "number" ? r.cost : 0,
-			}))
+			.map((r) => {
+				const desc = r.description.trim();
+				const inv = inventoryMap.get(desc.toLowerCase());
+				const isInv = Boolean(inv);
+				const qty = isInv && typeof r.quantity === "number" && r.quantity > 0 ? r.quantity : null;
+				const cost = getLineEffectiveCost(r);
+				return {
+					description: desc,
+					quantity: qty,
+					cost,
+				};
+			})
 			.filter((r) => r.description !== "" && r.cost > 0);
 
 		if (validRepairs.length === 0) {
@@ -204,7 +289,7 @@ export function ExpenditureCreateModal({
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs overscroll-contain">
-			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+			<div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
 				{/* Modal Header */}
 				<div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
 					<div className="flex items-center gap-3">
@@ -250,19 +335,19 @@ export function ExpenditureCreateModal({
 								Data Kendaraan
 							</span>
 							<span className="text-[10px] text-slate-500">
-								Pilih dari Transaksi atau ketik manual
+								Pilih dari Stok/Transaksi atau ketik manual
 							</span>
 						</div>
 
 						{/* Quick Combobox from Transaksi */}
 						<div className="relative" ref={dropdownRef}>
 							<label className="block text-xs font-semibold text-slate-600 mb-1">
-								Cari dari Transaksi (Opsional)
+								Cari dari Stok Mobil / Transaksi (Opsional)
 							</label>
 							<div className="relative">
 								<input
 									type="text"
-									placeholder="Ketik plat atau nama mobil di Transaksi..."
+									placeholder="Ketik plat atau nama mobil..."
 									value={carQuery}
 									onFocus={() => setIsCarDropdownOpen(true)}
 									onInput={(e) => {
@@ -355,42 +440,115 @@ export function ExpenditureCreateModal({
 							</button>
 						</div>
 
-						<div className="space-y-2">
-							{repairs.map((repair, idx) => (
-								<div key={idx} className="flex items-center gap-2">
-									<span className="text-xs font-mono font-semibold text-slate-400 w-5 text-center">
-										{idx + 1}.
-									</span>
-									<RepairCombobox
-										className="flex-1"
-										required
-										placeholder="Pilih dari daftar atau ketik perbaikan baru..."
-										value={repair.description}
-										options={repairOptions}
-										onChange={(val) => handleUpdateRepairLine(idx, "description", val)}
-									/>
-									<input
-										type="number"
-										required
-										min="0"
-										placeholder="Biaya (Rp)"
-										value={repair.cost}
-										onInput={(e) =>
-											handleUpdateRepairLine(idx, "cost", (e.target as HTMLInputElement).value)
-										}
-										className="w-36 px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-									/>
-									<button
-										type="button"
-										onClick={() => handleRemoveRepairLine(idx)}
-										disabled={repairs.length <= 1}
-										className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:text-slate-400 cursor-pointer"
-									>
-										<IconTrash2 className="w-4 h-4" />
-									</button>
-								</div>
-							))}
+						{/* Column Headers for Repair Lines */}
+						<div className="flex items-center gap-2 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+							<span className="w-5 text-center">#</span>
+							<span className="flex-1">Deskripsi Perbaikan / Barang Inventaris</span>
+							<span className="w-20 text-center">Kuantitas</span>
+							<span className="w-36 text-right pr-2">Biaya (Rp)</span>
+							<span className="w-8"></span>
 						</div>
+
+						<div className="space-y-2">
+							{repairs.map((repair, idx) => {
+								const matchedInv = inventoryMap.get(repair.description.trim().toLowerCase());
+								const isInv = Boolean(matchedInv);
+								const hasLockedPrice = isInv && matchedInv!.harga > 0;
+								const isOut = isInv && matchedInv!.tersedia <= 0;
+								const qtyNum = typeof repair.quantity === "number" ? repair.quantity : 0;
+								const isExceeding = isInv && !isOut && qtyNum > matchedInv!.tersedia;
+								const lineCost = getLineEffectiveCost(repair);
+
+								return (
+									<div key={idx} className="flex items-center gap-2">
+										<span className="text-xs font-mono font-semibold text-slate-400 w-5 text-center">
+											{idx + 1}.
+										</span>
+										<RepairCombobox
+											className="flex-1"
+											required
+											placeholder="Pilih dari daftar atau ketik perbaikan baru..."
+											value={repair.description}
+											options={repairOptions}
+											inventoryItems={inventoryItems}
+											onChange={(val) => handleUpdateRepairLine(idx, "description", val)}
+										/>
+
+										{/* Kuantitas (Enabled only for Inventory Showroom items) */}
+										{isInv ? (
+											<input
+												type="number"
+												required
+												min="1"
+												max={matchedInv!.tersedia > 0 ? matchedInv!.tersedia : undefined}
+												disabled={isOut}
+												value={repair.quantity}
+												onInput={(e) =>
+													handleUpdateRepairLine(
+														idx,
+														"quantity",
+														(e.target as HTMLInputElement).value,
+													)
+												}
+												className={`w-20 px-2.5 py-2 text-xs border rounded-lg font-mono text-center font-semibold focus:outline-hidden focus:ring-2 ${
+													isOut || isExceeding
+														? "border-rose-300 bg-rose-50/50 text-rose-800 focus:ring-rose-500/20"
+														: "border-slate-200 text-slate-900 focus:ring-blue-500/20 focus:border-blue-500"
+												}`}
+											/>
+										) : (
+											<input
+												type="text"
+												disabled
+												value="—"
+												title="Kuantitas hanya aktif untuk barang dari Inventory Showroom"
+												className="w-20 px-2.5 py-2 text-xs border border-slate-200 bg-slate-100 text-slate-400 rounded-lg font-mono text-center cursor-not-allowed select-none"
+											/>
+										)}
+
+										{/* Biaya (Locked to Qty * Harga for Inventory items with price > 0) */}
+										{hasLockedPrice ? (
+											<input
+												type="text"
+												readOnly
+												disabled
+												value={formatRp(lineCost)}
+												title="Biaya dihitung otomatis dari Kuantitas × Harga Satuan Inventory"
+												className="w-36 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-bold rounded-lg font-mono text-right cursor-not-allowed"
+											/>
+										) : (
+											<input
+												type="number"
+												required
+												min="0"
+												placeholder="Biaya (Rp)"
+												value={repair.cost}
+												onInput={(e) =>
+													handleUpdateRepairLine(idx, "cost", (e.target as HTMLInputElement).value)
+												}
+												className="w-36 px-3 py-2 text-xs border border-slate-200 rounded-lg font-mono text-right focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+											/>
+										)}
+
+										<button
+											type="button"
+											onClick={() => handleRemoveRepairLine(idx)}
+											disabled={repairs.length <= 1}
+											className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:text-slate-400 cursor-pointer"
+										>
+											<IconTrash2 className="w-4 h-4" />
+										</button>
+									</div>
+								);
+							})}
+						</div>
+
+						{stockViolation && (
+							<div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800">
+								<IconAlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+								<span>{stockViolation}</span>
+							</div>
+						)}
 
 						{/* Total Summary Row */}
 						<div className="flex items-center justify-between p-3 bg-blue-50/60 rounded-xl border border-blue-100 mt-2">
@@ -412,8 +570,8 @@ export function ExpenditureCreateModal({
 						</button>
 						<button
 							type="submit"
-							disabled={isSubmitting}
-							className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+							disabled={isSubmitting || Boolean(stockViolation)}
+							className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
 						>
 							{isSubmitting ? "Menyimpan ke Sheets..." : "Simpan Pengeluaran"}
 						</button>

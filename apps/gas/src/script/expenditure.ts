@@ -13,6 +13,7 @@ import {
 	VehicleExpenditureCreateSchema,
 	VehicleExpenditureItem,
 } from "../shared/schema";
+import { deductInventoryByName, restoreInventoryByName } from "./inventory";
 import { withDocumentLock } from "./lock";
 import { getLunasPlateHashes } from "./transaction";
 
@@ -123,6 +124,14 @@ export function findVehicleRowRange(
 
 /**
  * Fetch all grouped vehicle expenditures from the spreadsheet.
+ * Columns (A..G):
+ * 0 (A): No
+ * 1 (B): Deskripsi Mobil
+ * 2 (C): Plat Mobil
+ * 3 (D): Deskripsi perbaikan
+ * 4 (E): Kuantitas (numeric for Inventory Showroom items, blank for general/service items)
+ * 5 (F): Biaya
+ * 6 (G): Total
  */
 export function getExpenditures(): VehicleExpenditureItem[] {
 	const sheet = getExpenditureSheet();
@@ -133,7 +142,7 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 	}
 
 	const totalRows = lastRow - EXPENDITURE_DATA_START_ROW_INDEX + 1;
-	const values = sheet.getRange(EXPENDITURE_DATA_START_ROW_INDEX, 1, totalRows, 6).getValues();
+	const values = sheet.getRange(EXPENDITURE_DATA_START_ROW_INDEX, 1, totalRows, 7).getValues();
 
 	// Fetch set of LUNAS vehicle plate hashes in TRANSAKSI
 	const lunasSet = getLunasPlateHashes();
@@ -147,7 +156,9 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 		const cellCar = String(row[1] || "").trim();
 		const cellPlate = String(row[2] || "").trim();
 		const repairDesc = String(row[3] || "").trim();
-		const repairCost = parseRp(row[4]);
+		const rawQty = parseInt(String(row[4] ?? "").trim(), 10);
+		const quantity = !isNaN(rawQty) && rawQty > 0 ? rawQty : null;
+		const repairCost = parseRp(row[5]);
 
 		const isNewVehicleStart =
 			(cellNo !== "" && cellNo !== null && cellNo !== undefined) || cellPlate !== "";
@@ -177,6 +188,7 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 			currentVehicle.repairs.push({
 				id: `${currentVehicle.id}-r${currentVehicle.repairs.length + 1}`,
 				description: repairDesc || "Perbaikan",
+				quantity,
 				cost: repairCost,
 			});
 		}
@@ -192,15 +204,16 @@ export function getExpenditures(): VehicleExpenditureItem[] {
 
 /**
  * Applies standard grid borders and alignments to a vehicle block in PENGELUARAN PER UNIT.
- * - Solid borders on all outer and inner cell boundaries.
+ * - Solid borders on all outer and inner cell boundaries (7 columns A..G).
  * - Vertical alignment: TOP for all cells.
  * - Horizontal alignment:
- *   - Col A (No): center
- *   - Col B (Deskripsi Mobil): left
- *   - Col C (Plat Mobil): center
- *   - Col D (Deskripsi Perbaikan): left
- *   - Col E (Biaya): right
- *   - Col F (Total): right
+ *   - Col A (1 - No): center
+ *   - Col B (2 - Deskripsi Mobil): left
+ *   - Col C (3 - Plat Mobil): center
+ *   - Col D (4 - Deskripsi perbaikan): left
+ *   - Col E (5 - Kuantitas): center
+ *   - Col F (6 - Biaya): right
+ *   - Col G (7 - Total): right
  */
 export function formatVehicleRange(
 	sheet: GoogleAppsScript.Spreadsheet.Sheet,
@@ -208,7 +221,7 @@ export function formatVehicleRange(
 	numRows: number,
 	isLunas = false,
 ): void {
-	const blockRange = sheet.getRange(startRow, 1, numRows, 6);
+	const blockRange = sheet.getRange(startRow, 1, numRows, 7);
 
 	// Full grid solid borders (top, left, bottom, right, vertical, horizontal)
 	blockRange.setBorder(
@@ -233,8 +246,9 @@ export function formatVehicleRange(
 	sheet.getRange(startRow, 2, numRows, 1).setHorizontalAlignment("left");
 	sheet.getRange(startRow, 3, numRows, 1).setHorizontalAlignment("center");
 	sheet.getRange(startRow, 4, numRows, 1).setHorizontalAlignment("left");
-	sheet.getRange(startRow, 5, numRows, 1).setHorizontalAlignment("right");
+	sheet.getRange(startRow, 5, numRows, 1).setHorizontalAlignment("center");
 	sheet.getRange(startRow, 6, numRows, 1).setHorizontalAlignment("right");
+	sheet.getRange(startRow, 7, numRows, 1).setHorizontalAlignment("right");
 }
 
 /**
@@ -250,7 +264,7 @@ export function syncVehicleLunasBackground(plateHash: string, isLunas: boolean):
 	if (!range) return;
 
 	sheet
-		.getRange(range.startRow, 1, range.numRows, 6)
+		.getRange(range.startRow, 1, range.numRows, 7)
 		.setBackground(isLunas ? "#fff2cc" : "#ffffff");
 }
 
@@ -270,6 +284,13 @@ export function appendVehicleExpenditure(
 			throw new Error(`Kendaraan dengan plat "${parsed.plateNumber}" sudah terdaftar.`);
 		}
 
+		// Deduct inventory stock for any repair item with quantity > 0
+		for (const r of parsed.repairs) {
+			if (r.quantity && r.quantity > 0) {
+				deductInventoryByName(r.description, r.quantity, parsed.carDescription);
+			}
+		}
+
 		const existingVehicles = getExpenditures();
 		const nextNo = existingVehicles.reduce((max, v) => Math.max(max, v.no), 0) + 1;
 
@@ -279,36 +300,56 @@ export function appendVehicleExpenditure(
 
 		const rowData: (string | number)[][] = [];
 		for (let i = 0; i < numRows; i++) {
+			const qtyVal =
+				parsed.repairs[i].quantity && parsed.repairs[i].quantity! > 0
+					? parsed.repairs[i].quantity!
+					: "";
 			if (i === 0) {
 				rowData.push([
 					nextNo,
 					parsed.carDescription,
 					parsed.plateNumber,
 					parsed.repairs[i].description,
+					qtyVal,
 					parsed.repairs[i].cost,
 					"",
 				]);
 			} else {
-				rowData.push(["", "", "", parsed.repairs[i].description, parsed.repairs[i].cost, ""]);
+				rowData.push([
+					"",
+					"",
+					"",
+					parsed.repairs[i].description,
+					qtyVal,
+					parsed.repairs[i].cost,
+					"",
+				]);
 			}
 		}
 
-		sheet.getRange(startRow, 1, numRows, 6).setValues(rowData);
+		sheet.getRange(startRow, 1, numRows, 7).setValues(rowData);
 
-		// Merge Columns A, B, C, F across the vehicle rows if numRows > 1
+		// Explicitly clear Col E (Kuantitas) for non-inventory rows so they remain blank
+		for (let i = 0; i < numRows; i++) {
+			if (!parsed.repairs[i].quantity || parsed.repairs[i].quantity! <= 0) {
+				sheet.getRange(startRow + i, 5).clearContent();
+			}
+		}
+
+		// Merge Columns A (1), B (2), C (3), G (7) across the vehicle rows if numRows > 1
 		if (numRows > 1) {
 			sheet.getRange(startRow, 1, numRows, 1).merge();
 			sheet.getRange(startRow, 2, numRows, 1).merge();
 			sheet.getRange(startRow, 3, numRows, 1).merge();
-			sheet.getRange(startRow, 6, numRows, 1).merge();
+			sheet.getRange(startRow, 7, numRows, 1).merge();
 		}
 
-		// Set dynamic formula in Column F
-		sheet.getRange(startRow, 6).setFormula(`=SUM(E${startRow}:E${endRow})`);
+		// Set dynamic formula in Column G (7) summing Column F (Biaya)
+		sheet.getRange(startRow, 7).setFormula(`=SUM(F${startRow}:F${endRow})`);
 
 		// Number formats
-		sheet.getRange(startRow, 5, numRows, 1).setNumberFormat("Rp #,##0");
-		sheet.getRange(startRow, 6, 1, 1).setNumberFormat("Rp #,##0");
+		sheet.getRange(startRow, 6, numRows, 1).setNumberFormat("Rp #,##0");
+		sheet.getRange(startRow, 7, 1, 1).setNumberFormat("Rp #,##0");
 
 		const isLunas = getLunasPlateHashes().has(targetHash);
 
@@ -323,6 +364,7 @@ export function appendVehicleExpenditure(
 			repairs: parsed.repairs.map((r, idx) => ({
 				id: `${targetHash}-r${idx + 1}`,
 				description: r.description,
+				quantity: r.quantity && r.quantity > 0 ? r.quantity : null,
 				cost: r.cost,
 			})),
 			totalCost: parsed.repairs.reduce((sum, r) => sum + r.cost, 0),
@@ -344,20 +386,33 @@ export function appendRepairToVehicle(payload: AddRepairInput): VehicleExpenditu
 			throw new Error("Kendaraan tidak ditemukan di spreadsheet.");
 		}
 
+		// Deduct inventory stock if quantity > 0
+		if (parsed.quantity && parsed.quantity > 0) {
+			deductInventoryByName(parsed.description, parsed.quantity, range.carDescription);
+		}
+
 		// Insert 1 row right after the car's current last row
 		sheet.insertRowAfter(range.endRow);
 		const newRow = range.endRow + 1;
 		const newNumRows = range.numRows + 1;
 
-		// Populate the new repair row (Col D & Col E)
-		sheet.getRange(newRow, 1, 1, 6).setValues([["", "", "", parsed.description, parsed.cost, ""]]);
+		const qtyVal = parsed.quantity && parsed.quantity > 0 ? parsed.quantity : "";
 
-		// Unmerge old columns A, B, C, F
+		// Populate the new repair row across 7 columns (A..G)
+		sheet
+			.getRange(newRow, 1, 1, 7)
+			.setValues([["", "", "", parsed.description, qtyVal, parsed.cost, ""]]);
+
+		if (!parsed.quantity || parsed.quantity <= 0) {
+			sheet.getRange(newRow, 5).clearContent();
+		}
+
+		// Unmerge old columns A (1), B (2), C (3), G (7)
 		if (range.numRows > 1) {
 			sheet.getRange(range.startRow, 1, range.numRows, 1).breakApart();
 			sheet.getRange(range.startRow, 2, range.numRows, 1).breakApart();
 			sheet.getRange(range.startRow, 3, range.numRows, 1).breakApart();
-			sheet.getRange(range.startRow, 6, range.numRows, 1).breakApart();
+			sheet.getRange(range.startRow, 7, range.numRows, 1).breakApart();
 		}
 
 		// Ensure vehicle metadata is preserved at startRow
@@ -365,18 +420,18 @@ export function appendRepairToVehicle(payload: AddRepairInput): VehicleExpenditu
 			.getRange(range.startRow, 1, 1, 3)
 			.setValues([[range.no, range.carDescription, range.plateNumber]]);
 
-		// Re-merge columns A, B, C, F across the expanded span
+		// Re-merge columns A (1), B (2), C (3), G (7) across the expanded span
 		sheet.getRange(range.startRow, 1, newNumRows, 1).merge();
 		sheet.getRange(range.startRow, 2, newNumRows, 1).merge();
 		sheet.getRange(range.startRow, 3, newNumRows, 1).merge();
-		sheet.getRange(range.startRow, 6, newNumRows, 1).merge();
+		sheet.getRange(range.startRow, 7, newNumRows, 1).merge();
 
-		// Update Column F formula
-		sheet.getRange(range.startRow, 6).setFormula(`=SUM(E${range.startRow}:E${newRow})`);
+		// Update Column G (7) formula summing Column F (Biaya)
+		sheet.getRange(range.startRow, 7).setFormula(`=SUM(F${range.startRow}:F${newRow})`);
 
 		// Number formats
-		sheet.getRange(newRow, 5).setNumberFormat("Rp #,##0");
-		sheet.getRange(range.startRow, 6).setNumberFormat("Rp #,##0");
+		sheet.getRange(newRow, 6).setNumberFormat("Rp #,##0");
+		sheet.getRange(range.startRow, 7).setNumberFormat("Rp #,##0");
 
 		const isLunas = getLunasPlateHashes().has(parsed.vehiclePlateHash);
 
@@ -394,6 +449,7 @@ export function appendRepairToVehicle(payload: AddRepairInput): VehicleExpenditu
 /**
  * Delete a specific repair item from a vehicle.
  * If this was the last repair item of the vehicle, the entire vehicle row is deleted.
+ * Automatically restores Inventory Showroom stock if the deleted repair had Kuantitas > 0.
  */
 export function deleteRepair(vehiclePlateHash: string, repairIndex: number): void {
 	withDocumentLock(() => {
@@ -407,19 +463,28 @@ export function deleteRepair(vehiclePlateHash: string, repairIndex: number): voi
 			throw new Error("Indeks perbaikan tidak valid.");
 		}
 
+		const targetRow = range.startRow + repairIndex;
+
+		// Read targetRow Col D (Deskripsi perbaikan) & Col E (Kuantitas) before deleting to restore inventory
+		const deletedRowVals = sheet.getRange(targetRow, 4, 1, 2).getValues()[0];
+		const deletedDesc = String(deletedRowVals[0] ?? "").trim();
+		const deletedQty = parseInt(String(deletedRowVals[1] ?? "").trim(), 10);
+		if (deletedDesc && !isNaN(deletedQty) && deletedQty > 0) {
+			restoreInventoryByName(deletedDesc, deletedQty, range.carDescription);
+		}
+
 		// If this is the only repair item, delete the entire vehicle block
 		if (range.numRows <= 1) {
 			sheet.deleteRow(range.startRow);
 			return;
 		}
 
-		// Unmerge columns A, B, C, F before deleting the row
+		// Unmerge columns A (1), B (2), C (3), G (7) before deleting the row
 		sheet.getRange(range.startRow, 1, range.numRows, 1).breakApart();
 		sheet.getRange(range.startRow, 2, range.numRows, 1).breakApart();
 		sheet.getRange(range.startRow, 3, range.numRows, 1).breakApart();
-		sheet.getRange(range.startRow, 6, range.numRows, 1).breakApart();
+		sheet.getRange(range.startRow, 7, range.numRows, 1).breakApart();
 
-		const targetRow = range.startRow + repairIndex;
 		sheet.deleteRow(targetRow);
 
 		const newNumRows = range.numRows - 1;
@@ -435,12 +500,12 @@ export function deleteRepair(vehiclePlateHash: string, repairIndex: number): voi
 			sheet.getRange(range.startRow, 1, newNumRows, 1).merge();
 			sheet.getRange(range.startRow, 2, newNumRows, 1).merge();
 			sheet.getRange(range.startRow, 3, newNumRows, 1).merge();
-			sheet.getRange(range.startRow, 6, newNumRows, 1).merge();
+			sheet.getRange(range.startRow, 7, newNumRows, 1).merge();
 		}
 
-		// Update formula in Column F
-		sheet.getRange(range.startRow, 6).setFormula(`=SUM(E${range.startRow}:E${newEndRow})`);
-		sheet.getRange(range.startRow, 6).setNumberFormat("Rp #,##0");
+		// Update formula in Column G (7) summing Column F (Biaya)
+		sheet.getRange(range.startRow, 7).setFormula(`=SUM(F${range.startRow}:F${newEndRow})`);
+		sheet.getRange(range.startRow, 7).setNumberFormat("Rp #,##0");
 
 		const isLunas = getLunasPlateHashes().has(vehiclePlateHash);
 
@@ -451,6 +516,7 @@ export function deleteRepair(vehiclePlateHash: string, repairIndex: number): voi
 
 /**
  * Delete all rows belonging to a vehicle block.
+ * Automatically restores Inventory Showroom stock for any repair rows with Kuantitas > 0.
  */
 export function deleteVehicleExpenditure(vehiclePlateHash: string): void {
 	withDocumentLock(() => {
@@ -458,6 +524,16 @@ export function deleteVehicleExpenditure(vehiclePlateHash: string): void {
 		const range = findVehicleRowRange(sheet, vehiclePlateHash);
 		if (!range) {
 			throw new Error("Kendaraan tidak ditemukan di spreadsheet.");
+		}
+
+		// Restore inventory for any repair rows with Kuantitas > 0
+		const repairRowsVals = sheet.getRange(range.startRow, 4, range.numRows, 2).getValues();
+		for (let i = 0; i < repairRowsVals.length; i++) {
+			const desc = String(repairRowsVals[i][0] ?? "").trim();
+			const qty = parseInt(String(repairRowsVals[i][1] ?? "").trim(), 10);
+			if (desc && !isNaN(qty) && qty > 0) {
+				restoreInventoryByName(desc, qty, range.carDescription);
+			}
 		}
 
 		sheet.deleteRows(range.startRow, range.numRows);

@@ -176,7 +176,7 @@ export function appendStockCar(input: StockCarCreateInput): StockCarItem {
 		// Whole-column formula that survives row additions & deletions in PENGELUARAN PER UNIT
 		sheet
 			.getRange(nextRow, 9)
-			.setFormula(`=IFERROR(VLOOKUP(D${nextRow}, 'PENGELUARAN PER UNIT'!C:F, 4, FALSE), 0)`);
+			.setFormula(`=IFERROR(VLOOKUP(D${nextRow}, 'PENGELUARAN PER UNIT'!C:G, 5, FALSE), 0)`);
 
 		// Formats
 		sheet.getRange(nextRow, 7).setNumberFormat("Rp #,##0");
@@ -236,7 +236,7 @@ export function updateStockCar(input: StockCarUpdateInput): StockCarItem {
 		// Re-ensure formula is intact in Column I
 		sheet
 			.getRange(targetRow, 9)
-			.setFormula(`=IFERROR(VLOOKUP(D${targetRow}, 'PENGELUARAN PER UNIT'!C:F, 4, FALSE), 0)`);
+			.setFormula(`=IFERROR(VLOOKUP(D${targetRow}, 'PENGELUARAN PER UNIT'!C:G, 5, FALSE), 0)`);
 
 		SpreadsheetApp.flush();
 

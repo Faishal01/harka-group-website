@@ -321,3 +321,101 @@ export function deleteInventoryItem(no: number): boolean {
 		return true;
 	});
 }
+
+/**
+ * Helper to locate the row index of an inventory item by its name (Column B, case-insensitive).
+ */
+export function findInventoryRowByName(
+	sheet: GoogleAppsScript.Spreadsheet.Sheet,
+	itemName: string,
+): number | null {
+	const target = itemName.trim().toLowerCase();
+	if (!target) return null;
+
+	const lastRow = sheet.getLastRow();
+	if (lastRow < INVENTORY_DATA_START_ROW_INDEX) return null;
+
+	const numRows = lastRow - INVENTORY_DATA_START_ROW_INDEX + 1;
+	const nameValues = sheet.getRange(INVENTORY_DATA_START_ROW_INDEX, 2, numRows, 1).getValues();
+
+	for (let i = 0; i < nameValues.length; i++) {
+		const rowName = String(nameValues[i][0] ?? "")
+			.trim()
+			.toLowerCase();
+		if (rowName === target) {
+			return INVENTORY_DATA_START_ROW_INDEX + i;
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Deduct stock in Inventory Showroom when an inventory item is added to Pengeluaran Per Unit.
+ * Must be called inside withDocumentLock.
+ */
+export function deductInventoryByName(itemName: string, qty: number, carName: string): void {
+	if (!qty || qty <= 0) return;
+
+	const sheet = getInventorySheet();
+	const rowIdx = findInventoryRowByName(sheet, itemName);
+	if (!rowIdx) return;
+
+	const currentValues = sheet.getRange(rowIdx, 1, 1, 8).getValues()[0];
+	const namaBarang = String(currentValues[1] ?? "").trim();
+	const stokAwal = parseInt(String(currentValues[3] ?? "0").trim(), 10) || 0;
+	const currentTerpakai = parseInt(String(currentValues[4] ?? "0").trim(), 10) || 0;
+	const tersedia = Math.max(0, stokAwal - currentTerpakai);
+
+	if (qty > tersedia) {
+		throw new Error(
+			`Stok "${namaBarang}" tidak mencukupi (Tersedia: ${tersedia} unit, Diminta: ${qty} unit).`,
+		);
+	}
+
+	const newTerpakai = currentTerpakai + qty;
+	const existingDitujukan = String(currentValues[7] ?? "").trim();
+	const cleanCarName = carName.trim();
+	const updatedDitujukan = existingDitujukan
+		? `${existingDitujukan}, ${cleanCarName}`
+		: cleanCarName;
+
+	sheet.getRange(rowIdx, 5).setValue(newTerpakai);
+	sheet.getRange(rowIdx, 8).setValue(updatedDitujukan);
+}
+
+/**
+ * Restore stock in Inventory Showroom when a repair item with Kuantitas > 0 is deleted from Pengeluaran Per Unit.
+ * Must be called inside withDocumentLock.
+ */
+export function restoreInventoryByName(itemName: string, qty: number, carName: string): void {
+	if (!qty || qty <= 0) return;
+
+	const sheet = getInventorySheet();
+	const rowIdx = findInventoryRowByName(sheet, itemName);
+	if (!rowIdx) return;
+
+	const currentValues = sheet.getRange(rowIdx, 1, 1, 8).getValues()[0];
+	const currentTerpakai = parseInt(String(currentValues[4] ?? "0").trim(), 10) || 0;
+	const existingDitujukan = String(currentValues[7] ?? "").trim();
+
+	const newTerpakai = Math.max(0, currentTerpakai - qty);
+
+	// Remove one occurrence of carName from comma-separated Ditujukan list
+	let updatedDitujukan = existingDitujukan;
+	if (existingDitujukan && carName.trim()) {
+		const targetCar = carName.trim().toLowerCase();
+		const parts = existingDitujukan
+			.split(",")
+			.map((p) => p.trim())
+			.filter(Boolean);
+		const removeIdx = parts.findIndex((p) => p.toLowerCase() === targetCar);
+		if (removeIdx !== -1) {
+			parts.splice(removeIdx, 1);
+		}
+		updatedDitujukan = parts.join(", ");
+	}
+
+	sheet.getRange(rowIdx, 5).setValue(newTerpakai);
+	sheet.getRange(rowIdx, 8).setValue(updatedDitujukan);
+}

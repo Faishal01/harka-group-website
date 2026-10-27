@@ -1,7 +1,7 @@
+import IconCar from "~icons/lucide/car";
 import IconPackage from "~icons/lucide/package";
 import IconPencil from "~icons/lucide/pencil";
 import IconTrash2 from "~icons/lucide/trash-2";
-import IconWrench from "~icons/lucide/wrench";
 import {
 	formatRp,
 	InventoryFilterState,
@@ -15,7 +15,6 @@ interface InventoryTableProps {
 	onSort: (column: InventorySortColumn) => void;
 	isLoading: boolean;
 	onEdit: (item: InventoryItem) => void;
-	onConsume: (item: InventoryItem) => void;
 	onDelete: (item: InventoryItem) => void;
 }
 
@@ -25,7 +24,6 @@ export function InventoryTable({
 	onSort,
 	isLoading,
 	onEdit,
-	onConsume,
 	onDelete,
 }: InventoryTableProps) {
 	const renderSortIcon = (col: InventorySortColumn) => {
@@ -102,7 +100,7 @@ export function InventoryTable({
 							<th className="py-3 px-3 text-center whitespace-nowrap">Status</th>
 
 							{/* 8. Ditujukan */}
-							<th className="py-3 px-3 whitespace-nowrap">Ditujukan</th>
+							<th className="py-3 px-3 whitespace-nowrap min-w-[180px]">Ditujukan</th>
 
 							{/* 9. Aksi */}
 							<th className="py-3 px-3 text-center whitespace-nowrap">Aksi</th>
@@ -113,6 +111,12 @@ export function InventoryTable({
 						{items.map((item) => {
 							const isOutOfStock = item.tersedia <= 0;
 							const isRestock = item.status === "PERLU RESTOCK";
+							const targetCars = item.ditujukan
+								? item.ditujukan
+										.split(",")
+										.map((c) => c.trim())
+										.filter(Boolean)
+								: [];
 
 							return (
 								<tr key={item.no} className="hover:bg-slate-50/80 transition-colors group">
@@ -189,26 +193,26 @@ export function InventoryTable({
 
 									{/* 8. Ditujukan (Mobil) */}
 									<td className="py-2.5 px-3 text-slate-600 text-xs">
-										{item.ditujukan ? (
-											<div className="line-clamp-2 max-w-xs" title={item.ditujukan}>
-												{item.ditujukan}
+										{targetCars.length > 0 ? (
+											<div className="flex flex-wrap gap-1 max-w-xs" title={item.ditujukan}>
+												{targetCars.map((car, idx) => (
+													<span
+														key={idx}
+														className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs select-none"
+													>
+														<IconCar className="w-3 h-3 text-blue-500 shrink-0" />
+														<span>{car}</span>
+													</span>
+												))}
 											</div>
 										) : (
-											<span className="text-slate-400 font-mono">-</span>
+											<span className="text-slate-300 font-mono">-</span>
 										)}
 									</td>
 
 									{/* 9. Aksi */}
 									<td className="py-2.5 px-3 text-center whitespace-nowrap">
 										<div className="flex items-center justify-center gap-1">
-											<button
-												onClick={() => onConsume(item)}
-												type="button"
-												title="Pakai Barang"
-												className="p-1 rounded text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
-											>
-												<IconWrench className="w-3.5 h-3.5" />
-											</button>
 											<button
 												onClick={() => onEdit(item)}
 												type="button"

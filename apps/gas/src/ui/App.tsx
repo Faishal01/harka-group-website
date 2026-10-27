@@ -7,7 +7,6 @@ import {
 	CashTransactionItem,
 	CashTransactionUpdateInput,
 	hashPlate,
-	InventoryConsumeInput,
 	InventoryCreateInput,
 	InventoryFilterState,
 	InventoryItem,
@@ -50,7 +49,6 @@ import { ExpenditureStatsCards } from "./components/expenditure/ExpenditureStats
 import { ExpenditureTable } from "./components/expenditure/ExpenditureTable";
 import { FiltersBar } from "./components/FiltersBar";
 import { DeleteInventoryConfirmModal } from "./components/inventory/DeleteInventoryConfirmModal";
-import { InventoryConsumeModal } from "./components/inventory/InventoryConsumeModal";
 import { InventoryFiltersBar } from "./components/inventory/InventoryFiltersBar";
 import { InventoryFormModal } from "./components/inventory/InventoryFormModal";
 import { InventoryStatsCards } from "./components/inventory/InventoryStatsCards";
@@ -640,7 +638,6 @@ export function App() {
 	});
 	const [inventoryModalMode, setInventoryModalMode] = useState<ModalMode>(null);
 	const [activeInventoryItem, setActiveInventoryItem] = useState<InventoryItem | null>(null);
-	const [consumingInventoryItem, setConsumingInventoryItem] = useState<InventoryItem | null>(null);
 	const [deletingInventoryItem, setDeletingInventoryItem] = useState<InventoryItem | null>(null);
 
 	// Cashflow (Kas Operasional) state
@@ -675,7 +672,6 @@ export function App() {
 		stockModalMode ||
 		deletingStockCar ||
 		inventoryModalMode ||
-		consumingInventoryItem ||
 		deletingInventoryItem ||
 		cashModalMode ||
 		deletingCashItem,
@@ -856,6 +852,7 @@ export function App() {
 						showToast("Pengeluaran unit berhasil dicatat ke Google Sheets", "success");
 						loadExpenditures();
 						loadStocks();
+						loadInventory();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -878,6 +875,7 @@ export function App() {
 				repairs: payload.repairs.map((r, idx) => ({
 					id: `${plateHash}-r${idx + 1}`,
 					description: r.description,
+					quantity: r.quantity && r.quantity > 0 ? r.quantity : null,
 					cost: r.cost,
 				})),
 				totalCost,
@@ -887,6 +885,31 @@ export function App() {
 			setStocks((prev) =>
 				prev.map((s) => (s.id === plateHash ? { ...s, serviceExpense: totalCost } : s)),
 			);
+
+			// Deduct mock inventory
+			setInventoryItems((prev) =>
+				prev.map((inv) => {
+					const matched = payload.repairs.find(
+						(r) => r.description.trim().toLowerCase() === inv.namaBarang.trim().toLowerCase(),
+					);
+					if (matched && matched.quantity && matched.quantity > 0) {
+						const newTerpakai = inv.terpakai + matched.quantity;
+						const newTersedia = Math.max(0, inv.stokAwal - newTerpakai);
+						const updatedDitujukan = inv.ditujukan
+							? `${inv.ditujukan}, ${payload.carDescription}`
+							: payload.carDescription;
+						return {
+							...inv,
+							terpakai: newTerpakai,
+							tersedia: newTersedia,
+							ditujukan: updatedDitujukan,
+							status: newTersedia <= inv.threshold ? "PERLU RESTOCK" : "AMAN",
+						};
+					}
+					return inv;
+				}),
+			);
+
 			showToast("Pengeluaran unit berhasil dicatat (Dev Mock)", "success");
 		}
 	};
@@ -900,6 +923,7 @@ export function App() {
 						showToast("Item perbaikan berhasil ditambahkan", "success");
 						loadExpenditures();
 						loadStocks();
+						loadInventory();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -916,6 +940,7 @@ export function App() {
 							{
 								id: `${v.id}-r${v.repairs.length + 1}`,
 								description: payload.description,
+								quantity: payload.quantity && payload.quantity > 0 ? payload.quantity : null,
 								cost: payload.cost,
 							},
 						];
@@ -934,6 +959,30 @@ export function App() {
 					return v;
 				}),
 			);
+
+			// Deduct mock inventory
+			if (payload.quantity && payload.quantity > 0) {
+				setInventoryItems((prev) =>
+					prev.map((inv) => {
+						if (inv.namaBarang.trim().toLowerCase() === payload.description.trim().toLowerCase()) {
+							const targetCar =
+								expenditures.find((e) => e.id === payload.vehiclePlateHash)?.carDescription || "";
+							const newTerpakai = inv.terpakai + payload.quantity!;
+							const newTersedia = Math.max(0, inv.stokAwal - newTerpakai);
+							const updatedDitujukan = inv.ditujukan ? `${inv.ditujukan}, ${targetCar}` : targetCar;
+							return {
+								...inv,
+								terpakai: newTerpakai,
+								tersedia: newTersedia,
+								ditujukan: updatedDitujukan,
+								status: newTersedia <= inv.threshold ? "PERLU RESTOCK" : "AMAN",
+							};
+						}
+						return inv;
+					}),
+				);
+			}
+
 			showToast("Item perbaikan berhasil ditambahkan (Dev Mock)", "success");
 		}
 	};
@@ -975,6 +1024,7 @@ export function App() {
 						showToast("Item perbaikan berhasil dihapus", "success");
 						loadExpenditures();
 						loadStocks();
+						loadInventory();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -983,6 +1033,9 @@ export function App() {
 					.deleteRepair(targetHash, repairIndex);
 			});
 		} else {
+			const targetVeh = expenditures.find((e) => e.id === targetHash);
+			const targetRepair = targetVeh?.repairs[repairIndex];
+
 			setExpenditures((prev) => {
 				return prev
 					.map((v) => {
@@ -1008,6 +1061,28 @@ export function App() {
 					})
 					.filter((v): v is VehicleExpenditureItem => v !== null);
 			});
+
+			// Restore mock inventory stock if applicable
+			if (targetRepair && targetRepair.quantity && targetRepair.quantity > 0) {
+				setInventoryItems((prev) =>
+					prev.map((inv) => {
+						if (
+							inv.namaBarang.trim().toLowerCase() === targetRepair.description.trim().toLowerCase()
+						) {
+							const newTerpakai = Math.max(0, inv.terpakai - targetRepair.quantity!);
+							const newTersedia = Math.max(0, inv.stokAwal - newTerpakai);
+							return {
+								...inv,
+								terpakai: newTerpakai,
+								tersedia: newTersedia,
+								status: newTersedia <= inv.threshold ? "PERLU RESTOCK" : "AMAN",
+							};
+						}
+						return inv;
+					}),
+				);
+			}
+
 			showToast("Item perbaikan berhasil dihapus (Dev Mock)", "success");
 		}
 	};
@@ -1021,6 +1096,7 @@ export function App() {
 						showToast("Unit pengeluaran berhasil dihapus dari Google Sheets", "success");
 						loadExpenditures();
 						loadStocks();
+						loadInventory();
 						resolve();
 					})
 					.withFailureHandler((err: Error) => {
@@ -1029,8 +1105,33 @@ export function App() {
 					.deleteVehicleExpenditure(targetHash);
 			});
 		} else {
+			const targetVeh = expenditures.find((e) => e.id === targetHash);
 			setExpenditures((prev) => prev.filter((v) => v.id !== targetHash));
 			setStocks((prev) => prev.map((s) => (s.id === targetHash ? { ...s, serviceExpense: 0 } : s)));
+
+			// Restore mock inventory for all repairs
+			if (targetVeh) {
+				for (const r of targetVeh.repairs) {
+					if (r.quantity && r.quantity > 0) {
+						setInventoryItems((prev) =>
+							prev.map((inv) => {
+								if (inv.namaBarang.trim().toLowerCase() === r.description.trim().toLowerCase()) {
+									const newTerpakai = Math.max(0, inv.terpakai - r.quantity!);
+									const newTersedia = Math.max(0, inv.stokAwal - newTerpakai);
+									return {
+										...inv,
+										terpakai: newTerpakai,
+										tersedia: newTersedia,
+										status: newTersedia <= inv.threshold ? "PERLU RESTOCK" : "AMAN",
+									};
+								}
+								return inv;
+							}),
+						);
+					}
+				}
+			}
+
 			showToast("Unit pengeluaran berhasil dihapus (Dev Mock)", "success");
 		}
 	};
@@ -1545,38 +1646,6 @@ export function App() {
 		return inventoryItems.filter((i) => i.status === "PERLU RESTOCK").length;
 	}, [inventoryItems]);
 
-	// Available car suggestions for quick consumption autocomplete
-	const availableCarSuggestions = useMemo(() => {
-		const map = new Map<string, { plateNumber: string; carDescription: string }>();
-		for (const s of stocks) {
-			if (s.plateNumber) {
-				map.set(s.plateNumber.toUpperCase(), {
-					plateNumber: s.plateNumber,
-					carDescription: s.carDescription,
-				});
-			}
-		}
-		for (const t of transactions) {
-			if (t.plateNumber && !map.has(t.plateNumber.toUpperCase())) {
-				map.set(t.plateNumber.toUpperCase(), {
-					plateNumber: t.plateNumber,
-					carDescription: t.carDescription,
-				});
-			}
-		}
-		for (const e of expenditures) {
-			if (e.plateNumber && !map.has(e.plateNumber.toUpperCase())) {
-				map.set(e.plateNumber.toUpperCase(), {
-					plateNumber: e.plateNumber,
-					carDescription: e.carDescription,
-				});
-			}
-		}
-		return Array.from(map.values()).sort((a, b) =>
-			a.carDescription.localeCompare(b.carDescription, "id-ID"),
-		);
-	}, [stocks, transactions, expenditures]);
-
 	// Inventory Sort Toggle
 	const handleInventorySort = (column: InventorySortColumn) => {
 		if (inventoryFilters.sortBy === column) {
@@ -1693,45 +1762,6 @@ export function App() {
 				setInventoryItems((prev) => [...prev, newItem]);
 				showToast(`Barang #${nextNo} berhasil ditambahkan (Mock)`, "success");
 			}
-		}
-	};
-
-	// Consume Inventory Item (Pakai Barang)
-	const handleConsumeInventoryItem = async (payload: InventoryConsumeInput) => {
-		if (isGasEnv) {
-			return new Promise<void>((resolve, reject) => {
-				google.script.run
-					.withSuccessHandler((updated: InventoryItem) => {
-						showToast(`Pemakaian ${updated.namaBarang} berhasil dicatat`, "success");
-						loadInventory();
-						resolve();
-					})
-					.withFailureHandler((err: Error) => {
-						reject(err);
-					})
-					.useInventoryItem(payload);
-			});
-		} else {
-			// Mock in dev
-			setInventoryItems((prev) =>
-				prev.map((i) => {
-					if (i.no !== payload.no) return i;
-					const newTerpakai = i.terpakai + payload.qty;
-					const newTersedia = Math.max(0, i.stokAwal - newTerpakai);
-					const updatedDitujukan = i.ditujukan
-						? `${i.ditujukan}, ${payload.carName}`
-						: payload.carName;
-					const status = newTersedia <= i.threshold ? "PERLU RESTOCK" : "AMAN";
-					return {
-						...i,
-						terpakai: newTerpakai,
-						tersedia: newTersedia,
-						ditujukan: updatedDitujukan,
-						status,
-					};
-				}),
-			);
-			showToast(`Pemakaian barang berhasil dicatat (Mock)`, "success");
 		}
 	};
 
@@ -2168,7 +2198,6 @@ export function App() {
 							setActiveInventoryItem(item);
 							setInventoryModalMode("edit");
 						}}
-						onConsume={(item) => setConsumingInventoryItem(item)}
 						onDelete={(item) => setDeletingInventoryItem(item)}
 					/>
 				</>
@@ -2316,6 +2345,7 @@ export function App() {
 					transactionCars={transactions}
 					stockCars={stocks}
 					existingRepairDescriptions={existingRepairDescriptions}
+					inventoryItems={inventoryItems}
 					onClose={() => setIsCreateExpenditureOpen(false)}
 					onSubmit={handleCreateExpenditure}
 				/>
@@ -2326,6 +2356,7 @@ export function App() {
 				<AddRepairModal
 					vehicle={activeAddRepairVehicle}
 					existingRepairDescriptions={existingRepairDescriptions}
+					inventoryItems={inventoryItems}
 					onClose={() => setActiveAddRepairVehicle(null)}
 					onSubmit={handleAddRepair}
 				/>
@@ -2377,16 +2408,6 @@ export function App() {
 						setActiveInventoryItem(null);
 					}}
 					onSubmit={handleSaveInventoryItem}
-				/>
-			)}
-
-			{/* Quick Inventory Consume Modal (Pakai Barang) */}
-			{consumingInventoryItem && (
-				<InventoryConsumeModal
-					item={consumingInventoryItem}
-					availableCars={availableCarSuggestions}
-					onClose={() => setConsumingInventoryItem(null)}
-					onSubmit={handleConsumeInventoryItem}
 				/>
 			)}
 

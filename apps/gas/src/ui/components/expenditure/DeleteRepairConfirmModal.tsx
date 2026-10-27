@@ -60,8 +60,21 @@ export function DeleteRepairConfirmModal({
 					</p>
 
 					<div className="p-3 bg-slate-50 rounded-lg border border-slate-200/80 text-xs">
-						<p className="font-semibold text-slate-800">{repair.description}</p>
+						<div className="flex items-center justify-between">
+							<p className="font-semibold text-slate-800">{repair.description}</p>
+							{repair.quantity != null && repair.quantity > 0 && (
+								<span className="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px]">
+									{repair.quantity} unit
+								</span>
+							)}
+						</div>
 						<p className="font-mono text-slate-600 mt-0.5">{formatRp(repair.cost)}</p>
+						{repair.quantity != null && repair.quantity > 0 && (
+							<p className="text-[11px] text-indigo-600 mt-1 font-medium">
+								Stok barang akan otomatis dikembalikan ke Inventory Showroom (+{repair.quantity}{" "}
+								unit).
+							</p>
+						)}
 					</div>
 
 					{isLastRepair && (

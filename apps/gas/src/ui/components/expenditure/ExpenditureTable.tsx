@@ -244,6 +244,7 @@ export function ExpenditureTable({
 																<tr className="bg-slate-100/70 text-[10px] font-bold text-slate-500 uppercase border-b border-slate-200">
 																	<th className="py-2 px-3 w-10 text-center">#</th>
 																	<th className="py-2 px-4">Deskripsi Perbaikan</th>
+																	<th className="py-2 px-3 w-24 text-center">Kuantitas</th>
 																	<th className="py-2 px-4 w-40 text-right">Biaya (Rp)</th>
 																	<th className="py-2 px-3 w-16 text-center">Hapus</th>
 																</tr>
@@ -259,6 +260,20 @@ export function ExpenditureTable({
 																		</td>
 																		<td className="py-2 px-4 font-medium text-slate-800">
 																			{repair.description}
+																		</td>
+																		<td className="py-2 px-3 text-center">
+																			{repair.quantity != null && repair.quantity > 0 ? (
+																				<span className="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono font-bold text-[11px]">
+																					{repair.quantity}
+																				</span>
+																			) : (
+																				<span
+																					className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-400 font-mono text-[11px] select-none cursor-not-allowed"
+																					title="Non-Inventory Showroom"
+																				>
+																					—
+																				</span>
+																			)}
 																		</td>
 																		<td className="py-2 px-4 text-right font-mono font-semibold text-slate-800">
 																			{formatRp(repair.cost)}
@@ -278,7 +293,7 @@ export function ExpenditureTable({
 															</tbody>
 															<tfoot>
 																<tr className="bg-blue-50/50 font-bold border-t border-slate-200 text-slate-900">
-																	<td colSpan={2} className="py-2.5 px-4 text-right text-xs">
+																	<td colSpan={3} className="py-2.5 px-4 text-right text-xs">
 																		Total Perbaikan Unit:
 																	</td>
 																	<td className="py-2.5 px-4 text-right font-mono text-blue-700 text-xs">
