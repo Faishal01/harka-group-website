@@ -51,3 +51,22 @@ gas/
   ```bash
   bunx clasp status
   ```
+
+## CI/CD with GitHub Actions
+
+Automated deployments to Google Apps Script are integrated into the monorepo deployment workflow (`.github/workflows/deploy.yml`) following Google's recommended Clasp CI/CD practices.
+
+### Required GitHub Secrets
+
+1. **`CLASPRC_JSON`**:
+   - Run `bun --filter=gas run clasp login` locally.
+   - Copy the entire contents of your local `~/.clasprc.json` (containing OAuth credentials and refresh token).
+   - Add it as a repository secret named `CLASPRC_JSON`.
+2. **`CLASP_JSON`**:
+   - Copy the contents of your local `.clasp.json` (or `.clasp.json.example` with your project's `scriptId`).
+   - Add it as a repository secret named `CLASP_JSON`.
+
+### Triggering Deployments
+
+- **Automatic (via Commit Message):** Include `deploy_gas` in the commit message on `master` (e.g. `feat: update inventory modal [deploy_gas]`).
+- **Manual (Workflow Dispatch):** Go to **Actions** ➡️ **Deploy Worker** ➡️ **Run workflow** ➡️ select `gas` (or `all`).
