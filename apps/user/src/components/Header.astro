@@ -15,7 +15,11 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 			<div class="flex justify-between items-center gap-x-4">
 				<a href="/">
 					<div class="flex items-center gap-x-2">
-						<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
+						<Image
+							src={icon}
+							class="h-14 lg:h-16 w-auto inline-block object-contain"
+							alt="Harka Autocar Logo"
+						/>
 						<span class="font-bold text-2xl lg:text-4xl font-header"
 							>Harka<span class="font-normal">Autocar</span></span
 						>
