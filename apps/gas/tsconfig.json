@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["google-apps-script", "unplugin-icons/types/preact"],
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact"
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx"]
+}
