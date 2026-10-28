@@ -32,3 +32,7 @@ pnpm-debug.log*
 .cloudflare/
 .agents/
 .vscode/
+
+# Google Apps Script Clasp config & credentials
+.clasp.json
+.clasprc.json
