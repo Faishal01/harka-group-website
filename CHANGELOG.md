@@ -1,5 +1,51 @@
 # Changelog
 
+# [1.1.0](https://github.com/Faishal01/harka-group-website/compare/v1.0.0...v1.1.0) (2026-10-28)
+
+
+### Bug Fixes
+
+* **gas:** isolate prettier config and provide clasp example ([edf89d3](https://github.com/Faishal01/harka-group-website/commit/edf89d3651beddb14263e8b7e62834f42a0f8f93))
+
+
+### Features
+
+* add cashflow ([7dd92fb](https://github.com/Faishal01/harka-group-website/commit/7dd92fb84e5b2a0d8863c85dbe8e218da73f7ddd))
+* add inventory ([e13e8a8](https://github.com/Faishal01/harka-group-website/commit/e13e8a8a139efa71fe01b268ba34c0a9dc0e9f77))
+* another ux stuff ([d5bf066](https://github.com/Faishal01/harka-group-website/commit/d5bf0667b5877c3f14b45aab0181bd5b64b3781d))
+* bring gas to ci ([01825c5](https://github.com/Faishal01/harka-group-website/commit/01825c5fcf9765768c47b5d2b3a98426cdd5b056))
+* deploy_user | some user side update ([d85c88a](https://github.com/Faishal01/harka-group-website/commit/d85c88a9ebbd5248f5f604f3cc567af05932b829))
+* expenditure update ([3331adc](https://github.com/Faishal01/harka-group-website/commit/3331adc19bb99155a94eee05d1c8e0647c41c933))
+* finalize stock ([7a7e29e](https://github.com/Faishal01/harka-group-website/commit/7a7e29eb90836ee87e8b5d613f50f93dbcad1d56))
+* fix dashboard utama filtering ([21cc87f](https://github.com/Faishal01/harka-group-website/commit/21cc87f0bc3e9fcc18d379e1dbaafd65ace4cd39))
+* fix mobile menu ([6783df0](https://github.com/Faishal01/harka-group-website/commit/6783df0af1f57af95caaa60f367ea63a20d6d2f5))
+* funny stuff ([9e14aed](https://github.com/Faishal01/harka-group-website/commit/9e14aed304a85bf78bd17a22e73c3dc678f46fdb))
+* gas | add tailwind ([6f10d99](https://github.com/Faishal01/harka-group-website/commit/6f10d99ecff07d83fdd631e081eac84260de453f))
+* gas | init gas ([375f3f1](https://github.com/Faishal01/harka-group-website/commit/375f3f189fa61e78bf84a7b10bb3fa3249eacb0d))
+* gas | use preact ([c2c3b79](https://github.com/Faishal01/harka-group-website/commit/c2c3b79eb3addcfdbfe86dcda71feef4435e3e05))
+* gas ux changes ([3a82d7a](https://github.com/Faishal01/harka-group-website/commit/3a82d7aa209e7836b1ead1cd5ce9098e8c5d79af))
+* implement gas dashboard ([d5b91cb](https://github.com/Faishal01/harka-group-website/commit/d5b91cb8d47c60470e3708e7635cc208deef9ed5))
+* marker ([f2ca1da](https://github.com/Faishal01/harka-group-website/commit/f2ca1dae7ccf7b71dce9f68b121dbfb7b6d86c11))
+* Merge branch 'gas' ([0af209b](https://github.com/Faishal01/harka-group-website/commit/0af209be2467fc2615b0f9a27a486d2644eace2a))
+* Merge branch 'master' into gas ([7849c2f](https://github.com/Faishal01/harka-group-website/commit/7849c2f1c85f4c0503de0fe618999d9a45d82935))
+* remove version from title ([a894889](https://github.com/Faishal01/harka-group-website/commit/a8948892e41ed89051891fba8c9cec04d75d4f10))
+* replace icon ([90306a1](https://github.com/Faishal01/harka-group-website/commit/90306a17c45108d8e2b08bcf785bcc53993d7aa7))
+* some gas stuff ([3bd54d7](https://github.com/Faishal01/harka-group-website/commit/3bd54d714d8804aede684258bd44baefca3decd0))
+* some much stuff ([d61829b](https://github.com/Faishal01/harka-group-website/commit/d61829b62582a34c4e39890beaf738631a020f69))
+* some stuff ([58780f2](https://github.com/Faishal01/harka-group-website/commit/58780f228448cf41e7490b1ad3c916b3acf5ac7f))
+* some uiux changes ([b5ca813](https://github.com/Faishal01/harka-group-website/commit/b5ca81319409ef97f62a9c6e50080be397270930))
+* some uxes ([7bbb4eb](https://github.com/Faishal01/harka-group-website/commit/7bbb4eb96f323c6a60879a3c171a5edb06d1778e))
+* stuff ([89c1fd5](https://github.com/Faishal01/harka-group-website/commit/89c1fd54de71906e231cf91858f824a401b30495))
+* transaction ([86a5e2a](https://github.com/Faishal01/harka-group-website/commit/86a5e2a8a5299d8bccc39c554e563e7ecca60671))
+* transaction graph ([20cfcbb](https://github.com/Faishal01/harka-group-website/commit/20cfcbbb8df10871bb89949c87534b5489c071b7))
+* transaction page adaptation ([fc63b96](https://github.com/Faishal01/harka-group-website/commit/fc63b962c6522a6336f12bf985514fbbbc5dbf27))
+* update ([09068da](https://github.com/Faishal01/harka-group-website/commit/09068dabf28357aabcaee3cf5d2a7d5152d8eac0))
+* update prettier stuff ([db70bfe](https://github.com/Faishal01/harka-group-website/commit/db70bfe55be7112a82aea6c21c49029a1b82b23f))
+* ux update and stuff ([9307812](https://github.com/Faishal01/harka-group-website/commit/9307812ebdd2c58cb183f31a6d873a887923fd98))
+* versioning ([945625c](https://github.com/Faishal01/harka-group-website/commit/945625c6f393fa868514bfcd320db6c3baee8a04))
+* yoy ([e800802](https://github.com/Faishal01/harka-group-website/commit/e80080297ed4b3d31a281a6302d8c95e4dfe6abf))
+* yoy graph ([cd63a57](https://github.com/Faishal01/harka-group-website/commit/cd63a575de75ffac6f993c661af4f73b56762010))
+
 # 1.0.0 (2026-10-20)
 
 
