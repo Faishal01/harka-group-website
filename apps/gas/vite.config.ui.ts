@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
@@ -22,5 +23,8 @@ export default defineConfig({
 	build: {
 		outDir: "../../dist",
 		emptyOutDir: false,
+		rollupOptions: {
+			input: resolve(import.meta.dirname, "src/ui/Index.html"),
+		},
 	},
 });
