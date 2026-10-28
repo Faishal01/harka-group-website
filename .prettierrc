@@ -1,19 +1,4 @@
 {
-	"plugins": ["prettier-plugin-astro", "prettier-plugin-svelte"],
 	"useTabs": true,
-	"printWidth": 100,
-	"overrides": [
-		{
-			"files": "*.astro",
-			"options": {
-				"parser": "astro"
-			}
-		},
-		{
-			"files": "*.svelte",
-			"options": {
-				"parser": "svelte"
-			}
-		}
-	]
+	"printWidth": 100
 }
