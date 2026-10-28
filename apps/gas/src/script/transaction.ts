@@ -1,6 +1,7 @@
 import {
 	DATA_START_ROW_INDEX,
 	formatDateToDDMMYY,
+	formatPlateNumber,
 	formatRp,
 	HEADER_ROW_INDEX,
 	hashPlate,
@@ -170,13 +171,14 @@ export function appendTransaction(payload: TransactionCreateInput): {
 } {
 	return withDocumentLock(() => {
 		const sheet = getTransactionSheet();
-		const plateHash = hashPlate(payload.plateNumber);
+		const formattedPlate = formatPlateNumber(payload.plateNumber);
+		const plateHash = hashPlate(formattedPlate);
 
 		// Enforce 1:1 plate uniqueness
 		const existingRow = findRowByPlateHash(sheet, plateHash);
 		if (existingRow !== -1) {
 			throw new Error(
-				`Mobil dengan plat nomor "${payload.plateNumber.toUpperCase()}" sudah terdaftar dalam transaksi.`,
+				`Mobil dengan plat nomor "${formattedPlate}" sudah terdaftar dalam transaksi.`,
 			);
 		}
 
@@ -209,7 +211,7 @@ export function appendTransaction(payload: TransactionCreateInput): {
 			nextNo,
 			payload.transactionDate,
 			payload.carDescription,
-			payload.plateNumber.toUpperCase(),
+			formattedPlate,
 			payload.category,
 			payload.buyerName,
 			payload.phoneNumber,
@@ -269,7 +271,7 @@ export function updateTransaction(payload: TransactionUpdateInput): {
 			payload.no,
 			payload.transactionDate,
 			payload.carDescription,
-			payload.plateNumber.toUpperCase(),
+			formatPlateNumber(payload.plateNumber),
 			payload.category,
 			payload.buyerName,
 			payload.phoneNumber,

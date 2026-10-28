@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import IconX from "~icons/lucide/x";
 import {
 	formatDateToDDMMYY,
+	formatPlateNumber,
 	formatRp,
 	StockCarItem,
 	TRANSACTION_CATEGORIES,
@@ -133,7 +134,7 @@ export function TransactionFormModal({
 			transactionDate: tanggal.trim(),
 			category: kategori,
 			carDescription: deskripsi.trim(),
-			plateNumber: plat.trim().toUpperCase(),
+			plateNumber: formatPlateNumber(plat),
 			buyerName: pembeli.trim(),
 			phoneNumber: telpon.trim(),
 			sellingPrice: typeof hargaJual === "number" ? hargaJual : 0,

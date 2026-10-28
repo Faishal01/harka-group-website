@@ -11,6 +11,21 @@ export const TRANSACTION_STATUSES = ["LUNAS", "BELUM LUNAS"] as const;
 export const PLATE_NUMBER_REGEX = /^([A-Za-z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Za-z]{0,3})$/;
 
 /**
+ * Automatically format any valid Indonesian license plate into standard spacing:
+ * e.g. "b1562xx" -> "B 1562 XX", "B   1234  CD" -> "B 1234 CD"
+ */
+export function formatPlateNumber(raw?: string | null): string {
+	if (!raw) return "";
+	const trimmed = raw.trim().toUpperCase();
+	const match = trimmed.match(/^([A-Z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Z]{0,3})$/);
+	if (match) {
+		const [, region, number, letters] = match;
+		return letters ? `${region} ${number} ${letters}` : `${region} ${number}`;
+	}
+	return trimmed.replace(/\s+/g, " ");
+}
+
+/**
  * Normalize car plate: eliminate all whitespace and convert to uppercase.
  */
 export function normalizePlate(plate: string): string {
