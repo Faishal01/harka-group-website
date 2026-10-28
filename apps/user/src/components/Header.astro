@@ -15,7 +15,11 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 			<div class="flex justify-between items-center gap-x-4">
 				<a href="/">
 					<div class="flex items-center gap-x-2">
-						<Image src={icon} class="h-16 w-28 inline-block" alt={""} />
+						<Image
+							src={icon}
+							class="h-14 lg:h-16 w-auto inline-block object-contain"
+							alt="Harka Autocar Logo"
+						/>
 						<span class="font-bold text-2xl lg:text-4xl font-header"
 							>Harka<span class="font-normal">Autocar</span></span
 						>
@@ -93,6 +97,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 					class="lg:hidden p-2 -mr-2 text-white focus:outline-none"
 					aria-label="Toggle mobile menu"
 					aria-expanded="false"
+					aria-controls="mobile-menu"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -164,33 +169,37 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 </header>
 
 <script>
-	const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
-	const mobileMenu = document.getElementById("mobile-menu");
+	function setupMobileMenu() {
+		const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+		const mobileMenu = document.getElementById("mobile-menu");
 
-	if (mobileMenuToggle && mobileMenu) {
-		mobileMenuToggle.addEventListener("click", () => {
-			const isExpanded = mobileMenuToggle.getAttribute("aria-expanded") === "true";
-			mobileMenuToggle.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
-			mobileMenu.classList.toggle("hidden");
+		if (mobileMenuToggle && mobileMenu) {
+			mobileMenuToggle.onclick = () => {
+				const isExpanded = mobileMenuToggle.getAttribute("aria-expanded") === "true";
+				mobileMenuToggle.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
+				mobileMenu.classList.toggle("hidden");
+			};
+		}
+
+		const accordions = document.querySelectorAll<HTMLButtonElement>(".mobile-accordion-toggle");
+		accordions.forEach((btn) => {
+			btn.onclick = () => {
+				const isExpanded = btn.getAttribute("aria-expanded") === "true";
+				btn.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
+
+				const submenu = btn.nextElementSibling;
+				if (submenu) {
+					submenu.classList.toggle("hidden");
+					submenu.classList.toggle("flex");
+				}
+
+				const chevron = btn.querySelector(".chevron");
+				if (chevron) {
+					chevron.classList.toggle("rotate-180");
+				}
+			};
 		});
 	}
 
-	const accordions = document.querySelectorAll(".mobile-accordion-toggle");
-	accordions.forEach((btn) => {
-		btn.addEventListener("click", () => {
-			const isExpanded = btn.getAttribute("aria-expanded") === "true";
-			btn.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
-
-			const submenu = btn.nextElementSibling;
-			if (submenu) {
-				submenu.classList.toggle("hidden");
-				submenu.classList.toggle("flex");
-			}
-
-			const chevron = btn.querySelector(".chevron");
-			if (chevron) {
-				chevron.classList.toggle("rotate-180");
-			}
-		});
-	});
+	document.addEventListener("astro:page-load", setupMobileMenu);
 </script>

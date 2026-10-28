@@ -28,14 +28,14 @@ const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas ber
 	schema={autoDealerSchema}
 >
 	{/* Main Heading */}
-	<Section class:list={"relative"}>
+	<Section class:list={"relative overflow-hidden"}>
 		<Image
 			src={ImageHeadingBackground}
 			alt="Heading background"
-			class:list={"absolute inset-0 w-full h-full object-cover"}
+			class:list={"absolute inset-0 w-full h-full object-cover scale-125 origin-[center_40%] md:scale-100 md:origin-center"}
 		/>
-		<div class="absolute inset-0 w-full h-full object-cover bg-gray-800/80"></div>
-		<Container class:list={"relative z-10"}>
+		<div class="absolute inset-0 w-full h-full bg-gray-800/80"></div>
+		<Container class:list={"relative z-10 max-lg:py-10"}>
 			<Heading class:list={"prose-invert max-w-4xl"}>
 				<h1 slot="heading-title" class="mb-0 lg:text-7xl text-balance">
 					{homePage.headingTitle}
