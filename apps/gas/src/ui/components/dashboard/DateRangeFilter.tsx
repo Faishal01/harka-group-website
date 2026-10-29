@@ -1,6 +1,6 @@
 import { useMemo } from "preact/hooks";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
-import { ddmmyyToIsoDate, isoDateToDdmmyy } from "../../../shared/schema";
+import { ddmmyyToIsoDate, INDONESIAN_MONTH_NAMES, isoDateToDdmmyy } from "../../../shared/schema";
 import { CustomSelect } from "../CustomSelect";
 import { DatePicker } from "../DatePicker";
 
@@ -26,21 +26,6 @@ export function DateRangeFilter({
 		const curYear = now.getFullYear();
 		const curMonth = now.getMonth();
 
-		const monthNames = [
-			"Januari",
-			"Februari",
-			"Maret",
-			"April",
-			"Mei",
-			"Juni",
-			"Juli",
-			"Agustus",
-			"September",
-			"Oktober",
-			"November",
-			"Desember",
-		];
-
 		for (let i = 0; i < 24; i++) {
 			const targetDate = new Date(curYear, curMonth - i, 1);
 			const y = targetDate.getFullYear();
@@ -50,7 +35,7 @@ export function DateRangeFilter({
 			const start = `${y}-${mStr}-01`;
 			const end = `${y}-${mStr}-${String(lastDay).padStart(2, "0")}`;
 			list.push({
-				label: `${monthNames[m]} ${y}`,
+				label: `${INDONESIAN_MONTH_NAMES[m]} ${y}`,
 				value: `${y}-${mStr}`,
 				start,
 				end,

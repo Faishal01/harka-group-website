@@ -7,6 +7,7 @@ import IconPlus from "~icons/lucide/plus";
 import IconTrash2 from "~icons/lucide/trash-2";
 import IconX from "~icons/lucide/x";
 import {
+	formatPlateNumber,
 	formatRp,
 	hashPlate,
 	InventoryItem,
@@ -71,11 +72,11 @@ export function ExpenditureCreateModal({
 
 		if (stockCars && stockCars.length > 0) {
 			for (const s of stockCars) {
-				const cleanPlate = normalizePlate(s.plateNumber);
-				if (cleanPlate && !map.has(cleanPlate)) {
-					map.set(cleanPlate, {
+				const key = normalizePlate(s.plateNumber);
+				if (key && !map.has(key)) {
+					map.set(key, {
 						carDescription: s.carDescription || "",
-						plateNumber: cleanPlate,
+						plateNumber: s.plateNumber.trim().replace(/\s+/g, " ").toUpperCase(),
 					});
 				}
 			}
@@ -83,11 +84,11 @@ export function ExpenditureCreateModal({
 
 		if (map.size === 0 && transactionCars) {
 			for (const t of transactionCars) {
-				const cleanPlate = normalizePlate(t.plateNumber);
-				if (cleanPlate && !map.has(cleanPlate)) {
-					map.set(cleanPlate, {
+				const key = normalizePlate(t.plateNumber);
+				if (key && !map.has(key)) {
+					map.set(key, {
 						carDescription: t.carDescription || "",
-						plateNumber: cleanPlate,
+						plateNumber: t.plateNumber.trim().replace(/\s+/g, " ").toUpperCase(),
 					});
 				}
 			}
@@ -233,7 +234,7 @@ export function ExpenditureCreateModal({
 			return;
 		}
 
-		const cleanPlate = plateNumber.trim().toUpperCase();
+		const cleanPlate = formatPlateNumber(plateNumber);
 		const cleanCar = carDescription.trim();
 
 		if (!cleanPlate) {

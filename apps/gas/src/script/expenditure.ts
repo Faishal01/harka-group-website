@@ -5,6 +5,7 @@ import {
 	EXPENDITURE_DATA_START_ROW_INDEX,
 	EXPENDITURE_HEADER_ROW_INDEX,
 	EXPENDITURE_SHEET_NAME,
+	formatPlateNumber,
 	hashPlate,
 	parseRp,
 	UpdateVehicleDescriptionInput,
@@ -277,11 +278,12 @@ export function appendVehicleExpenditure(
 	return withDocumentLock(() => {
 		const parsed = VehicleExpenditureCreateSchema.parse(payload);
 		const sheet = getExpenditureSheet();
-		const targetHash = hashPlate(parsed.plateNumber);
+		const formattedPlate = formatPlateNumber(parsed.plateNumber);
+		const targetHash = hashPlate(formattedPlate);
 
 		const existing = findVehicleRowRange(sheet, targetHash);
 		if (existing) {
-			throw new Error(`Kendaraan dengan plat "${parsed.plateNumber}" sudah terdaftar.`);
+			throw new Error(`Kendaraan dengan plat "${formattedPlate}" sudah terdaftar.`);
 		}
 
 		// Deduct inventory stock for any repair item with quantity > 0
@@ -308,7 +310,7 @@ export function appendVehicleExpenditure(
 				rowData.push([
 					nextNo,
 					parsed.carDescription,
-					parsed.plateNumber,
+					formattedPlate,
 					parsed.repairs[i].description,
 					qtyVal,
 					parsed.repairs[i].cost,
@@ -360,7 +362,7 @@ export function appendVehicleExpenditure(
 			id: targetHash,
 			no: nextNo,
 			carDescription: parsed.carDescription,
-			plateNumber: parsed.plateNumber,
+			plateNumber: formattedPlate,
 			repairs: parsed.repairs.map((r, idx) => ({
 				id: `${targetHash}-r${idx + 1}`,
 				description: r.description,

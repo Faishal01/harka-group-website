@@ -13,6 +13,7 @@ import {
 	InventorySortColumn,
 	InventoryUpdateInput,
 	parseDate,
+	parseDateMonthYear,
 	parseDateUniversal,
 	PickerConfig,
 	RepairItem,
@@ -1318,12 +1319,9 @@ export function App() {
 				}
 
 				// Month
-				if (filters.month !== "ALL" && item.transactionDate.includes("/")) {
-					const parts = item.transactionDate.split("/");
-					if (parts.length === 3) {
-						const m = `${parts[1]}/${parts[2]}`;
-						if (m !== filters.month) return false;
-					}
+				if (filters.month !== "ALL") {
+					const parsed = parseDateMonthYear(item.transactionDate);
+					if (!parsed || parsed.key !== filters.month) return false;
 				}
 
 				// Status
@@ -1804,13 +1802,8 @@ export function App() {
 
 				// Month filter
 				if (cashFilters.month !== "ALL") {
-					const parts = (item.date || "").split("/");
-					if (parts.length === 3) {
-						const m = `${parts[1]}/${parts[2]}`;
-						if (m !== cashFilters.month) return false;
-					} else {
-						return false;
-					}
+					const parsed = parseDateMonthYear(item.date);
+					if (!parsed || parsed.key !== cashFilters.month) return false;
 				}
 
 				// Type filter

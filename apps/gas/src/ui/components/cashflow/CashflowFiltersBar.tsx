@@ -3,7 +3,8 @@ import IconPlus from "~icons/lucide/plus";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconRotateCcw from "~icons/lucide/rotate-ccw";
 import IconSearch from "~icons/lucide/search";
-import { CashFilterState, CashTransactionItem } from "../../../shared/schema";
+import { CashFilterState, CashTransactionItem, parseDateMonthYear } from "../../../shared/schema";
+import { CustomSelect, CustomSelectOption } from "../CustomSelect";
 import { Select } from "../Select";
 
 interface CashflowFiltersBarProps {
@@ -23,22 +24,29 @@ export function CashflowFiltersBar({
 	onRefresh,
 	isLoading,
 }: CashflowFiltersBarProps) {
-	// Extract unique months (MM/YY) sorted in descending order
-	const months = useMemo(() => {
-		const set = new Set<string>();
+	// Extract unique months sorted in descending order
+	const monthOptions: CustomSelectOption[] = useMemo(() => {
+		const map = new Map<string, { label: string; year: number; month: number }>();
 		for (const it of items) {
-			if (it.date && it.date.includes("/")) {
-				const parts = it.date.split("/");
-				if (parts.length === 3) {
-					set.add(`${parts[1]}/${parts[2]}`);
-				}
+			const parsed = parseDateMonthYear(it.date);
+			if (parsed && !map.has(parsed.key)) {
+				map.set(parsed.key, {
+					label: parsed.label,
+					year: parsed.year,
+					month: parsed.month,
+				});
 			}
 		}
-		return Array.from(set).sort((a, b) => {
-			const [ma, ya] = a.split("/").map(Number);
-			const [mb, yb] = b.split("/").map(Number);
-			return yb !== ya ? yb - ya : mb - ma;
+		const sorted = Array.from(map.entries()).sort((a, b) => {
+			return b[1].year !== a[1].year ? b[1].year - a[1].year : b[1].month - a[1].month;
 		});
+		return [
+			{ label: "Semua Bulan", value: "ALL" },
+			...sorted.map(([key, val]) => ({
+				label: val.label,
+				value: key,
+			})),
+		];
 	}, [items]);
 
 	// Extract unique categories
@@ -117,18 +125,14 @@ export function CashflowFiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Bulan
 					</label>
-					<Select
+					<CustomSelect
 						value={filters.month}
-						onChange={(e) => onChange({ ...filters, month: (e.target as HTMLSelectElement).value })}
-						className="px-2.5 py-1.5"
-					>
-						<option value="ALL">Semua Bulan</option>
-						{months.map((m) => (
-							<option key={m} value={m}>
-								{m}
-							</option>
-						))}
-					</Select>
+						onChange={(val) => onChange({ ...filters, month: val })}
+						options={monthOptions}
+						placeholder="Semua Bulan"
+						size="sm"
+						menuWidth="w-52 sm:w-56"
+					/>
 				</div>
 
 				{/* Jenis Filter */}

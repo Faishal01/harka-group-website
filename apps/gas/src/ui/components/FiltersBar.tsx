@@ -1,9 +1,16 @@
+import { useMemo } from "preact/hooks";
 import IconPlus from "~icons/lucide/plus";
 import IconRefreshCw from "~icons/lucide/refresh-cw";
 import IconRotateCcw from "~icons/lucide/rotate-ccw";
 import IconSearch from "~icons/lucide/search";
-import { TRANSACTION_CATEGORIES, TRANSACTION_STATUSES, TransactionItem } from "../../shared/schema";
+import {
+	parseDateMonthYear,
+	TRANSACTION_CATEGORIES,
+	TRANSACTION_STATUSES,
+	TransactionItem,
+} from "../../shared/schema";
 import { FilterState } from "../types";
+import { CustomSelect, CustomSelectOption } from "./CustomSelect";
 import { Select } from "./Select";
 
 interface FiltersBarProps {
@@ -23,19 +30,30 @@ export function FiltersBar({
 	onRefresh,
 	isLoading,
 }: FiltersBarProps) {
-	// Extract unique months (MM/YY)
-	const months = Array.from(
-		new Set(
-			transactions
-				.map((t) => {
-					if (!t.transactionDate || !t.transactionDate.includes("/")) return null;
-					const parts = t.transactionDate.split("/");
-					if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
-					return null;
-				})
-				.filter(Boolean) as string[],
-		),
-	).sort();
+	// Extract unique months sorted in descending order
+	const monthOptions: CustomSelectOption[] = useMemo(() => {
+		const map = new Map<string, { label: string; year: number; month: number }>();
+		for (const t of transactions) {
+			const parsed = parseDateMonthYear(t.transactionDate);
+			if (parsed && !map.has(parsed.key)) {
+				map.set(parsed.key, {
+					label: parsed.label,
+					year: parsed.year,
+					month: parsed.month,
+				});
+			}
+		}
+		const sorted = Array.from(map.entries()).sort((a, b) => {
+			return b[1].year !== a[1].year ? b[1].year - a[1].year : b[1].month - a[1].month;
+		});
+		return [
+			{ label: "Semua Bulan", value: "ALL" },
+			...sorted.map(([key, val]) => ({
+				label: val.label,
+				value: key,
+			})),
+		];
+	}, [transactions]);
 
 	// Extract unique sales
 	const salesList = Array.from(
@@ -109,18 +127,14 @@ export function FiltersBar({
 					<label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
 						Bulan
 					</label>
-					<Select
+					<CustomSelect
 						value={filters.month}
-						onChange={(e) => onChange({ ...filters, month: (e.target as HTMLSelectElement).value })}
-						className="px-2.5 py-1.5"
-					>
-						<option value="ALL">Semua Bulan</option>
-						{months.map((m) => (
-							<option key={m} value={m}>
-								{m}
-							</option>
-						))}
-					</Select>
+						onChange={(val) => onChange({ ...filters, month: val })}
+						options={monthOptions}
+						placeholder="Semua Bulan"
+						size="sm"
+						menuWidth="w-52 sm:w-56"
+					/>
 				</div>
 
 				{/* Status Filter */}

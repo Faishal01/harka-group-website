@@ -1,6 +1,6 @@
 import {
+	formatPlateNumber,
 	hashPlate,
-	normalizePlate,
 	parseRp,
 	STOCK_COLUMNS,
 	STOCK_DATA_START_ROW_INDEX,
@@ -143,13 +143,13 @@ export function appendStockCar(input: StockCarCreateInput): StockCarItem {
 		const validated = StockCarCreateSchema.parse(input);
 		const sheet = getStockSheet();
 
-		const cleanPlate = normalizePlate(validated.plateNumber);
-		const targetPlateHash = hashPlate(cleanPlate);
+		const formattedPlate = formatPlateNumber(validated.plateNumber);
+		const targetPlateHash = hashPlate(formattedPlate);
 
 		// Check for duplicate plate in STOK MOBIL
 		const existingRow = findStockCarRowIndex(sheet, targetPlateHash);
 		if (existingRow !== null) {
-			throw new Error(`Mobil dengan plat "${cleanPlate}" sudah terdaftar di Stok Mobil.`);
+			throw new Error(`Mobil dengan plat "${formattedPlate}" sudah terdaftar di Stok Mobil.`);
 		}
 
 		const nextRow = Math.max(sheet.getLastRow() + 1, STOCK_DATA_START_ROW_INDEX);
@@ -162,7 +162,7 @@ export function appendStockCar(input: StockCarCreateInput): StockCarItem {
 			nextNo,
 			validated.make.toUpperCase(),
 			validated.carDescription,
-			cleanPlate,
+			formattedPlate,
 			validated.documents,
 			validated.status,
 			validated.sellingPrice,
@@ -200,7 +200,7 @@ export function appendStockCar(input: StockCarCreateInput): StockCarItem {
 			no: nextNo,
 			make: validated.make.toUpperCase(),
 			carDescription: validated.carDescription,
-			plateNumber: cleanPlate,
+			plateNumber: formattedPlate,
 			documents: validated.documents,
 			status: validated.status,
 			sellingPrice: validated.sellingPrice,

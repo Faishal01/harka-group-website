@@ -48,7 +48,9 @@ export function CustomSelect({
 	// Find active selection
 	const selectedOption = options.find((opt) => opt.value === value);
 	const displayText = selectedOption ? selectedOption.label : placeholder;
-	const isSelected = Boolean(selectedOption && selectedOption.value !== "");
+	const isSelected = Boolean(
+		selectedOption && selectedOption.value !== "" && selectedOption.value !== "ALL",
+	);
 
 	// Close on outside click or Escape
 	useEffect(() => {

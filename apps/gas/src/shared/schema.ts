@@ -11,6 +11,21 @@ export const TRANSACTION_STATUSES = ["LUNAS", "BELUM LUNAS"] as const;
 export const PLATE_NUMBER_REGEX = /^([A-Za-z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Za-z]{0,3})$/;
 
 /**
+ * Automatically format any valid Indonesian license plate into standard spacing:
+ * e.g. "b1562xx" -> "B 1562 XX", "B   1234  CD" -> "B 1234 CD"
+ */
+export function formatPlateNumber(raw?: string | null): string {
+	if (!raw) return "";
+	const trimmed = raw.trim().toUpperCase();
+	const match = trimmed.match(/^([A-Z]{1,2})\s*([1-9][0-9]{0,3})\s*([A-Z]{0,3})$/);
+	if (match) {
+		const [, region, number, letters] = match;
+		return letters ? `${region} ${number} ${letters}` : `${region} ${number}`;
+	}
+	return trimmed.replace(/\s+/g, " ");
+}
+
+/**
  * Normalize car plate: eliminate all whitespace and convert to uppercase.
  */
 export function normalizePlate(plate: string): string {
@@ -188,6 +203,24 @@ export function ddmmyyToIsoDate(dStr: string): string {
 }
 
 /**
+ * Indonesian month names for date formatting across dashboards and filters.
+ */
+export const INDONESIAN_MONTH_NAMES = [
+	"Januari",
+	"Februari",
+	"Maret",
+	"April",
+	"Mei",
+	"Juni",
+	"Juli",
+	"Agustus",
+	"September",
+	"Oktober",
+	"November",
+	"Desember",
+] as const;
+
+/**
  * Universal date parser that handles:
  * - YYYY-MM-DD (ISO)
  * - D/M/YY or DD/MM/YYYY (Spreadsheet format)
@@ -241,6 +274,27 @@ export function parseDateUniversal(dStr?: string): {
 	}
 
 	return null;
+}
+
+/**
+ * Extract normalized month key ("YYYY-MM") and Indonesian label ("Oktober 2026") from any date string.
+ */
+export function parseDateMonthYear(dStr?: string): {
+	year: number;
+	month: number; // 1-12
+	key: string; // "YYYY-MM"
+	label: string; // e.g. "Oktober 2026"
+} | null {
+	const parsed = parseDateUniversal(dStr);
+	if (!parsed) return null;
+	const m1 = parsed.month + 1;
+	const mStr = String(m1).padStart(2, "0");
+	return {
+		year: parsed.year,
+		month: m1,
+		key: `${parsed.year}-${mStr}`,
+		label: `${INDONESIAN_MONTH_NAMES[parsed.month]} ${parsed.year}`,
+	};
 }
 
 /**
@@ -566,7 +620,7 @@ export type CashSortColumn = "date" | "description" | "cashIn" | "cashOut" | "ba
 
 export interface CashFilterState {
 	searchQuery: string;
-	month: string; // "ALL" | "MM/YY"
+	month: string; // "ALL" | "YYYY-MM"
 	category: string; // "ALL" | category name
 	type: "ALL" | "IN" | "OUT";
 	sortBy: CashSortColumn;

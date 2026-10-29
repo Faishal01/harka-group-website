@@ -9,6 +9,7 @@ import {
 	calculateTargetSellingPrice,
 	DEFAULT_DOCUMENTS,
 	DEFAULT_MAKES,
+	formatPlateNumber,
 	formatRp,
 	StockCarCreateInput,
 	StockCarItem,
@@ -134,7 +135,7 @@ export function StockFormModal({
 			return;
 		}
 
-		const cleanPlate = plateNumber.trim().toUpperCase();
+		const cleanPlate = formatPlateNumber(plateNumber);
 		if (!cleanPlate) {
 			setError("Plat nomor wajib diisi");
 			return;
