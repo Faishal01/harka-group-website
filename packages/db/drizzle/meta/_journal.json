@@ -113,6 +113,13 @@
       "when": 1789576219800,
       "tag": "0015_drop_trade_in_bpkb_status",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1789576219810,
+      "tag": "0016_add_trade_in_submission_type",
+      "breakpoints": true
     }
   ]
 }

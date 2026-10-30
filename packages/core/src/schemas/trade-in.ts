@@ -7,6 +7,11 @@ export const TradeInStatusSchema = Schema.Literal(
 	"rejected",
 );
 
+export const TradeInSubmissionTypeSchema = Schema.Literal(
+	"trade_in",
+	"sell_outright",
+);
+
 export const STNKStatusSchema = Schema.Literal("active", "expired");
 
 export const TradeInPhotoSchema = Schema.Struct({

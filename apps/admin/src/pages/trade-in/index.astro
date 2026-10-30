@@ -7,10 +7,15 @@ import Section from "~/components/Section.astro";
 import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
 import { getPrice } from "~/utils/helpers";
+import type { TradeInSubmissionType } from "@harka/db";
 
 const pageParam = Astro.url.searchParams.get("page");
 const currentPage = Math.max(1, Number(pageParam) || 1);
 const limit = 15;
+
+const typeParam = Astro.url.searchParams.get("type");
+const filterType: TradeInSubmissionType | "all" =
+	typeParam === "trade_in" || typeParam === "sell_outright" ? typeParam : "all";
 
 const core = createCore(env);
 const {
@@ -20,10 +25,45 @@ const {
 } = await core.tradeIn.getSubmissions({
 	page: currentPage,
 	limit,
+	submissionType: filterType,
 });
+
+const targetCarIds = [
+	...new Set(submissions.map((s) => s.targetCarId).filter(Boolean)),
+] as string[];
+const targetCarsMap = new Map<string, { id: string; title: string; price: number }>();
+if (targetCarIds.length > 0) {
+	for (const cid of targetCarIds) {
+		try {
+			const c = await core.cars.getById(cid, { adminView: true });
+			if (c) {
+				targetCarsMap.set(cid, {
+					id: c.id,
+					title: `${c.year} ${c.make} ${c.model}`,
+					price: c.price,
+				});
+			}
+		} catch {
+			// ignore missing
+		}
+	}
+}
 
 const startIndex = total === 0 ? 0 : (currentPage - 1) * limit + 1;
 const endIndex = Math.min(total, currentPage * limit);
+
+function getSubmissionTypeBadge(type: string) {
+	if (type === "sell_outright") {
+		return {
+			label: "Jual Lepas",
+			badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
+		};
+	}
+	return {
+		label: "Tukar Tambah",
+		badgeClass: "bg-indigo-50 text-indigo-800 border-indigo-200",
+	};
+}
 
 function getOwnershipBadge(status?: string | null) {
 	if (status === "leasing") {
@@ -77,17 +117,26 @@ function generatePaginationRange(
 }
 
 const paginationRange = generatePaginationRange(currentPage, totalPages);
+
+function createPageUrl(p: number | string) {
+	const params = new URLSearchParams();
+	params.set("page", String(p));
+	if (filterType !== "all") {
+		params.set("type", filterType);
+	}
+	return `/trade-in?${params.toString()}`;
+}
 ---
 
-<Layout pageTitle="Pengajuan Tukar Tambah">
+<Layout pageTitle="Pengajuan Unit | Dasbor Admin">
 	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
 		<Container>
 			<!-- Header -->
-			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 				<div>
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Pengajuan Tukar Tambah</h1>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Pengajuan Unit</h1>
 					<p class="text-sm text-gray-500 mt-1">
-						Daftar formulir taksiran dan tukar tambah mobil yang diajukan oleh calon pelanggan.
+						Kelola permohonan Tukar Tambah dan Jual Lepas dari pelanggan.
 					</p>
 				</div>
 				<div class="flex items-center gap-2">
@@ -97,6 +146,40 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 						Total: {total} Pengajuan
 					</span>
 				</div>
+			</div>
+
+			<!-- Filter Tabs -->
+			<div class="flex items-center gap-2 mb-6 border-b border-gray-200 pb-3">
+				<a
+					href="/trade-in"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+						filterType === "all"
+							? "bg-gray-900 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					Semua Pengajuan
+				</a>
+				<a
+					href="/trade-in?type=trade_in"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 ${
+						filterType === "trade_in"
+							? "bg-indigo-700 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					<span>Tukar Tambah</span>
+				</a>
+				<a
+					href="/trade-in?type=sell_outright"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 ${
+						filterType === "sell_outright"
+							? "bg-teal-700 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					<span>Jual Lepas</span>
+				</a>
 			</div>
 
 			{
@@ -130,6 +213,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 								<thead>
 									<tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
 										<th class="py-3.5 px-4 sm:px-6">Tanggal</th>
+										<th class="py-3.5 px-4 sm:px-6">Layanan</th>
 										<th class="py-3.5 px-4 sm:px-6">Pelanggan</th>
 										<th class="py-3.5 px-4 sm:px-6">Kendaraan</th>
 										<th class="py-3.5 px-4 sm:px-6">Ekspektasi Harga</th>
@@ -149,6 +233,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 										});
 										const cleanPhone = sub.customerPhone.replace(/[^0-9]/g, "");
 										const reviewBadge = getReviewStatusBadge(sub.status);
+										const typeBadge = getSubmissionTypeBadge(sub.submissionType);
 
 										return (
 											<tr class="hover:bg-gray-50/70 transition">
@@ -157,6 +242,31 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 													<span class="block font-mono text-[10px] text-gray-400 mt-0.5">
 														ID: {sub.id}
 													</span>
+												</td>
+
+												<td class="py-4 px-4 sm:px-6">
+													<span
+														class={`inline-block px-2.5 py-1 rounded-md text-xs font-bold border ${typeBadge.badgeClass}`}
+													>
+														{typeBadge.label}
+													</span>
+													{sub.submissionType === "trade_in" && sub.targetCarId && (
+														<div class="mt-1.5 text-xs">
+															{targetCarsMap.get(sub.targetCarId) ? (
+																<a
+																	href={`/cars/view/${sub.targetCarId}`}
+																	class="font-semibold text-indigo-700 hover:underline block truncate max-w-[180px]"
+																	title={targetCarsMap.get(sub.targetCarId)!.title}
+																>
+																	&rarr; {targetCarsMap.get(sub.targetCarId)!.title}
+																</a>
+															) : (
+																<span class="text-gray-400 font-mono text-[11px] block">
+																	Unit ID: {sub.targetCarId}
+																</span>
+															)}
+														</div>
+													)}
 												</td>
 
 												<td class="py-4 px-4 sm:px-6">
@@ -281,7 +391,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 								<nav class="flex items-center gap-1">
 									{currentPage > 1 ? (
 										<a
-											href={`/trade-in?page=${currentPage - 1}`}
+											href={createPageUrl(currentPage - 1)}
 											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
 										>
 											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -312,7 +422,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 												<span class="px-2 text-gray-400">...</span>
 											) : (
 												<a
-													href={`/trade-in?page=${p}`}
+													href={createPageUrl(p)}
 													class={`size-8 inline-flex items-center justify-center rounded-md font-medium transition ${
 														p === currentPage
 															? "bg-gray-900 text-white font-bold"
@@ -327,7 +437,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 
 									{currentPage < totalPages ? (
 										<a
-											href={`/trade-in?page=${currentPage + 1}`}
+											href={createPageUrl(currentPage + 1)}
 											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
 										>
 											<span>Berikutnya</span>

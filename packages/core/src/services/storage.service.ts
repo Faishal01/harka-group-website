@@ -33,11 +33,14 @@ export const streamImage = (id: string) =>
 			);
 		}
 
+		// Normalize id to strip any leading slashes or redundant api/images/ prefix
+		const cleanId = id.replace(/^\/?(api\/images\/)+/, "").replace(/^\/+/, "");
+
 		const r2 = yield* R2Client;
-		const maybeObject = yield* r2.get(id);
+		const maybeObject = yield* r2.get(cleanId);
 
 		if (Option.isNone(maybeObject)) {
-			return yield* Effect.fail(new StorageFileNotFoundError({ id }));
+			return yield* Effect.fail(new StorageFileNotFoundError({ id: cleanId }));
 		}
 
 		const object = maybeObject.value;

@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
 import {
 	tradeInSubmissions as tradeInTable,
+	cars as carsTable,
 	generateId,
 	validatePlateNumber,
 	formatPlateNumber,
@@ -13,6 +14,7 @@ import {
 	type TradeInPhoto,
 	type TradeInDocument,
 	type TradeInQueryParams,
+	type TradeInSubmissionType,
 } from "@harka/db";
 import { eq } from "drizzle-orm";
 import { DatabaseClient } from "../clients/database";
@@ -30,6 +32,41 @@ import { notifyTradeInSubmission } from "../notifications/trade-in";
 
 export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 	Effect.gen(function* () {
+		const rawSubmissionType = (formData.get("submissionType") || "trade_in").toString().trim();
+		const submissionType: TradeInSubmissionType =
+			rawSubmissionType === "sell_outright" ? "sell_outright" : "trade_in";
+		const targetCarId = (formData.get("targetCarId") || "").toString().trim() || null;
+
+		const db = yield* DatabaseClient;
+
+		if (submissionType === "trade_in") {
+			if (!targetCarId) {
+				return yield* Effect.fail(
+					new ValidationError({
+						message: "Untuk pengajuan Tukar Tambah, unit mobil tujuan wajib dipilih.",
+					}),
+				);
+			}
+
+			const targetCar = yield* Effect.tryPromise({
+				try: () =>
+					db
+						.select({ id: carsTable.id })
+						.from(carsTable)
+						.where(eq(carsTable.id, targetCarId))
+						.limit(1),
+				catch: (cause) => new DatabaseError({ cause }),
+			});
+
+			if (!targetCar || targetCar.length === 0) {
+				return yield* Effect.fail(
+					new ValidationError({
+						message: "Unit mobil tujuan yang dipilih tidak ditemukan di stok showroom.",
+					}),
+				);
+			}
+		}
+
 		const customerName = (formData.get("customerName") || "").toString().trim();
 		const customerPhone = (formData.get("customerPhone") || "").toString().trim();
 		const customerCity = (formData.get("customerCity") || "").toString().trim();
@@ -188,6 +225,8 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 		const now = new Date();
 		const record: InsertTradeInSubmission = {
 			id,
+			submissionType,
+			targetCarId: submissionType === "trade_in" ? targetCarId : null,
 			customerName,
 			customerPhone,
 			customerCity,
@@ -215,8 +254,6 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 			createdAt: now,
 			updatedAt: now,
 		};
-
-		const db = yield* DatabaseClient;
 
 		yield* Effect.tryPromise({
 			try: () => db.insert(tradeInTable).values(record),
