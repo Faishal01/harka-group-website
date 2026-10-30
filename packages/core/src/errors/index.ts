@@ -31,6 +31,17 @@ export class TradeInNotFoundError extends Error {
 	}
 }
 
+export class TeamMemberNotFoundError extends Error {
+	readonly _tag = "TeamMemberNotFoundError";
+	readonly status = 404;
+	readonly id: string;
+	constructor(args: { id: string; message?: string }) {
+		super(args.message ?? `Anggota tim ID ${args.id} tidak ditemukan`);
+		this.name = "TeamMemberNotFoundError";
+		this.id = args.id;
+	}
+}
+
 export class StorageFileNotFoundError extends Error {
 	readonly _tag = "StorageFileNotFoundError";
 	readonly status = 404;

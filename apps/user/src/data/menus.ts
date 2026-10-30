@@ -22,6 +22,11 @@ export const menuMain: MainMenuItem[] = [
 		url: "/trade-in?type=sell",
 	},
 	{
+		id: "team",
+		label: "Tim Kami",
+		url: "/team",
+	},
+	{
 		id: "contact",
 		label: "Hubungi Kami",
 		url: "/contact",
@@ -46,6 +51,10 @@ export const menuNavigation: MenuNavigation = {
 		{
 			name: "Jual Mobil",
 			url: "/trade-in?type=sell",
+		},
+		{
+			name: "Tim Kami",
+			url: "/team",
 		},
 	],
 };

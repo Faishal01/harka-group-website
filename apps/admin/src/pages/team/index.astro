@@ -1,39 +1,95 @@
 ---
+export const prerender = false;
+
 import Layout from "~/layouts/Layout.astro";
 import Container from "~/components/Container.astro";
 import Section from "~/components/Section.astro";
 import TeamManager from "~/components/admin/TeamManager.svelte";
+import PublicTeamManager from "~/components/admin/PublicTeamManager.svelte";
 import { getDb, adminWhitelist } from "@harka/db";
 import { desc } from "drizzle-orm";
 import { env } from "cloudflare:workers";
+import { createCore } from "@harka/core";
 
 const currentUser = Astro.locals.user;
 const currentUserRole = Astro.locals.userRole || "admin";
 
+const tabParam = Astro.url.searchParams.get("tab");
+const activeTab = tabParam === "access" ? "access" : "members";
+
 const db = getDb(env);
 const allMembers = await db.select().from(adminWhitelist).orderBy(desc(adminWhitelist.createdAt));
+
+const core = createCore(env);
+const publicMembers = await core.team.getMembers();
 ---
 
-<Layout pageTitle="Kelola Akses Tim | Harka Admin" title="Kelola Akses Tim">
+<Layout pageTitle="Manajemen Tim | Harka Admin" title="Manajemen Tim">
 	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
 		<Container>
 			<!-- Header -->
-			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 				<div>
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Kelola Akses Tim</h1>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Manajemen Tim</h1>
 					<p class="text-sm text-gray-500 mt-1">
-						Kelola daftar whitelist email admin yang memiliki izin akses ke dasbor ini.
+						Kelola profil anggota tim publik website dan hak akses admin dasbor.
 					</p>
 				</div>
 			</div>
 
-			<!-- Management Island -->
-			<TeamManager
-				initialMembers={allMembers}
-				currentUserEmail={currentUser?.email || ""}
-				currentUserRole={currentUserRole}
-				client:load
-			/>
+			<!-- Tabs -->
+			<div class="flex items-center gap-6 border-b border-gray-200 mb-8">
+				<a
+					href="/team?tab=members"
+					class={`pb-3 px-1 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+						activeTab === "members"
+							? "border-red-600 text-red-600"
+							: "border-transparent text-gray-500 hover:text-gray-700"
+					}`}
+				>
+					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+						></path>
+					</svg>
+					<span>Anggota Tim Publik ({publicMembers.length})</span>
+				</a>
+				<a
+					href="/team?tab=access"
+					class={`pb-3 px-1 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+						activeTab === "access"
+							? "border-red-600 text-red-600"
+							: "border-transparent text-gray-500 hover:text-gray-700"
+					}`}
+				>
+					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+						></path>
+					</svg>
+					<span>Akses Admin ({allMembers.length})</span>
+				</a>
+			</div>
+
+			<!-- Tab Content -->
+			{
+				activeTab === "members" ? (
+					<PublicTeamManager initialMembers={publicMembers} client:load />
+				) : (
+					<TeamManager
+						initialMembers={allMembers}
+						currentUserEmail={currentUser?.email || ""}
+						currentUserRole={currentUserRole}
+						client:load
+					/>
+				)
+			}
 		</Container>
 	</Section>
 </Layout>

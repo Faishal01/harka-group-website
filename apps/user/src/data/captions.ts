@@ -263,3 +263,13 @@ export const tradeInCaptions = {
 		},
 	],
 };
+
+export const teamCaptions = {
+	title: "Tim Kami",
+	subtitle:
+		"Kenali staf dan konsultan otomotif profesional Harka Autocar yang siap melayani kebutuhan jual, beli, dan tukar tambah mobil impian Anda.",
+	emptyTitle: "Profil Tim Sedang Diperbarui",
+	emptySubtitle:
+		"Kami sedang memperbarui daftar personel showroom. Untuk informasi dan bantuan cepat, silakan hubungi layanan pelanggan kami.",
+	contactCta: "Hubungi Showroom",
+};

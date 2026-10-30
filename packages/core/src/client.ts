@@ -3,25 +3,22 @@ import { makeCoreLayer } from "./layer";
 import * as CarService from "./services/car.service";
 import * as StorageService from "./services/storage.service";
 import * as TradeInService from "./services/trade-in.service";
+import * as TeamService from "./services/team.service";
 import type {
 	Car,
 	QueryOptions,
 	TradeInQueryParams,
 	PaginatedTradeInSubmissions,
 	TradeInSubmission,
+	TeamMember,
 } from "@harka/db";
 
 export interface CoreClient {
 	cars: {
 		getFiltered: (params: unknown, options?: QueryOptions) => Promise<Car[]>;
 		getById: (id: string, options?: { adminView?: boolean }) => Promise<Car>;
-		getDistinctModels: (
-			make: string,
-			options?: { adminView?: boolean },
-		) => Promise<string[]>;
-		create: (
-			input: unknown,
-		) => Promise<{ success: boolean; id: string; title: string }>;
+		getDistinctModels: (make: string, options?: { adminView?: boolean }) => Promise<string[]>;
+		create: (input: unknown) => Promise<{ success: boolean; id: string; title: string }>;
 		update: (
 			id: string,
 			input: unknown,
@@ -38,13 +35,8 @@ export interface CoreClient {
 		uploadGalleryImages: (files: File[]) => Promise<string[]>;
 	};
 	tradeIn: {
-		submit: (
-			formData: FormData,
-			webhookUrl?: string,
-		) => Promise<{ success: boolean; id: string }>;
-		getSubmissions: (
-			params?: TradeInQueryParams,
-		) => Promise<PaginatedTradeInSubmissions>;
+		submit: (formData: FormData, webhookUrl?: string) => Promise<{ success: boolean; id: string }>;
+		getSubmissions: (params?: TradeInQueryParams) => Promise<PaginatedTradeInSubmissions>;
 		getById: (id: string) => Promise<TradeInSubmission>;
 		updateStatus: (
 			id: string,
@@ -57,6 +49,22 @@ export interface CoreClient {
 			reviewedBy: string | null;
 		}>;
 	};
+	team: {
+		getMembers: (options?: { activeOnly?: boolean }) => Promise<TeamMember[]>;
+		getById: (id: string) => Promise<TeamMember>;
+		create: (
+			input: TeamService.TeamMemberInput,
+			photoFile?: File | null,
+		) => Promise<{ success: boolean; id: string }>;
+		update: (
+			id: string,
+			input: Partial<TeamService.TeamMemberInput>,
+			photoFile?: File | null,
+			removePhoto?: boolean,
+		) => Promise<{ success: boolean; id: string }>;
+		delete: (id: string) => Promise<{ success: boolean; id: string }>;
+		reorder: (orderedIds: string[]) => Promise<{ success: boolean }>;
+	};
 	respond: <T>(
 		callback: () => Promise<T>,
 		options?: { status?: number; eventName?: string },
@@ -67,25 +75,17 @@ export function createCore(env: unknown): CoreClient {
 	const layer = makeCoreLayer(env as any);
 
 	const run = <A, E, R>(effect: Effect.Effect<A, E, R>): Promise<A> =>
-		Effect.runPromise(
-			effect.pipe(Effect.provide(layer)) as unknown as Effect.Effect<
-				A,
-				E,
-				never
-			>,
-		);
+		Effect.runPromise(effect.pipe(Effect.provide(layer)) as unknown as Effect.Effect<A, E, never>);
 
 	return {
 		cars: {
-			getFiltered: (params, options) =>
-				run(CarService.getFilteredCars(params, options)),
+			getFiltered: (params, options) => run(CarService.getFilteredCars(params, options)),
 			getById: (id, options) => run(CarService.getCarById(id, options)),
 			getDistinctModels: (make, options) =>
 				run(CarService.getDistinctModelsByMake(make, options?.adminView)),
 			create: (input) => run(CarService.createCar(input)),
 			update: (id, input) => run(CarService.updateCar(id, input)),
-			softDelete: (id, reason) =>
-				run(CarService.softDeleteCar(id, reason)),
+			softDelete: (id, reason) => run(CarService.softDeleteCar(id, reason)),
 			restore: (id) => run(CarService.restoreCar(id)),
 			hardDelete: (id) => run(CarService.hardDeleteCar(id)),
 		},
@@ -106,17 +106,23 @@ export function createCore(env: unknown): CoreClient {
 					return new Response("Storage Error", { status: 502 });
 				}
 			},
-			uploadGalleryImages: (files) =>
-				run(StorageService.uploadGalleryImages(files)),
+			uploadGalleryImages: (files) => run(StorageService.uploadGalleryImages(files)),
 		},
 		tradeIn: {
-			submit: (formData, webhookUrl) =>
-				run(TradeInService.submitTradeIn(formData, webhookUrl)),
-			getSubmissions: (params) =>
-				run(TradeInService.getTradeInSubmissions(params)),
+			submit: (formData, webhookUrl) => run(TradeInService.submitTradeIn(formData, webhookUrl)),
+			getSubmissions: (params) => run(TradeInService.getTradeInSubmissions(params)),
 			getById: (id) => run(TradeInService.getTradeInById(id)),
 			updateStatus: (id, input, reviewer = "Admin") =>
 				run(TradeInService.updateTradeInStatus(id, input, reviewer)),
+		},
+		team: {
+			getMembers: (options) => run(TeamService.getTeamMembers(options)),
+			getById: (id) => run(TeamService.getTeamMemberById(id)),
+			create: (input, photoFile) => run(TeamService.createTeamMember(input, photoFile)),
+			update: (id, input, photoFile, removePhoto) =>
+				run(TeamService.updateTeamMember(id, input, photoFile, removePhoto)),
+			delete: (id) => run(TeamService.deleteTeamMember(id)),
+			reorder: (orderedIds) => run(TeamService.reorderTeamMembers(orderedIds)),
 		},
 		respond: async <T>(
 			callback: () => Promise<T>,
@@ -137,10 +143,7 @@ export function createCore(env: unknown): CoreClient {
 						cause: err?.cause,
 					}),
 				);
-				return Response.json(
-					{ error: "Internal Server Error" },
-					{ status: 500 },
-				);
+				return Response.json({ error: "Internal Server Error" }, { status: 500 });
 			}
 		},
 	};
