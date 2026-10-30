@@ -7,10 +7,15 @@ import Section from "~/components/Section.astro";
 import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
 import { getPrice } from "~/utils/helpers";
+import type { TradeInSubmissionType } from "@harka/db";
 
 const pageParam = Astro.url.searchParams.get("page");
 const currentPage = Math.max(1, Number(pageParam) || 1);
 const limit = 15;
+
+const typeParam = Astro.url.searchParams.get("type");
+const filterType: TradeInSubmissionType | "all" =
+	typeParam === "trade_in" || typeParam === "sell_outright" ? typeParam : "all";
 
 const core = createCore(env);
 const {
@@ -20,10 +25,45 @@ const {
 } = await core.tradeIn.getSubmissions({
 	page: currentPage,
 	limit,
+	submissionType: filterType,
 });
+
+const targetCarIds = [
+	...new Set(submissions.map((s) => s.targetCarId).filter(Boolean)),
+] as string[];
+const targetCarsMap = new Map<string, { id: string; title: string; price: number }>();
+if (targetCarIds.length > 0) {
+	for (const cid of targetCarIds) {
+		try {
+			const c = await core.cars.getById(cid, { adminView: true });
+			if (c) {
+				targetCarsMap.set(cid, {
+					id: c.id,
+					title: `${c.year} ${c.make} ${c.model}`,
+					price: c.price,
+				});
+			}
+		} catch {
+			// ignore missing
+		}
+	}
+}
 
 const startIndex = total === 0 ? 0 : (currentPage - 1) * limit + 1;
 const endIndex = Math.min(total, currentPage * limit);
+
+function getSubmissionTypeBadge(type: string) {
+	if (type === "sell_outright") {
+		return {
+			label: "Jual Lepas",
+			badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
+		};
+	}
+	return {
+		label: "Tukar Tambah",
+		badgeClass: "bg-indigo-50 text-indigo-800 border-indigo-200",
+	};
+}
 
 function getOwnershipBadge(status?: string | null) {
 	if (status === "leasing") {
@@ -77,17 +117,26 @@ function generatePaginationRange(
 }
 
 const paginationRange = generatePaginationRange(currentPage, totalPages);
+
+function createPageUrl(p: number | string) {
+	const params = new URLSearchParams();
+	params.set("page", String(p));
+	if (filterType !== "all") {
+		params.set("type", filterType);
+	}
+	return `/trade-in?${params.toString()}`;
+}
 ---
 
-<Layout pageTitle="Pengajuan Tukar Tambah">
+<Layout pageTitle="Pengajuan Unit | Dasbor Admin">
 	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
 		<Container>
 			<!-- Header -->
-			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 				<div>
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Pengajuan Tukar Tambah</h1>
+					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Pengajuan Unit</h1>
 					<p class="text-sm text-gray-500 mt-1">
-						Daftar formulir taksiran dan tukar tambah mobil yang diajukan oleh calon pelanggan.
+						Kelola permohonan Tukar Tambah dan Jual Lepas dari pelanggan.
 					</p>
 				</div>
 				<div class="flex items-center gap-2">
@@ -97,6 +146,40 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 						Total: {total} Pengajuan
 					</span>
 				</div>
+			</div>
+
+			<!-- Filter Tabs -->
+			<div class="flex items-center gap-2 mb-6 border-b border-gray-200 pb-3">
+				<a
+					href="/trade-in"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+						filterType === "all"
+							? "bg-gray-900 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					Semua Pengajuan
+				</a>
+				<a
+					href="/trade-in?type=trade_in"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 ${
+						filterType === "trade_in"
+							? "bg-indigo-700 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					<span>Tukar Tambah</span>
+				</a>
+				<a
+					href="/trade-in?type=sell_outright"
+					class={`px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5 ${
+						filterType === "sell_outright"
+							? "bg-teal-700 text-white shadow-xs"
+							: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+					}`}
+				>
+					<span>Jual Lepas</span>
+				</a>
 			</div>
 
 			{
@@ -125,17 +208,18 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 					</div>
 				) : (
 					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-						<div class="overflow-x-auto">
-							<table class="w-full text-left border-collapse text-sm">
+						<div class="overflow-x-auto table-scrollbar pb-1">
+							<table class="w-full min-w-[1150px] text-left border-collapse text-sm">
 								<thead>
 									<tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-										<th class="py-3.5 px-4 sm:px-6">Tanggal</th>
-										<th class="py-3.5 px-4 sm:px-6">Pelanggan</th>
-										<th class="py-3.5 px-4 sm:px-6">Kendaraan</th>
-										<th class="py-3.5 px-4 sm:px-6">Ekspektasi Harga</th>
-										<th class="py-3.5 px-4 sm:px-6">Status Berkas</th>
-										<th class="py-3.5 px-4 sm:px-6">Status Review</th>
-										<th class="py-3.5 px-4 sm:px-6 text-right">Aksi</th>
+										<th class="py-3.5 px-4 sm:px-6 whitespace-nowrap">Tanggal</th>
+										<th class="py-3.5 px-4 sm:px-6 whitespace-nowrap">Layanan</th>
+										<th class="py-3.5 px-4 sm:px-6 min-w-[180px]">Pelanggan</th>
+										<th class="py-3.5 px-4 sm:px-6 min-w-[240px]">Kendaraan</th>
+										<th class="py-3.5 px-4 sm:px-6 whitespace-nowrap">Ekspektasi Harga</th>
+										<th class="py-3.5 px-4 sm:px-6 whitespace-nowrap">Status Berkas</th>
+										<th class="py-3.5 px-4 sm:px-6 whitespace-nowrap">Status Review</th>
+										<th class="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">Aksi</th>
 									</tr>
 								</thead>
 								<tbody class="divide-y divide-gray-200">
@@ -149,6 +233,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 										});
 										const cleanPhone = sub.customerPhone.replace(/[^0-9]/g, "");
 										const reviewBadge = getReviewStatusBadge(sub.status);
+										const typeBadge = getSubmissionTypeBadge(sub.submissionType);
 
 										return (
 											<tr class="hover:bg-gray-50/70 transition">
@@ -159,14 +244,39 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 													</span>
 												</td>
 
-												<td class="py-4 px-4 sm:px-6">
+												<td class="py-4 px-4 sm:px-6 whitespace-nowrap">
+													<span
+														class={`inline-block px-2.5 py-1 rounded-md text-xs font-bold border ${typeBadge.badgeClass}`}
+													>
+														{typeBadge.label}
+													</span>
+													{sub.submissionType === "trade_in" && sub.targetCarId && (
+														<div class="mt-1.5 text-xs">
+															{targetCarsMap.get(sub.targetCarId) ? (
+																<a
+																	href={`/cars/view/${sub.targetCarId}`}
+																	class="font-semibold text-indigo-700 hover:underline block truncate max-w-[200px]"
+																	title={targetCarsMap.get(sub.targetCarId)!.title}
+																>
+																	&rarr; {targetCarsMap.get(sub.targetCarId)!.title}
+																</a>
+															) : (
+																<span class="text-gray-400 font-mono text-[11px] block">
+																	Unit ID: {sub.targetCarId}
+																</span>
+															)}
+														</div>
+													)}
+												</td>
+
+												<td class="py-4 px-4 sm:px-6 min-w-[180px]">
 													<div class="font-bold text-gray-900">{sub.customerName}</div>
 													<div class="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
 														<a
 															href={`https://wa.me/${cleanPhone}`}
 															target="_blank"
 															rel="noopener noreferrer"
-															class="text-green-700 font-semibold hover:underline inline-flex items-center gap-1"
+															class="text-green-700 font-semibold hover:underline inline-flex items-center gap-1 whitespace-nowrap"
 														>
 															<span>{sub.customerPhone}</span>
 															<svg
@@ -188,32 +298,32 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 													<span class="text-[11px] text-gray-400 block">{sub.customerCity}</span>
 												</td>
 
-												<td class="py-4 px-4 sm:px-6">
+												<td class="py-4 px-4 sm:px-6 min-w-[240px]">
 													<div class="font-bold text-gray-900 flex items-center gap-2 flex-wrap">
 														<span>
 															{sub.year} {sub.make} {sub.model}
 														</span>
 														{sub.plateNumber && (
-															<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 text-gray-700 border border-gray-200">
+															<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
 																{sub.plateNumber}
 															</span>
 														)}
 													</div>
-													<div class="text-xs text-gray-500">
+													<div class="text-xs text-gray-500 whitespace-nowrap">
 														{sub.mileage.toLocaleString("id-ID")} KM &bull; {sub.transmission}
 													</div>
-													<div class="text-[11px] text-blue-600 font-medium mt-0.5">
+													<div class="text-[11px] text-blue-600 font-medium mt-0.5 whitespace-nowrap">
 														{sub.photos?.length || 0} Foto Terlampir
 													</div>
 												</td>
 
-												<td class="py-4 px-4 sm:px-6">
-													<span class="font-bold text-red-700 text-sm">
+												<td class="py-4 px-4 sm:px-6 whitespace-nowrap">
+													<span class="font-bold text-red-700 text-sm whitespace-nowrap">
 														{getPrice(sub.sellingPrice)}
 													</span>
 												</td>
 
-												<td class="py-4 px-4 sm:px-6">
+												<td class="py-4 px-4 sm:px-6 whitespace-nowrap">
 													<div class="flex flex-col gap-1">
 														<span
 															class={`inline-block px-2 py-0.5 rounded text-[11px] font-bold w-fit ${getOwnershipBadge(sub.ownershipStatus).badgeClass}`}
@@ -281,7 +391,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 								<nav class="flex items-center gap-1">
 									{currentPage > 1 ? (
 										<a
-											href={`/trade-in?page=${currentPage - 1}`}
+											href={createPageUrl(currentPage - 1)}
 											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
 										>
 											<svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -312,7 +422,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 												<span class="px-2 text-gray-400">...</span>
 											) : (
 												<a
-													href={`/trade-in?page=${p}`}
+													href={createPageUrl(p)}
 													class={`size-8 inline-flex items-center justify-center rounded-md font-medium transition ${
 														p === currentPage
 															? "bg-gray-900 text-white font-bold"
@@ -327,7 +437,7 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 
 									{currentPage < totalPages ? (
 										<a
-											href={`/trade-in?page=${currentPage + 1}`}
+											href={createPageUrl(currentPage + 1)}
 											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition"
 										>
 											<span>Berikutnya</span>
@@ -360,3 +470,23 @@ const paginationRange = generatePaginationRange(currentPage, totalPages);
 		</Container>
 	</Section>
 </Layout>
+
+<style>
+	.table-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: #cbd5e1 transparent;
+	}
+	.table-scrollbar::-webkit-scrollbar {
+		height: 6px;
+	}
+	.table-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.table-scrollbar::-webkit-scrollbar-thumb {
+		background-color: #cbd5e1;
+		border-radius: 9999px;
+	}
+	.table-scrollbar::-webkit-scrollbar-thumb:hover {
+		background-color: #94a3b8;
+	}
+</style>

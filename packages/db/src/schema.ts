@@ -145,6 +145,9 @@ export type InsertAdminWhitelist = typeof adminWhitelist.$inferInsert;
 export const tradeInStatusEnum = ["pending", "approved", "rejected"] as const;
 export type TradeInStatus = (typeof tradeInStatusEnum)[number];
 
+export const tradeInSubmissionTypeEnum = ["trade_in", "sell_outright"] as const;
+export type TradeInSubmissionType = (typeof tradeInSubmissionTypeEnum)[number];
+
 export interface TradeInPhoto {
 	slot: string;
 	label: string;
@@ -163,6 +166,12 @@ export const tradeInSubmissions = sqliteTable(
 	"trade_in_submissions",
 	{
 		id: text("id").primaryKey(), // 12-character NanoID
+
+		// Submission Type & Intent
+		submissionType: text("submission_type", { enum: tradeInSubmissionTypeEnum })
+			.notNull()
+			.default("trade_in"),
+		targetCarId: text("target_car_id"),
 
 		// Review & Conversion Lifecycle
 		status: text("status", { enum: tradeInStatusEnum }).notNull().default("pending"),
@@ -212,9 +221,32 @@ export const tradeInSubmissions = sqliteTable(
 		index("trade_in_created_at_idx").on(table.createdAt),
 		index("trade_in_customer_phone_idx").on(table.customerPhone),
 		index("trade_in_status_idx").on(table.status),
+		index("trade_in_submission_type_idx").on(table.submissionType),
 	],
 );
 
 export type TradeInSubmission = typeof tradeInSubmissions.$inferSelect;
 export type InsertTradeInSubmission = typeof tradeInSubmissions.$inferInsert;
 
+export const teamMembers = sqliteTable(
+	"team_members",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		role: text("role"),
+		photoUrl: text("photo_url"),
+		phone: text("phone"),
+		email: text("email"),
+		order: integer("order").default(0).notNull(),
+		isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }),
+	},
+	(table) => [
+		index("team_members_order_idx").on(table.order),
+		index("team_members_is_active_idx").on(table.isActive),
+	],
+);
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = typeof teamMembers.$inferInsert;

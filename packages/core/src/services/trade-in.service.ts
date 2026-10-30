@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
 import {
 	tradeInSubmissions as tradeInTable,
+	cars as carsTable,
 	generateId,
 	validatePlateNumber,
 	formatPlateNumber,
@@ -13,28 +14,56 @@ import {
 	type TradeInPhoto,
 	type TradeInDocument,
 	type TradeInQueryParams,
+	type TradeInSubmissionType,
 } from "@harka/db";
 import { eq } from "drizzle-orm";
 import { DatabaseClient } from "../clients/database";
-import {
-	DatabaseError,
-	TradeInNotFoundError,
-	ValidationError,
-} from "../errors";
-import {
-	PhotoMetaArraySchema,
-	UpdateTradeInStatusSchema,
-} from "../schemas/trade-in";
+import { DatabaseError, TradeInNotFoundError, ValidationError } from "../errors";
+import { PhotoMetaArraySchema, UpdateTradeInStatusSchema } from "../schemas/trade-in";
 import { uploadTradeInPhoto, uploadSPHDocument } from "./storage.service";
 import { notifyTradeInSubmission } from "../notifications/trade-in";
 
 export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 	Effect.gen(function* () {
+		const rawSubmissionType = (formData.get("submissionType") || "trade_in").toString().trim();
+		const submissionType: TradeInSubmissionType =
+			rawSubmissionType === "sell_outright" ? "sell_outright" : "trade_in";
+		const targetCarId = (formData.get("targetCarId") || "").toString().trim() || null;
+
+		const db = yield* DatabaseClient;
+
+		if (submissionType === "trade_in") {
+			if (!targetCarId) {
+				return yield* Effect.fail(
+					new ValidationError({
+						message: "Untuk pengajuan Tukar Tambah, unit mobil tujuan wajib dipilih.",
+					}),
+				);
+			}
+
+			const targetCar = yield* Effect.tryPromise({
+				try: () =>
+					db
+						.select({ id: carsTable.id })
+						.from(carsTable)
+						.where(eq(carsTable.id, targetCarId))
+						.limit(1),
+				catch: (cause) => new DatabaseError({ cause }),
+			});
+
+			if (!targetCar || targetCar.length === 0) {
+				return yield* Effect.fail(
+					new ValidationError({
+						message: "Unit mobil tujuan yang dipilih tidak ditemukan di stok showroom.",
+					}),
+				);
+			}
+		}
+
 		const customerName = (formData.get("customerName") || "").toString().trim();
 		const customerPhone = (formData.get("customerPhone") || "").toString().trim();
 		const customerCity = (formData.get("customerCity") || "").toString().trim();
-		const customerEmail =
-			(formData.get("customerEmail") || "").toString().trim() || null;
+		const customerEmail = (formData.get("customerEmail") || "").toString().trim() || null;
 
 		if (!customerName || !customerPhone || !customerCity) {
 			return yield* Effect.fail(
@@ -52,15 +81,7 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 		const fuelType = (formData.get("fuelType") || "").toString().trim() || null;
 		const sellingPrice = Number(formData.get("sellingPrice"));
 
-		if (
-			!make ||
-			!model ||
-			!year ||
-			!mileage ||
-			!transmission ||
-			!sellingPrice ||
-			year < 1950
-		) {
+		if (!make || !model || !year || !mileage || !transmission || !sellingPrice || year < 1950) {
 			return yield* Effect.fail(
 				new ValidationError({
 					message:
@@ -94,13 +115,11 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 				: "first_hand";
 
 		const stnkStatus = (formData.get("stnkStatus") || "active").toString();
-		const stnkTaxExpiry =
-			(formData.get("stnkTaxExpiry") || "").toString().trim() || null;
+		const stnkTaxExpiry = (formData.get("stnkTaxExpiry") || "").toString().trim() || null;
 		const hasFaktur = formData.get("hasFaktur") === "true";
 		const hasServiceBook = formData.get("hasServiceBook") === "true";
 		const hasSpareKey = formData.get("hasSpareKey") === "true";
-		const adminNotes =
-			(formData.get("adminNotes") || "").toString().trim() || null;
+		const adminNotes = (formData.get("adminNotes") || "").toString().trim() || null;
 
 		const isFloodFree =
 			formData.get("isFloodFree") !== null
@@ -114,8 +133,7 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 				: formData.get("hasAccidentDamage") !== null
 					? formData.get("hasAccidentDamage") !== "true"
 					: false;
-		const conditionNotes =
-			(formData.get("conditionNotes") || "").toString().trim() || null;
+		const conditionNotes = (formData.get("conditionNotes") || "").toString().trim() || null;
 
 		const photoMetaRaw = (formData.get("photoMeta") || "").toString();
 		let parsedMeta: unknown;
@@ -127,9 +145,7 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 			);
 		}
 
-		const photoMeta = yield* Schema.decodeUnknown(PhotoMetaArraySchema)(
-			parsedMeta,
-		).pipe(
+		const photoMeta = yield* Schema.decodeUnknown(PhotoMetaArraySchema)(parsedMeta).pipe(
 			Effect.mapError(
 				(err) =>
 					new ValidationError({
@@ -160,12 +176,7 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 				);
 			}
 
-			const photo = yield* uploadTradeInPhoto(
-				file,
-				id,
-				item.slot,
-				item.label,
-			);
+			const photo = yield* uploadTradeInPhoto(file, id, item.slot, item.label);
 			uploadedPhotos.push(photo);
 		}
 
@@ -175,8 +186,7 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 			if (!sphFile) {
 				return yield* Effect.fail(
 					new ValidationError({
-						message:
-							"Surat Pelepasan Hak (SPH) wajib diunggah untuk mobil atas nama perusahaan.",
+						message: "Surat Pelepasan Hak (SPH) wajib diunggah untuk mobil atas nama perusahaan.",
 					}),
 				);
 			}
@@ -188,6 +198,8 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 		const now = new Date();
 		const record: InsertTradeInSubmission = {
 			id,
+			submissionType,
+			targetCarId: submissionType === "trade_in" ? targetCarId : null,
 			customerName,
 			customerPhone,
 			customerCity,
@@ -216,8 +228,6 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 			updatedAt: now,
 		};
 
-		const db = yield* DatabaseClient;
-
 		yield* Effect.tryPromise({
 			try: () => db.insert(tradeInTable).values(record),
 			catch: (cause) => new DatabaseError({ cause }),
@@ -240,9 +250,7 @@ export const getTradeInSubmissions = (params?: TradeInQueryParams) =>
 export const getTradeInById = (id: string) =>
 	Effect.gen(function* () {
 		if (!id) {
-			return yield* Effect.fail(
-				new ValidationError({ message: "ID pengajuan tidak ditemukan" }),
-			);
+			return yield* Effect.fail(new ValidationError({ message: "ID pengajuan tidak ditemukan" }));
 		}
 
 		const db = yield* DatabaseClient;
@@ -258,21 +266,13 @@ export const getTradeInById = (id: string) =>
 		return row;
 	});
 
-export const updateTradeInStatus = (
-	id: string,
-	rawInput: unknown,
-	reviewer: string,
-) =>
+export const updateTradeInStatus = (id: string, rawInput: unknown, reviewer: string) =>
 	Effect.gen(function* () {
 		if (!id) {
-			return yield* Effect.fail(
-				new ValidationError({ message: "ID pengajuan tidak ditemukan" }),
-			);
+			return yield* Effect.fail(new ValidationError({ message: "ID pengajuan tidak ditemukan" }));
 		}
 
-		const input = yield* Schema.decodeUnknown(UpdateTradeInStatusSchema)(
-			rawInput,
-		).pipe(
+		const input = yield* Schema.decodeUnknown(UpdateTradeInStatusSchema)(rawInput).pipe(
 			Effect.mapError(
 				(err) =>
 					new ValidationError({
@@ -284,12 +284,7 @@ export const updateTradeInStatus = (
 
 		const db = yield* DatabaseClient;
 		const existing = yield* Effect.tryPromise({
-			try: () =>
-				db
-					.select()
-					.from(tradeInTable)
-					.where(eq(tradeInTable.id, id))
-					.get(),
+			try: () => db.select().from(tradeInTable).where(eq(tradeInTable.id, id)).get(),
 			catch: (cause) => new DatabaseError({ cause }),
 		});
 

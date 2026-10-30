@@ -28,16 +28,17 @@ export interface UploadedTradeInDocument {
 export const streamImage = (id: string) =>
 	Effect.gen(function* () {
 		if (!id) {
-			return yield* Effect.fail(
-				new ValidationError({ message: "Image id is required" }),
-			);
+			return yield* Effect.fail(new ValidationError({ message: "Image id is required" }));
 		}
 
+		// Normalize id to strip any leading slashes or redundant api/images/ prefix
+		const cleanId = id.replace(/^\/?(api\/images\/)+/, "").replace(/^\/+/, "");
+
 		const r2 = yield* R2Client;
-		const maybeObject = yield* r2.get(id);
+		const maybeObject = yield* r2.get(cleanId);
 
 		if (Option.isNone(maybeObject)) {
-			return yield* Effect.fail(new StorageFileNotFoundError({ id }));
+			return yield* Effect.fail(new StorageFileNotFoundError({ id: cleanId }));
 		}
 
 		const object = maybeObject.value;
@@ -55,9 +56,7 @@ export const streamImage = (id: string) =>
 export const uploadGalleryImages = (files: File[]) =>
 	Effect.gen(function* () {
 		if (!files || files.length === 0) {
-			return yield* Effect.fail(
-				new ValidationError({ message: "No files uploaded" }),
-			);
+			return yield* Effect.fail(new ValidationError({ message: "No files uploaded" }));
 		}
 
 		const r2 = yield* R2Client;
@@ -89,12 +88,7 @@ export const uploadGalleryImages = (files: File[]) =>
 		return urls;
 	});
 
-export const uploadTradeInPhoto = (
-	file: File,
-	tradeInId: string,
-	slot: string,
-	label: string,
-) =>
+export const uploadTradeInPhoto = (file: File, tradeInId: string, slot: string, label: string) =>
 	Effect.gen(function* () {
 		if (!file || file.size === 0) {
 			return yield* Effect.fail(
@@ -133,8 +127,7 @@ export const uploadSPHDocument = (file: File, tradeInId: string) =>
 		if (!file || file.size === 0) {
 			return yield* Effect.fail(
 				new ValidationError({
-					message:
-						"Surat Pelepasan Hak (SPH) wajib diunggah untuk mobil atas nama perusahaan.",
+					message: "Surat Pelepasan Hak (SPH) wajib diunggah untuk mobil atas nama perusahaan.",
 				}),
 			);
 		}
@@ -165,9 +158,7 @@ export const uploadSPHDocument = (file: File, tradeInId: string) =>
 		}
 
 		const contentType =
-			file.type && file.type !== "application/octet-stream"
-				? file.type
-				: allowedMimeTypes[ext];
+			file.type && file.type !== "application/octet-stream" ? file.type : allowedMimeTypes[ext];
 
 		const r2 = yield* R2Client;
 		const buffer = yield* Effect.tryPromise({
@@ -193,4 +184,50 @@ export const uploadSPHDocument = (file: File, tradeInId: string) =>
 			filename: origName,
 			size: file.size,
 		} satisfies UploadedTradeInDocument;
+	});
+
+export const uploadTeamMemberPhoto = (file: File, memberId: string) =>
+	Effect.gen(function* () {
+		if (!file || file.size === 0) {
+			return yield* Effect.fail(
+				new ValidationError({ message: "Foto anggota tim tidak boleh kosong." }),
+			);
+		}
+
+		const origName = file.name || "photo.jpg";
+		const ext = origName.split(".").pop()?.toLowerCase() || "jpg";
+		const allowedExts = ["jpg", "jpeg", "png", "webp"];
+		if (!allowedExts.includes(ext)) {
+			return yield* Effect.fail(
+				new ValidationError({ message: "Format foto harus berupa JPG, PNG, atau WEBP." }),
+			);
+		}
+
+		const r2 = yield* R2Client;
+		const buffer = yield* Effect.tryPromise({
+			try: () => file.arrayBuffer(),
+			catch: (cause) =>
+				new ValidationError({
+					message: "Gagal membaca berkas foto",
+					details: cause,
+				}),
+		});
+
+		const timestamp = Date.now();
+		const r2Key = `team/member-${memberId}-${timestamp}.${ext}`;
+		const contentType = file.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
+
+		yield* r2.put(r2Key, buffer, {
+			httpMetadata: { contentType },
+		});
+
+		return `/api/images/${r2Key}`;
+	});
+
+export const deleteStorageFile = (urlOrKey: string) =>
+	Effect.gen(function* () {
+		if (!urlOrKey) return;
+		const cleanKey = urlOrKey.replace(/^\/?(api\/images\/)+/, "").replace(/^\/+/, "");
+		const r2 = yield* R2Client;
+		yield* r2.delete(cleanKey);
 	});

@@ -1,5 +1,14 @@
 import { and, eq, gte, isNull, like, lte, or, sql, desc, asc } from "drizzle-orm";
-import { cars, type Car, tradeInSubmissions, type TradeInSubmission } from "./schema";
+import {
+	cars,
+	type Car,
+	tradeInSubmissions,
+	type TradeInSubmission,
+	type TradeInSubmissionType,
+	type TradeInStatus,
+	teamMembers,
+	type TeamMember,
+} from "./schema";
 import { maskPlateNumber } from "./plate";
 import type { Database } from "./client";
 import type { FuelType, Transmission, BodyType, OwnershipStatus } from "./constants";
@@ -220,6 +229,8 @@ export async function getDistinctColors(db: Database): Promise<string[]> {
 export interface TradeInQueryParams {
 	page?: number;
 	limit?: number;
+	submissionType?: TradeInSubmissionType | "all";
+	status?: TradeInStatus | "all";
 }
 
 export interface PaginatedTradeInSubmissions {
@@ -241,13 +252,27 @@ export async function getTradeInSubmissions(
 	const limit = Math.max(1, Number(params?.limit) || 15);
 	const offset = (page - 1) * limit;
 
+	const conditions = [];
+
+	if (params?.submissionType && params.submissionType !== "all") {
+		conditions.push(eq(tradeInSubmissions.submissionType, params.submissionType));
+	}
+
+	if (params?.status && params.status !== "all") {
+		conditions.push(eq(tradeInSubmissions.status, params.status));
+	}
+
+	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
 	const [{ count }] = await db
 		.select({ count: sql<number>`count(*)` })
-		.from(tradeInSubmissions);
+		.from(tradeInSubmissions)
+		.where(whereClause);
 
 	const items = await db
 		.select()
 		.from(tradeInSubmissions)
+		.where(whereClause)
 		.orderBy(desc(tradeInSubmissions.createdAt))
 		.limit(limit)
 		.offset(offset);
@@ -279,3 +304,31 @@ export async function getTradeInSubmissionById(
 	return results[0];
 }
 
+/**
+ * Returns all team members, optionally filtering only active members for public view.
+ */
+export async function getTeamMembers(
+	db: Database,
+	options: { activeOnly?: boolean } = {},
+): Promise<TeamMember[]> {
+	const conditions = [];
+	if (options.activeOnly) {
+		conditions.push(eq(teamMembers.isActive, true));
+	}
+
+	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+	return db
+		.select()
+		.from(teamMembers)
+		.where(whereClause)
+		.orderBy(asc(teamMembers.order), desc(teamMembers.createdAt));
+}
+
+/**
+ * Returns a specific team member by ID.
+ */
+export async function getTeamMemberById(db: Database, id: string): Promise<TeamMember | undefined> {
+	const results = await db.select().from(teamMembers).where(eq(teamMembers.id, id)).limit(1);
+	return results[0];
+}

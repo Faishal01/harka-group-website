@@ -6,9 +6,14 @@ export const notifyTradeInSubmission = (
 	webhookUrl?: string,
 ) =>
 	Effect.gen(function* () {
+		const typeLabel =
+			submission.submissionType === "sell_outright"
+				? "Jual Lepas / Jual Mobil"
+				: "Tukar Tambah";
+
 		yield* Effect.sync(() => {
 			console.log(
-				`[Trade-In Submission] New inquiry from ${submission.customerName} (${submission.customerPhone}) for ${submission.year} ${submission.make} ${submission.model} - Asking: Rp ${submission.sellingPrice.toLocaleString("id-ID")}`,
+				`[${typeLabel}] New inquiry from ${submission.customerName} (${submission.customerPhone}) for ${submission.year} ${submission.make} ${submission.model} - Asking: Rp ${submission.sellingPrice.toLocaleString("id-ID")}${submission.targetCarId ? ` (Target: ${submission.targetCarId})` : ""}`,
 			);
 		});
 
@@ -20,6 +25,7 @@ export const notifyTradeInSubmission = (
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify({
 							event: "trade_in_submission",
+							submissionType: submission.submissionType,
 							data: submission,
 						}),
 					}),

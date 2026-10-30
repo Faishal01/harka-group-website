@@ -10,6 +10,71 @@
 		type OwnershipStatus,
 	} from "@harka/db";
 
+	// Props interface
+	interface AvailableCar {
+		id: string;
+		title: string;
+		make: string;
+		model: string;
+		year: number;
+		price: number;
+		coverImage?: string;
+	}
+
+	interface Props {
+		availableCars?: AvailableCar[];
+		initialType?: "trade_in" | "sell_outright";
+		lockedType?: "trade_in" | "sell_outright" | null;
+		initialTargetCarId?: string;
+	}
+
+	let {
+		availableCars = [],
+		initialType = "trade_in",
+		lockedType = null,
+		initialTargetCarId = "",
+	}: Props = $props();
+
+	// Mode State
+	let submissionType = $state<"trade_in" | "sell_outright">(
+		lockedType || initialType || "trade_in",
+	);
+	let targetCarId = $state<string>(initialTargetCarId || "");
+	let targetCarSearch = $state("");
+	let isTargetCarDropdownOpen = $state(false);
+	let targetCarComboboxRef = $state<HTMLElement | null>(null);
+
+	function handleClickOutside(event: MouseEvent) {
+		if (
+			isTargetCarDropdownOpen &&
+			targetCarComboboxRef &&
+			!targetCarComboboxRef.contains(event.target as Node)
+		) {
+			isTargetCarDropdownOpen = false;
+		}
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape" && isTargetCarDropdownOpen) {
+			isTargetCarDropdownOpen = false;
+		}
+	}
+
+	const selectedTargetCar = $derived(availableCars.find((c) => c.id === targetCarId) || null);
+
+	const filteredCars = $derived(
+		availableCars.filter((c) => {
+			if (!targetCarSearch.trim()) return true;
+			const q = targetCarSearch.toLowerCase();
+			return (
+				c.title.toLowerCase().includes(q) ||
+				c.make.toLowerCase().includes(q) ||
+				c.model.toLowerCase().includes(q) ||
+				String(c.year).includes(q)
+			);
+		}),
+	);
+
 	// Current wizard step (1 to 4)
 	let currentStep = $state(1);
 
@@ -139,6 +204,8 @@
 	interface StoredDraft {
 		version: 1;
 		savedAt: number;
+		submissionType?: "trade_in" | "sell_outright";
+		targetCarId?: string;
 		make: string;
 		model: string;
 		year: number | "";
@@ -189,6 +256,12 @@
 
 	function applyDraft() {
 		if (!draftData) return;
+		if (!lockedType && draftData.submissionType) {
+			submissionType = draftData.submissionType;
+		}
+		if (!initialTargetCarId && draftData.targetCarId) {
+			targetCarId = draftData.targetCarId;
+		}
 		make = draftData.make ?? "";
 		model = draftData.model ?? "";
 		year = draftData.year ?? "";
@@ -237,6 +310,8 @@
 				const draft: StoredDraft = {
 					version: 1,
 					savedAt: Date.now(),
+					submissionType,
+					targetCarId,
 					make,
 					model,
 					year,
@@ -272,6 +347,8 @@
 	$effect(() => {
 		// Reactive dependency tracking for draft auto-save
 		void [
+			submissionType,
+			targetCarId,
 			make,
 			model,
 			year,
@@ -306,6 +383,16 @@
 			currency: "IDR",
 			maximumFractionDigits: 0,
 		}).format(val);
+	}
+
+	// Helper for resolving car image URL safely
+	function getImageUrl(img?: string | null): string {
+		if (!img || !img.trim()) return "";
+		const trimmed = img.trim();
+		if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+		if (trimmed.startsWith("/api/images/")) return trimmed;
+		const clean = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+		return `/api/images${clean}`;
 	}
 
 	// Slot file selection handler
@@ -363,7 +450,9 @@
 
 	// Step validation
 	const isStep1Valid = $derived(
-		make.trim().length > 0 &&
+		(submissionType === "sell_outright" ||
+			(typeof targetCarId === "string" && targetCarId.trim().length > 0)) &&
+			make.trim().length > 0 &&
 			model.trim().length > 0 &&
 			typeof year === "number" &&
 			year >= 1950 &&
@@ -457,6 +546,10 @@
 
 			// 3. Build Multipart FormData
 			const formData = new FormData();
+			formData.append("submissionType", submissionType);
+			if (submissionType === "trade_in" && targetCarId) {
+				formData.append("targetCarId", targetCarId.trim());
+			}
 			formData.append("make", make.trim());
 			formData.append("model", model.trim());
 			formData.append("year", String(year));
@@ -564,11 +657,19 @@
 		customerPhone = "";
 		customerCity = "";
 		customerEmail = "";
+		if (!lockedType) {
+			submissionType = initialType || "trade_in";
+		}
+		if (!initialTargetCarId) {
+			targetCarId = "";
+		}
 		currentStep = 1;
 		isSubmitted = false;
 		submissionId = "";
 	}
 </script>
+
+<svelte:window onclick={handleClickOutside} onkeydown={handleWindowKeydown} />
 
 <div class="max-w-4xl mx-auto">
 	{#if isSubmitted}
@@ -756,7 +857,351 @@
 				<!-- STEP 1: Vehicle Specs & Price -->
 				{#if currentStep === 1}
 					<div>
-						<h3 class="text-xl font-bold text-gray-900 mb-2">{tradeInCaptions.steps.step1}</h3>
+						<!-- Mode Selection Card Toggle -->
+						<div class="mb-8 bg-gray-50/80 border border-gray-200 rounded-2xl p-4 sm:p-5">
+							<div class="flex items-center justify-between mb-3">
+								<span class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">
+									Pilih Layanan
+								</span>
+								{#if lockedType}
+									<span
+										class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="size-3"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+										<span>Terkunci dari menu</span>
+									</span>
+								{/if}
+							</div>
+
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+								<!-- Option 1: Tukar Tambah -->
+								<button
+									type="button"
+									disabled={Boolean(lockedType && lockedType !== "trade_in")}
+									onclick={() => {
+										if (!lockedType) {
+											submissionType = "trade_in";
+											triggerAutoSave();
+										}
+									}}
+									class="relative text-left p-4 rounded-xl border-2 transition-all duration-200 flex flex-col justify-between {submissionType ===
+									'trade_in'
+										? 'border-red-600 bg-red-50/40 shadow-xs ring-1 ring-red-600/30'
+										: 'border-gray-200 bg-white hover:border-gray-300 opacity-80'} {lockedType &&
+									lockedType !== 'trade_in'
+										? 'opacity-40 cursor-not-allowed'
+										: 'cursor-pointer'}"
+								>
+									<div class="flex items-start justify-between gap-3 mb-2">
+										<div class="flex items-center gap-2.5">
+											<div
+												class="size-9 rounded-lg flex items-center justify-center shrink-0 {submissionType ===
+												'trade_in'
+													? 'bg-red-600 text-white'
+													: 'bg-gray-100 text-gray-600'}"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-5"
+													viewBox="0 0 20 20"
+													fill="currentColor"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</div>
+											<span class="font-bold text-gray-900 text-base"
+												>{tradeInCaptions.modes.tradeIn}</span
+											>
+										</div>
+										<div
+											class="size-5 rounded-full border flex items-center justify-center shrink-0 {submissionType ===
+											'trade_in'
+												? 'border-red-600 bg-red-600'
+												: 'border-gray-300 bg-white'}"
+										>
+											{#if submissionType === "trade_in"}
+												<div class="size-2 rounded-full bg-white"></div>
+											{/if}
+										</div>
+									</div>
+									<p class="text-xs text-gray-600">{tradeInCaptions.modes.tradeInDesc}</p>
+								</button>
+
+								<!-- Option 2: Jual Lepas -->
+								<button
+									type="button"
+									disabled={Boolean(lockedType && lockedType !== "sell_outright")}
+									onclick={() => {
+										if (!lockedType) {
+											submissionType = "sell_outright";
+											triggerAutoSave();
+										}
+									}}
+									class="relative text-left p-4 rounded-xl border-2 transition-all duration-200 flex flex-col justify-between {submissionType ===
+									'sell_outright'
+										? 'border-red-600 bg-red-50/40 shadow-xs ring-1 ring-red-600/30'
+										: 'border-gray-200 bg-white hover:border-gray-300 opacity-80'} {lockedType &&
+									lockedType !== 'sell_outright'
+										? 'opacity-40 cursor-not-allowed'
+										: 'cursor-pointer'}"
+								>
+									<div class="flex items-start justify-between gap-3 mb-2">
+										<div class="flex items-center gap-2.5">
+											<div
+												class="size-9 rounded-lg flex items-center justify-center shrink-0 {submissionType ===
+												'sell_outright'
+													? 'bg-red-600 text-white'
+													: 'bg-gray-100 text-gray-600'}"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-5"
+													viewBox="0 0 20 20"
+													fill="currentColor"
+												>
+													<path
+														d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"
+													/>
+													<path
+														fill-rule="evenodd"
+														d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</div>
+											<span class="font-bold text-gray-900 text-base"
+												>{tradeInCaptions.modes.sell}</span
+											>
+										</div>
+										<div
+											class="size-5 rounded-full border flex items-center justify-center shrink-0 {submissionType ===
+											'sell_outright'
+												? 'border-red-600 bg-red-600'
+												: 'border-gray-300 bg-white'}"
+										>
+											{#if submissionType === "sell_outright"}
+												<div class="size-2 rounded-full bg-white"></div>
+											{/if}
+										</div>
+									</div>
+									<p class="text-xs text-gray-600">{tradeInCaptions.modes.sellDesc}</p>
+								</button>
+							</div>
+
+							<!-- Target Car Picker (when Tukar Tambah is active) -->
+							{#if submissionType === "trade_in"}
+								<div class="mt-5 pt-5 border-t border-gray-200">
+									<label class="block text-sm font-semibold text-gray-800 mb-2">
+										{tradeInCaptions.targetCar.label} <span class="text-red-600">*</span>
+									</label>
+
+									{#if selectedTargetCar}
+										<!-- Selected Card Preview -->
+										<div
+											class="bg-white border-2 border-red-500 rounded-xl p-3.5 flex items-center justify-between gap-4 shadow-xs"
+										>
+											<div class="flex items-center gap-3.5 min-w-0">
+												{#if selectedTargetCar.coverImage}
+													<img
+														src={getImageUrl(selectedTargetCar.coverImage)}
+														alt={selectedTargetCar.title}
+														class="size-16 sm:size-18 rounded-lg object-cover bg-gray-100 shrink-0"
+													/>
+												{:else}
+													<div
+														class="size-16 sm:size-18 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-400"
+													>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															class="size-7"
+															fill="none"
+															viewBox="0 0 24 24"
+															stroke="currentColor"
+														>
+															<path
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																stroke-width="1.5"
+																d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+															/>
+															<path
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																stroke-width="1.5"
+																d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+															/>
+														</svg>
+													</div>
+												{/if}
+												<div class="truncate">
+													<span
+														class="inline-block px-2 py-0.5 text-[11px] font-bold bg-red-100 text-red-800 rounded mb-1"
+													>
+														Unit Tujuan
+													</span>
+													<h5 class="font-bold text-gray-900 text-sm sm:text-base truncate">
+														{selectedTargetCar.year}
+														{selectedTargetCar.make}
+														{selectedTargetCar.model}
+													</h5>
+													<p class="text-xs text-red-700 font-semibold mt-0.5">
+														{formatRupiah(selectedTargetCar.price)}
+													</p>
+												</div>
+											</div>
+
+											{#if !initialTargetCarId}
+												<button
+													type="button"
+													onclick={() => {
+														targetCarId = "";
+														isTargetCarDropdownOpen = true;
+														triggerAutoSave();
+													}}
+													class="px-3.5 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition shrink-0"
+												>
+													{tradeInCaptions.targetCar.change}
+												</button>
+											{/if}
+										</div>
+									{:else}
+										<!-- Combobox / Searchable Dropdown -->
+										<div class="relative" bind:this={targetCarComboboxRef}>
+											<div class="relative">
+												<input
+													type="text"
+													bind:value={targetCarSearch}
+													onfocus={() => (isTargetCarDropdownOpen = true)}
+													placeholder={tradeInCaptions.targetCar.placeholder}
+													class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition bg-white text-sm"
+												/>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-5 text-gray-400 absolute left-3 top-3 pointer-events-none"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+													/>
+												</svg>
+											</div>
+
+											{#if isTargetCarDropdownOpen}
+												<div
+													class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-40 p-1.5 divide-y divide-gray-100"
+												>
+													{#if filteredCars.length > 0}
+														{#each filteredCars as car (car.id)}
+															<button
+																type="button"
+																onclick={() => {
+																	targetCarId = car.id;
+																	isTargetCarDropdownOpen = false;
+																	targetCarSearch = "";
+																	triggerAutoSave();
+																}}
+																class="w-full text-left p-2.5 hover:bg-red-50/50 rounded-lg transition flex items-center justify-between gap-3 group"
+															>
+																<div class="flex items-center gap-3 min-w-0">
+																	{#if car.coverImage}
+																		<img
+																			src={getImageUrl(car.coverImage)}
+																			alt={car.title}
+																			class="size-12 rounded-md object-cover bg-gray-100 shrink-0"
+																		/>
+																	{:else}
+																		<div
+																			class="size-12 rounded-md bg-gray-100 flex items-center justify-center shrink-0 text-gray-400"
+																		>
+																			<svg
+																				xmlns="http://www.w3.org/2000/svg"
+																				class="size-5"
+																				fill="none"
+																				viewBox="0 0 24 24"
+																				stroke="currentColor"
+																			>
+																				<path
+																					stroke-linecap="round"
+																					stroke-linejoin="round"
+																					stroke-width="1.5"
+																					d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+																				/>
+																				<path
+																					stroke-linecap="round"
+																					stroke-linejoin="round"
+																					stroke-width="1.5"
+																					d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+																				/>
+																			</svg>
+																		</div>
+																	{/if}
+																	<div class="truncate">
+																		<p
+																			class="font-bold text-gray-900 text-sm truncate group-hover:text-red-700"
+																		>
+																			{car.year}
+																			{car.make}
+																			{car.model}
+																		</p>
+																		<p class="text-xs text-red-600 font-semibold">
+																			{formatRupiah(car.price)}
+																		</p>
+																	</div>
+																</div>
+																<span
+																	class="text-xs font-semibold text-gray-400 group-hover:text-red-600 shrink-0"
+																>
+																	Pilih &rarr;
+																</span>
+															</button>
+														{/each}
+													{:else}
+														<div class="p-4 text-center text-xs text-gray-500">
+															Tidak ada unit yang cocok dengan pencarian.
+														</div>
+													{/if}
+												</div>
+											{/if}
+
+											{#if !targetCarId}
+												<p
+													class="text-xs text-amber-700 mt-1.5 flex items-center gap-1 font-medium"
+												>
+													<span>*</span>
+													<span>{tradeInCaptions.targetCar.required}</span>
+												</p>
+											{/if}
+										</div>
+									{/if}
+								</div>
+							{/if}
+						</div>
+
+						<h3 class="text-xl font-bold text-gray-900 mb-2">
+							{submissionType === "trade_in"
+								? "Spesifikasi Mobil Lama Anda"
+								: "Spesifikasi Mobil Anda"}
+						</h3>
 						<p class="text-gray-500 text-sm mb-6">
 							Masukkan informasi spesifikasi teknis dan estimasi harga jual yang Anda harapkan.
 						</p>
@@ -1778,16 +2223,16 @@
 								<span class="text-xs text-gray-500 font-normal">Pastikan data sudah tepat</span>
 							</h4>
 
-							<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+							<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mb-3">
 								<div class="bg-white p-3 rounded-lg border border-gray-100">
-									<span class="text-gray-400 block">Unit Mobil</span>
-									<span class="font-bold text-gray-900 text-sm">{year} {make} {model}</span>
+									<span class="text-gray-400 block">Jenis Layanan</span>
+									<span class="font-bold text-red-700 text-sm">
+										{submissionType === "trade_in" ? "Tukar Tambah" : "Jual Lepas"}
+									</span>
 								</div>
 								<div class="bg-white p-3 rounded-lg border border-gray-100">
-									<span class="text-gray-400 block">Jarak Tempuh</span>
-									<span class="font-bold text-gray-900 text-sm"
-										>{mileage?.toLocaleString("id-ID")} KM</span
-									>
+									<span class="text-gray-400 block">Unit Mobil Anda</span>
+									<span class="font-bold text-gray-900 text-sm">{year} {make} {model}</span>
 								</div>
 								<div class="bg-white p-3 rounded-lg border border-gray-100">
 									<span class="text-gray-400 block">Ekspektasi Harga</span>
@@ -1800,6 +2245,24 @@
 									>
 								</div>
 							</div>
+
+							{#if submissionType === "trade_in" && selectedTargetCar}
+								<div
+									class="bg-red-50/60 p-3 rounded-lg border border-red-200 flex flex-wrap items-center justify-between gap-2 text-xs"
+								>
+									<div class="flex items-center gap-2">
+										<span class="font-semibold text-red-800">Unit Impian Tujuan:</span>
+										<span class="font-bold text-gray-900">
+											{selectedTargetCar.year}
+											{selectedTargetCar.make}
+											{selectedTargetCar.model}
+										</span>
+									</div>
+									<span class="font-bold text-red-700">
+										{formatRupiah(selectedTargetCar.price)}
+									</span>
+								</div>
+							{/if}
 						</div>
 
 						<div class="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1841,7 +2304,11 @@
 									</svg>
 									<span>{submitProgressText}</span>
 								{:else}
-									<span>{tradeInCaptions.form.submit}</span>
+									<span
+										>{submissionType === "sell_outright"
+											? tradeInCaptions.form.submitSell
+											: tradeInCaptions.form.submit}</span
+									>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										class="w-5 h-5"

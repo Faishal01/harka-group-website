@@ -16,9 +16,9 @@ export const adminMenus: AdminMenuItem[] = [
 	},
 	{
 		id: "trade-in",
-		label: "Tukar Tambah",
+		label: "Pengajuan Unit",
 		url: "/trade-in",
-		icon: "lucide:arrow-left-right",
+		icon: "lucide:clipboard-list",
 	},
 	{
 		id: "team",

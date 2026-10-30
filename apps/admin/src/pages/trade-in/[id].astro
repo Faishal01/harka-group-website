@@ -8,6 +8,7 @@ import VehicleInspectionCard from "~/components/admin/VehicleInspectionCard.astr
 import TradeInReviewActions from "~/components/admin/TradeInReviewActions.svelte";
 import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
+import { getPrice } from "~/utils/helpers";
 
 const { id } = Astro.params;
 
@@ -22,6 +23,14 @@ if (!sub) {
 	return Astro.redirect("/trade-in");
 }
 
+let targetCar = null;
+if (sub.targetCarId) {
+	targetCar = await core.cars.getById(sub.targetCarId, { adminView: true }).catch(() => null);
+}
+
+const isSell = sub.submissionType === "sell_outright";
+const serviceLabel = isSell ? "Jual Lepas" : "Tukar Tambah";
+
 const formattedDate = new Date(sub.createdAt).toLocaleDateString("id-ID", {
 	day: "numeric",
 	month: "long",
@@ -31,13 +40,15 @@ const formattedDate = new Date(sub.createdAt).toLocaleDateString("id-ID", {
 });
 
 const cleanPhone = sub.customerPhone.replace(/[^0-9]/g, "");
-const waMessage = encodeURIComponent(
-	`Halo Bapak/Ibu ${sub.customerName}, kami dari Harka Autocar menindaklanjuti pengajuan tukar tambah untuk unit ${sub.year} ${sub.make} ${sub.model}. Apakah unit masih tersedia untuk dijadwalkan inspeksi fisik?`,
-);
+const waText = isSell
+	? `Halo Bapak/Ibu ${sub.customerName}, kami dari Harka Autocar menindaklanjuti pengajuan penjualan mobil untuk unit ${sub.year} ${sub.make} ${sub.model}. Apakah unit masih tersedia untuk dijadwalkan inspeksi fisik?`
+	: `Halo Bapak/Ibu ${sub.customerName}, kami dari Harka Autocar menindaklanjuti pengajuan tukar tambah unit ${sub.year} ${sub.make} ${sub.model} dengan ${targetCar ? `${targetCar.year} ${targetCar.make} ${targetCar.model}` : "unit showroom kami"}. Apakah unit masih tersedia untuk dijadwalkan inspeksi fisik?`;
+
+const waMessage = encodeURIComponent(waText);
 const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
 ---
 
-<Layout pageTitle={`Inspeksi Unit: ${sub.year} ${sub.make} ${sub.model}`}>
+<Layout pageTitle={`Inspeksi Unit ${serviceLabel}: ${sub.year} ${sub.make} ${sub.model}`}>
 	<Section class="bg-gray-50 min-h-[85vh] py-8 sm:py-12">
 		<Container>
 			<!-- Top Navigation & Title -->
@@ -60,8 +71,21 @@ const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
 						</svg>
 						Kembali ke Daftar Pengajuan
 					</a>
-					<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Lembar Inspeksi Tukar Tambah</h1>
-					<p class="text-xs sm:text-sm text-gray-500 mt-0.5">
+					<div class="flex items-center gap-3">
+						<h1 class="text-2xl sm:text-3xl font-bold text-gray-900">
+							Lembar Inspeksi {serviceLabel}
+						</h1>
+						<span
+							class={`px-3 py-1 text-xs font-bold rounded-full border ${
+								isSell
+									? "bg-teal-50 text-teal-800 border-teal-200"
+									: "bg-indigo-50 text-indigo-800 border-indigo-200"
+							}`}
+						>
+							{serviceLabel}
+						</span>
+					</div>
+					<p class="text-xs sm:text-sm text-gray-500 mt-1">
 						ID Referensi: <span class="font-mono font-bold text-gray-700">{sub.id}</span> &bull; Diajukan
 						pada {formattedDate}
 					</p>
@@ -118,6 +142,108 @@ const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
 					</div>
 				</div>
 			</div>
+
+			<!-- Target Unit Card (when Tukar Tambah) -->
+			{
+				sub.submissionType === "trade_in" && (
+					<div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-6 mb-8 shadow-xs">
+						<div class="flex items-center justify-between mb-4">
+							<div class="flex items-center gap-2">
+								<span class="size-2.5 rounded-full bg-indigo-600" />
+								<h3 class="text-xs sm:text-sm font-bold text-indigo-950 uppercase tracking-wider">
+									Unit Tujuan Tukar Tambah (Pilihan Calon Pelanggan)
+								</h3>
+							</div>
+							<span class="text-xs font-bold px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full border border-indigo-200">
+								Tukar Tambah
+							</span>
+						</div>
+
+						{targetCar ? (
+							<div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+								<div class="flex items-center gap-4 md:col-span-2">
+									{targetCar.gallery?.[0]?.image ? (
+										<img
+											src={
+												targetCar.gallery[0].image.startsWith("http") ||
+												targetCar.gallery[0].image.startsWith("/api/images/")
+													? targetCar.gallery[0].image
+													: `/api/images/${targetCar.gallery[0].image}`
+											}
+											alt={targetCar.title}
+											class="size-20 rounded-xl object-cover border border-indigo-200 shrink-0 bg-white"
+										/>
+									) : (
+										<div class="size-20 rounded-xl bg-indigo-100 text-indigo-400 flex items-center justify-center shrink-0">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="size-8"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="1.5"
+													d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+												/>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="1.5"
+													d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+												/>
+											</svg>
+										</div>
+									)}
+									<div>
+										<h4 class="font-bold text-gray-900 text-base">
+											{targetCar.year} {targetCar.make} {targetCar.model}
+										</h4>
+										<p class="text-xs text-gray-500 mt-0.5">
+											{targetCar.mileage.toLocaleString("id-ID")} KM &bull; {targetCar.transmission}{" "}
+											&bull; {targetCar.color}
+										</p>
+										<a
+											href={`/cars/view/${targetCar.id}`}
+											class="text-xs font-semibold text-indigo-700 hover:underline inline-flex items-center gap-1 mt-2"
+										>
+											<span>Lihat Detail Stok Mobil</span>
+											<span>&rarr;</span>
+										</a>
+									</div>
+								</div>
+
+								<div class="bg-white rounded-xl p-4 border border-indigo-100 flex flex-col justify-between shadow-2xs">
+									<div>
+										<span class="text-xs text-gray-500 block">Harga Unit Showroom</span>
+										<span class="font-bold text-gray-900 text-base">
+											{getPrice(targetCar.price)}
+										</span>
+									</div>
+									<div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+										<span class="text-xs text-indigo-950 font-semibold">
+											Estimasi Selisih Bayar:
+										</span>
+										<span class="font-bold text-sm text-indigo-700">
+											{getPrice(targetCar.price - sub.sellingPrice)}
+										</span>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div class="text-sm text-gray-600 bg-white p-4 rounded-xl border border-indigo-100">
+								ID Unit Pilihan: <span class="font-mono font-bold">{sub.targetCarId}</span>
+								<p class="text-xs text-amber-700 mt-1">
+									(Unit tujuan tidak ditemukan di inventaris aktif, kemungkinan telah terjual atau
+									dihapus)
+								</p>
+							</div>
+						)}
+					</div>
+				)
+			}
 
 			<!-- Reusable Vehicle Inspection Card -->
 			<VehicleInspectionCard

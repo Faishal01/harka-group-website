@@ -140,6 +140,23 @@ export const tradeInCaptions = {
 	title: "Tukar Tambah Mobil",
 	subtitle:
 		"Ajukan taksiran mobil lama Anda dengan mudah. Tim kami akan segera meninjau kelengkapan dan kondisi unit Anda.",
+	sellTitle: "Jual Mobil Anda",
+	sellSubtitle:
+		"Dapatkan penawaran harga tunai terbaik untuk mobil Anda secara cepat, transparan, dan aman langsung dari showroom kami.",
+	modes: {
+		tradeIn: "Tukar Tambah",
+		tradeInDesc: "Tukar mobil lama Anda dengan unit impian dari stok kami",
+		sell: "Jual Lepas",
+		sellDesc: "Jual mobil Anda langsung ke showroom kami tanpa tukar unit",
+		lockedNotice: "Mode formulir dikunci sesuai tautan menu yang dipilih.",
+	},
+	targetCar: {
+		label: "Pilih Unit Tujuan di Stok Kami",
+		placeholder: "Ketik merek atau model untuk mencari unit...",
+		required: "Pilihan unit tujuan wajib dipilih untuk pengajuan Tukar Tambah.",
+		selected: "Unit Tujuan Terpilih:",
+		change: "Ganti Unit",
+	},
 	steps: {
 		step1: "1. Data Kendaraan",
 		step2: "2. Dokumen & Kondisi",
@@ -202,6 +219,7 @@ export const tradeInCaptions = {
 		next: "Lanjut",
 		back: "Kembali",
 		submit: "Kirim Pengajuan Tukar Tambah",
+		submitSell: "Kirim Pengajuan Jual Mobil",
 		submitting: "Mengompres & Mengunggah Foto...",
 		successTitle: "Pengajuan Berhasil Dikirim!",
 		successDesc:
@@ -244,4 +262,14 @@ export const tradeInCaptions = {
 			desc: "Lembar bukti STNK/pajak yang terbaca",
 		},
 	],
+};
+
+export const teamCaptions = {
+	title: "Tim Kami",
+	subtitle:
+		"Kenali staf dan konsultan otomotif profesional Harka Autocar yang siap melayani kebutuhan jual, beli, dan tukar tambah mobil impian Anda.",
+	emptyTitle: "Profil Tim Sedang Diperbarui",
+	emptySubtitle:
+		"Kami sedang memperbarui daftar personel showroom. Untuk informasi dan bantuan cepat, silakan hubungi layanan pelanggan kami.",
+	contactCta: "Hubungi Showroom",
 };

@@ -6,18 +6,63 @@ import Heading from "~/components/Heading.astro";
 import TradeInWizard from "~/components/trade-in/TradeInWizard.svelte";
 import { tradeInCaptions } from "~/data/captions";
 import { SITE_URL, generateBreadcrumbSchema } from "~/utils/seo";
+import { createCore } from "@harka/core";
+import { env } from "cloudflare:workers";
 
+export const prerender = false;
+
+const typeParam = Astro.url.searchParams.get("type");
+const targetCarIdParam = Astro.url.searchParams.get("targetCarId") || "";
+
+const isSell = typeParam === "sell" || typeParam === "sell_outright";
+const isTradeIn = typeParam === "trade_in" || typeParam === "trade-in";
+const lockedType = isSell ? "sell_outright" : isTradeIn ? "trade_in" : null;
+
+const pageTitle = isSell
+	? `${tradeInCaptions.sellTitle} | Estimasi Harga Cepat & Transparan Harka Autocar`
+	: `${tradeInCaptions.title} | Estimasi Instan & Transparan Harka Group`;
+
+const heroTitle = isSell ? tradeInCaptions.sellTitle : tradeInCaptions.title;
+const heroSubtitle = isSell ? tradeInCaptions.sellSubtitle : tradeInCaptions.subtitle;
+
+const breadcrumbLabel = isSell ? "Jual Mobil" : "Tukar Tambah";
 const breadcrumbSchema = generateBreadcrumbSchema([
 	{ name: "Beranda", url: "/" },
-	{ name: "Tukar Tambah", url: "/trade-in" },
+	{ name: breadcrumbLabel, url: `${SITE_URL}/trade-in${typeParam ? `?type=${typeParam}` : ""}` },
 ]);
+
+const core = createCore(env);
+let availableCars: Array<{
+	id: string;
+	title: string;
+	make: string;
+	model: string;
+	year: number;
+	price: number;
+	coverImage?: string;
+}> = [];
+
+try {
+	const cars = await core.cars.getFiltered({}, { adminView: false });
+	availableCars = cars.map((car) => ({
+		id: car.id,
+		title: car.title,
+		make: car.make,
+		model: car.model,
+		year: car.year,
+		price: car.price,
+		coverImage: car.gallery?.[0]?.image || "",
+	}));
+} catch (e) {
+	console.error("Failed to load available cars for trade-in wizard:", e);
+}
 ---
 
 <Layout
-	pageTitle={`${tradeInCaptions.title} | Estimasi Instan & Transparan Harka Group`}
-	title={tradeInCaptions.title}
-	description={tradeInCaptions.subtitle}
-	canonicalUrl={`${SITE_URL}/trade-in`}
+	pageTitle={pageTitle}
+	title={heroTitle}
+	description={heroSubtitle}
+	canonicalUrl={`${SITE_URL}/trade-in${typeParam ? `?type=${typeParam}` : ""}`}
 	schema={breadcrumbSchema}
 >
 	<Section class:list={"bg-gray-50 py-10 sm:py-14"}>
@@ -25,15 +70,21 @@ const breadcrumbSchema = generateBreadcrumbSchema([
 			<div class="max-w-4xl mx-auto mb-10 text-center">
 				<Heading>
 					<h1 class="h2 font-bold text-gray-900 mb-3" slot="heading-title">
-						{tradeInCaptions.title}
+						{heroTitle}
 					</h1>
 					<p slot="heading-content" class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-						{tradeInCaptions.subtitle}
+						{heroSubtitle}
 					</p>
 				</Heading>
 			</div>
 
-			<TradeInWizard client:load />
+			<TradeInWizard
+				client:load
+				availableCars={availableCars}
+				initialType={lockedType || "trade_in"}
+				lockedType={lockedType}
+				initialTargetCarId={targetCarIdParam}
+			/>
 		</Container>
 	</Section>
 </Layout>

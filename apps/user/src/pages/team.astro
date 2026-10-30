@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+
+import Layout from "~/layouts/Layout.astro";
+import Section from "~/components/Section.astro";
+import Container from "~/components/Container.astro";
+import Heading from "~/components/Heading.astro";
+import Button from "~/components/Button.astro";
+import Team from "~/components/Team.astro";
+import { teamCaptions } from "~/data/captions";
+import { siteName } from "~/data/config";
+import { SITE_URL, generateBreadcrumbSchema, DEALER_LOCATION } from "~/utils/seo";
+import { createCore } from "@harka/core";
+import { env } from "cloudflare:workers";
+import type { TeamMember } from "@harka/db";
+
+const core = createCore(env);
+const members: TeamMember[] = await core.team.getMembers({ activeOnly: true }).catch(() => []);
+
+const pageTitle = `${teamCaptions.title} | ${siteName} ${DEALER_LOCATION}`;
+const metaDescription = `Kenali tim konsultan otomotif profesional ${siteName} di ${DEALER_LOCATION}. Siap membantu proses jual, beli, dan tukar tambah mobil Anda dengan ramah dan transparan.`;
+
+const breadcrumbSchema = generateBreadcrumbSchema([
+	{ name: "Beranda", url: "/" },
+	{ name: teamCaptions.title, url: `${SITE_URL}/team` },
+]);
+---
+
+<Layout
+	pageTitle={pageTitle}
+	title={`${teamCaptions.title} - ${siteName}`}
+	description={metaDescription}
+	canonicalUrl={`${SITE_URL}/team`}
+	schema={breadcrumbSchema}
+>
+	<Section class:list={"bg-gray-50 py-16 lg:py-24 min-h-[70vh]"}>
+		<Container>
+			<Heading>
+				<h1 slot="heading-title">{teamCaptions.title}</h1>
+				<p slot="heading-content">
+					{teamCaptions.subtitle}
+				</p>
+			</Heading>
+
+			{
+				members.length === 0 ? (
+					<div class="max-w-lg mx-auto bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center shadow-xs">
+						<div class="size-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-500 mx-auto mb-4">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="size-8"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="1.5"
+									d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+								/>
+							</svg>
+						</div>
+						<h3 class="text-lg font-bold text-gray-900 mb-1">{teamCaptions.emptyTitle}</h3>
+						<p class="text-sm text-gray-500 mb-6 leading-relaxed">{teamCaptions.emptySubtitle}</p>
+						<Button href="/contact" color="red">
+							{teamCaptions.contactCta}
+						</Button>
+					</div>
+				) : (
+					<Team members={members} />
+				)
+			}
+		</Container>
+	</Section>
+</Layout>
