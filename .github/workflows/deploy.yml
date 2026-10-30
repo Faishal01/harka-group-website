@@ -54,12 +54,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
       - name: Apply Migrations
         uses: cloudflare/wrangler-action@v4
         with:
           workingDirectory: packages/db
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: bun
           command: d1 migrations apply harka-db --remote
 
   deploy-user:
@@ -92,6 +101,7 @@ jobs:
           workingDirectory: apps/user
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: bun
           command: deploy --config dist/server/wrangler.json
 
   deploy-admin:
@@ -124,6 +134,7 @@ jobs:
           workingDirectory: apps/admin
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: bun
           command: deploy --config dist/server/wrangler.json
 
   deploy-gas:
