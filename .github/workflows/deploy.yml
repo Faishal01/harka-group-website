@@ -194,3 +194,70 @@ jobs:
         run: bunx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: [lint, migrate-db, deploy-user, deploy-admin, deploy-gas, release]
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compute deployment status and summary
+        id: status
+        run: |
+          LINT="${{ needs.lint.result }}"
+          DB="${{ needs.migrate-db.result }}"
+          USER="${{ needs.deploy-user.result }}"
+          ADMIN="${{ needs.deploy-admin.result }}"
+          GAS="${{ needs.deploy-gas.result }}"
+          RELEASE="${{ needs.release.result }}"
+
+          get_icon() {
+            case "$1" in
+              success) echo "✅ Success" ;;
+              failure) echo "❌ Failed" ;;
+              cancelled) echo "⏹️ Cancelled" ;;
+              skipped) echo "⏭️ Skipped" ;;
+              *) echo "$1" ;;
+            esac
+          }
+
+          if [ "$LINT" = "failure" ] || [ "$DB" = "failure" ] || [ "$USER" = "failure" ] || [ "$ADMIN" = "failure" ] || [ "$GAS" = "failure" ] || [ "$RELEASE" = "failure" ]; then
+            OVERALL_STATUS="failure"
+          elif [ "$LINT" = "cancelled" ] || [ "$DB" = "cancelled" ] || [ "$USER" = "cancelled" ] || [ "$ADMIN" = "cancelled" ] || [ "$GAS" = "cancelled" ] || [ "$RELEASE" = "cancelled" ]; then
+            OVERALL_STATUS="cancelled"
+          else
+            OVERALL_STATUS="success"
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TRIGGER="Manual dispatch (${{ inputs.service_to_deploy }})"
+          else
+            TRIGGER="Push to ${{ github.ref_name }}"
+          fi
+
+          echo "status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "description<<EOF"
+            echo "**Trigger:** $TRIGGER"
+            echo ""
+            echo "**Lint & Typecheck:** $(get_icon "$LINT")"
+            echo "**D1 Migrations:** $(get_icon "$DB")"
+            echo "**User Worker:** $(get_icon "$USER")"
+            echo "**Admin Worker:** $(get_icon "$ADMIN")"
+            echo "**Google Apps Script:** $(get_icon "$GAS")"
+            echo "**Semantic Release:** $(get_icon "$RELEASE")"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send status to Discord Forum Thread
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}?thread_id=${{ secrets.DISCORD_THREAD_ID }}
+          status: ${{ steps.status.outputs.status }}
+          title: "Deployment Summary"
+          description: ${{ steps.status.outputs.description }}
+          nofail: true
