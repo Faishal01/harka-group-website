@@ -1,5 +1,22 @@
 # Changelog
 
+# [1.3.0](https://github.com/Faishal01/harka-group-website/compare/v1.2.0...v1.3.0) (2026-10-30)
+
+
+### Bug Fixes
+
+* migrate_db deploy_admin deploy_user | Merge pull request [#28](https://github.com/Faishal01/harka-group-website/issues/28) from mralfarrakhan/master ([522cfca](https://github.com/Faishal01/harka-group-website/commit/522cfca73dacb78b37d698995c881cbe2322b359))
+
+
+### Features
+
+* add sell only trade in mode ([63f13b6](https://github.com/Faishal01/harka-group-website/commit/63f13b6b3957a1b55805a6731e3e5ab47e5c1252))
+* admin ux for trade in ([00c6c00](https://github.com/Faishal01/harka-group-website/commit/00c6c001fa245fb97731f3f09d0e8d32d768387c))
+* fix package manager in ga ([762be61](https://github.com/Faishal01/harka-group-website/commit/762be611264231da0435d0d9e782c8817adf41fb))
+* migrate_db deploy_admin deploy_user | Merge pull request [#27](https://github.com/Faishal01/harka-group-website/issues/27) from mralfarrakhan/master ([f765f11](https://github.com/Faishal01/harka-group-website/commit/f765f116bade17c04bc12cc2d2c16736a926cb2a))
+* team ([8833a4c](https://github.com/Faishal01/harka-group-website/commit/8833a4cfeb617e2be605031b33aec693d3d0d2f9))
+* update gh action with dc notif ([3ff9605](https://github.com/Faishal01/harka-group-website/commit/3ff96058fb0a30f3ea36f352f1bb1a4b9a7ac952))
+
 # [1.2.0](https://github.com/Faishal01/harka-group-website/compare/v1.1.0...v1.2.0) (2026-10-29)
 
 
