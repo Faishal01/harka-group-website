@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.2.0](https://github.com/Faishal01/harka-group-website/compare/v1.1.0...v1.2.0) (2026-10-29)
+
+
+### Features
+
+* deploy_gas | Merge pull request [#26](https://github.com/Faishal01/harka-group-website/issues/26) from mralfarrakhan/master ([0a8d7ba](https://github.com/Faishal01/harka-group-website/commit/0a8d7baaa446edc4c4142d97f7606ab5601fc0a6))
+* improve dashboard stuff ([b977e96](https://github.com/Faishal01/harka-group-website/commit/b977e968ddc3554830584969f889490f5acff567))
+* improve month filtering ([91137e2](https://github.com/Faishal01/harka-group-website/commit/91137e22f2891f8799c8ea5b353f2c5bd241a8b4))
+
 # [1.1.0](https://github.com/Faishal01/harka-group-website/compare/v1.0.0...v1.1.0) (2026-10-28)
 
 
