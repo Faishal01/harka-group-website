@@ -26,12 +26,4 @@ export const adminMenus: AdminMenuItem[] = [
 		url: "/team",
 		icon: "lucide:users",
 	},
-	{
-		id: "settings",
-		label: "Pengaturan",
-		url: "#",
-		disabled: true,
-		badge: "Segera",
-		icon: "lucide:settings",
-	},
 ];
