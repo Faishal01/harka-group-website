@@ -10,8 +10,8 @@ export function getPrice(price: number): string {
 	return new Intl.NumberFormat(siteLang, {
 		style: "currency",
 		currency: siteCurrency,
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0,
 	})
 		.format(price)
 		.replace(/^Rp(?! )/, "Rp ");
