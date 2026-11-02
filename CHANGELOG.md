@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.4.0](https://github.com/Faishal01/harka-group-website/compare/v1.3.0...v1.4.0) (2026-10-30)
+
+
+### Features
+
+* deploy_admin | Merge pull request [#29](https://github.com/Faishal01/harka-group-website/issues/29) from mralfarrakhan/master ([78bb1ea](https://github.com/Faishal01/harka-group-website/commit/78bb1ea219a1931d43b87c55fef8d1d8c9e34a9d))
+* remove unused admin menu ([f8bf169](https://github.com/Faishal01/harka-group-website/commit/f8bf1694b93ef19b19428b8d3e99c4dceafe2dbf))
+
 # [1.3.0](https://github.com/Faishal01/harka-group-website/compare/v1.2.0...v1.3.0) (2026-10-30)
 
 
