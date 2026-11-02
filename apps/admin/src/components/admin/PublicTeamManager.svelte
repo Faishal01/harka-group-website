@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TeamMember } from "@harka/db";
+	import { compressSingleFile } from "~/utils/imageCompression";
 
 	let { initialMembers = [] } = $props<{
 		initialMembers: TeamMember[];
@@ -62,13 +63,18 @@
 		errorMessage = null;
 	}
 
-	function handlePhotoSelect(e: Event) {
+	async function handlePhotoSelect(e: Event) {
 		const target = e.target as HTMLInputElement;
 		if (target.files && target.files[0]) {
 			const file = target.files[0];
-			photoFile = file;
 			removePhoto = false;
 			photoPreviewUrl = URL.createObjectURL(file);
+			try {
+				photoFile = await compressSingleFile(file, { maxDimension: 1200, quality: 0.82 });
+			} catch (err) {
+				console.warn("Gagal mengompres foto profil, memakai berkas asli:", err);
+				photoFile = file;
+			}
 		}
 	}
 
@@ -111,9 +117,9 @@
 					method: "PUT",
 					body: formData,
 				});
-				const data = (await res.json()) as any;
+				const data = (await res.json().catch(() => ({}))) as any;
 				if (!res.ok) {
-					throw new Error(data.error || "Gagal memperbarui data anggota tim");
+					throw new Error(data?.error || `Gagal memperbarui data anggota tim (${res.status})`);
 				}
 
 				// Refresh member list
@@ -125,9 +131,9 @@
 					method: "POST",
 					body: formData,
 				});
-				const data = (await res.json()) as any;
+				const data = (await res.json().catch(() => ({}))) as any;
 				if (!res.ok) {
-					throw new Error(data.error || "Gagal menambahkan anggota tim");
+					throw new Error(data?.error || `Gagal menambahkan anggota tim (${res.status})`);
 				}
 
 				// Refresh member list
@@ -204,9 +210,9 @@
 			const res = await fetch(`/api/team/members/${id}`, {
 				method: "DELETE",
 			});
+			const data = (await res.json().catch(() => ({}))) as any;
 			if (!res.ok) {
-				const data = (await res.json()) as any;
-				throw new Error(data.error || "Gagal menghapus anggota tim");
+				throw new Error(data?.error || `Gagal menghapus anggota tim (${res.status})`);
 			}
 
 			members = members.filter((m) => m.id !== id);
@@ -741,7 +747,48 @@
 				</div>
 
 				{#if errorMessage}
-					<p class="text-xs text-red-600 font-medium">{errorMessage}</p>
+					<div
+						class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+					>
+						<div class="flex items-start gap-2">
+							<svg
+								class="size-4 text-red-600 shrink-0 mt-0.5"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+							<span class="font-medium leading-relaxed">{errorMessage}</span>
+						</div>
+						{#if errorMessage.toLowerCase().includes("sesi") || errorMessage
+								.toLowerCase()
+								.includes("login")}
+							<button
+								type="button"
+								onclick={() => window.open("/login", "_blank")}
+								class="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-semibold text-xs rounded-lg shrink-0 transition flex items-center gap-1.5 self-end sm:self-center cursor-pointer shadow-xs"
+							>
+								<span>Login Kembali</span>
+								<svg
+									class="size-3"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+									/>
+								</svg>
+							</button>
+						{/if}
+					</div>
 				{/if}
 
 				<!-- Modal Actions -->

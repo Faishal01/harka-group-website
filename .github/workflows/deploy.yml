@@ -269,6 +269,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}?thread_id=${{ secrets.DISCORD_THREAD_ID }}
           status: ${{ steps.status.outputs.status }}
+          content: ${{ secrets.DISCORD_ROLE_ID != '' && format('<@&{0}>', secrets.DISCORD_ROLE_ID) || '' }}
           title: "Deployment Summary"
           description: ${{ steps.status.outputs.description }}
           nofail: true

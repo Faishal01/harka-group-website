@@ -1,37 +1,135 @@
 ---
 import Layout from "~/layouts/Layout.astro";
+import { createAuth } from "~/lib/server/auth";
+import { env } from "cloudflare:workers";
+import { liveSiteUrl } from "~/data/config";
+
+const auth = createAuth(env);
+const session = await auth.api.getSession({
+	headers: Astro.request.headers,
+});
+const userEmail = session?.user?.email;
 ---
 
-<Layout title="Unauthorized | Harka Admin" hideSidebar={true}>
+<Layout title="Akses Ditolak | Harka Admin" hideSidebar={true}>
 	<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-		<div class="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-lg text-center">
+		<div
+			class="w-full max-w-md space-y-6 rounded-2xl bg-white p-8 sm:p-10 shadow-xl border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-200"
+		>
+			<!-- Icon -->
+			<div
+				class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600"
+			>
+				<svg
+					class="h-7 w-7"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke-width="1.75"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"
+					></path>
+				</svg>
+			</div>
+
+			<!-- Title & description -->
 			<div>
-				<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+				<h2 class="text-2xl font-bold tracking-tight text-gray-900">Akses Ditolak</h2>
+				<p class="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
+					{
+						userEmail ? (
+							<>
+								Akun <strong class="text-gray-900 font-semibold">{userEmail}</strong> tidak
+								terdaftar sebagai admin yang berwenang di sistem Harka.
+							</>
+						) : (
+							"Akun Anda tidak memiliki izin untuk mengakses dasbor admin Harka."
+						)
+					}
+				</p>
+			</div>
+
+			<!-- Hint box -->
+			<div
+				class="bg-gray-50 border border-gray-200/80 rounded-xl p-3.5 text-xs text-gray-600 text-left space-y-1"
+			>
+				<p class="font-semibold text-gray-800 flex items-center gap-1.5">
+					<span>ℹ️</span> Apa yang harus dilakukan?
+				</p>
+				<p class="leading-relaxed text-[11px] text-gray-500">
+					Jika Anda seharusnya memiliki akses, hubungi administrator utama untuk mendaftarkan email
+					Anda ke daftar akses resmi (whitelist).
+				</p>
+			</div>
+
+			<!-- Actions -->
+			<div class="pt-2 space-y-3">
+				<button
+					id="unauthorized-logout-btn"
+					type="button"
+					class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white font-semibold text-xs shadow-sm transition cursor-pointer"
+				>
 					<svg
-						class="h-6 w-6 text-red-600"
-						fill="none"
+						class="size-4"
 						viewBox="0 0 24 24"
-						stroke-width="1.5"
+						fill="none"
 						stroke="currentColor"
+						stroke-width="2"
 					>
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+							d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
 						></path>
 					</svg>
-				</div>
-				<h2 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">Access Denied</h2>
-				<p class="mt-2 text-sm text-gray-600">
-					Your account is not authorized to access this dashboard.
-				</p>
-			</div>
+					<span>Keluar & Ganti Akun</span>
+				</button>
 
-			<div class="mt-8">
-				<a href="/login" class="text-sm font-semibold text-blue-600 hover:text-blue-500">
-					&larr; Back to login
-				</a>
+				<div class="flex items-center justify-center gap-4 text-xs text-gray-500 pt-2">
+					<a href="/login" class="hover:text-red-700 underline transition-colors">
+						Halaman Login
+					</a>
+					<span>&bull;</span>
+					<a
+						href={liveSiteUrl}
+						target="_blank"
+						class="hover:text-red-700 underline transition-colors"
+					>
+						Situs Publik Harka
+					</a>
+				</div>
 			</div>
 		</div>
 	</div>
 </Layout>
+
+<script>
+	import { authClient } from "~/lib/auth-client";
+
+	const attachLogout = () => {
+		const btn = document.getElementById("unauthorized-logout-btn");
+		if (!btn) return;
+
+		// Clean up existing listener if view transition re-runs
+		const newBtn = btn.cloneNode(true) as HTMLButtonElement;
+		btn.parentNode?.replaceChild(newBtn, btn);
+
+		newBtn.addEventListener("click", async () => {
+			newBtn.disabled = true;
+			newBtn.classList.add("opacity-50", "pointer-events-none");
+			newBtn.textContent = "Sedang keluar...";
+			try {
+				await authClient.signOut();
+			} catch (err) {
+				console.error("Gagal keluar:", err);
+			} finally {
+				window.location.href = "/login";
+			}
+		});
+	};
+
+	document.addEventListener("astro:page-load", attachLogout);
+</script>

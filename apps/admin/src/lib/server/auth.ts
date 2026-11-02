@@ -7,6 +7,14 @@ export const createAuth = (env: Env) =>
 	betterAuth({
 		baseURL: env.BETTER_AUTH_URL,
 		secret: env.BETTER_AUTH_SECRET,
+		session: {
+			expiresIn: 60 * 60 * 24 * 30, // 30 days
+			updateAge: 60 * 60 * 24 * 1, // update session expiry if active after 1 day
+			cookieCache: {
+				enabled: true,
+				maxAge: 5 * 60, // 5 minutes cache
+			},
+		},
 		socialProviders: {
 			google: {
 				clientId: env.GOOGLE_CLIENT_ID,

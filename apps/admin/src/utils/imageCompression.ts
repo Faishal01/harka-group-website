@@ -70,6 +70,24 @@ async function compressSingleImage(
 }
 
 /**
+ * Compresses a single image File (such as a profile portrait)
+ * down to max dimension and JPEG format.
+ */
+export async function compressSingleFile(
+	file: File,
+	options: {
+		maxDimension?: number;
+		quality?: number;
+	} = {},
+): Promise<File> {
+	const { maxDimension = 1200, quality = 0.82 } = options;
+	const img = await loadImage(file);
+	const { blob } = await compressSingleImage(img, file.name, maxDimension, quality);
+	const cleanName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+	return new File([blob], cleanName, { type: "image/jpeg" });
+}
+
+/**
  * Adaptively compresses an array of car photo Files so that the combined
  * total payload does NOT exceed the 5 MB limit (matching Trade-In).
  */
