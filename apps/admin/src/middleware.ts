@@ -1,7 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { createAuth } from "~/lib/server/auth";
 import { getDb } from "@harka/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { adminWhitelist } from "@harka/db";
 import { env } from "cloudflare:workers";
 
@@ -29,19 +29,45 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		headers: context.request.headers,
 	});
 
+	const isApiRoute = context.url.pathname.startsWith("/api/");
+
 	if (!session || !session.user) {
+		if (isApiRoute) {
+			return new Response(
+				JSON.stringify({
+					error: "Sesi login Anda telah berakhir. Silakan login kembali.",
+					code: "SESSION_EXPIRED",
+				}),
+				{
+					status: 401,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+		}
 		return context.redirect("/login");
 	}
 
-	// Verify against whitelist
+	// Verify against whitelist (case-insensitive)
 	const db = getDb(env);
 	const whitelistEntry = await db
 		.select()
 		.from(adminWhitelist)
-		.where(eq(adminWhitelist.email, session.user.email))
+		.where(eq(sql`lower(${adminWhitelist.email})`, session.user.email.toLowerCase()))
 		.get();
 
 	if (!whitelistEntry) {
+		if (isApiRoute) {
+			return new Response(
+				JSON.stringify({
+					error: "Akses ditolak: akun tidak terdaftar sebagai admin.",
+					code: "UNAUTHORIZED",
+				}),
+				{
+					status: 403,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+		}
 		return context.redirect("/unauthorized");
 	}
 

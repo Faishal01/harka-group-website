@@ -7,6 +7,7 @@ import { Image } from "astro:assets";
 import { adminMenus } from "~/data/adminMenus";
 import { Icon } from "astro-icon/components";
 import UserProfile from "~/components/admin/UserProfile.svelte";
+import SessionExpiredModal from "~/components/admin/SessionExpiredModal.svelte";
 
 const baseUrl = `${Astro.url.protocol}//${Astro.url.host}`;
 const { pageTitle, title, description, noindex = false, hideSidebar = false } = Astro.props;
@@ -225,11 +226,17 @@ const pathname = Astro.url.pathname;
 				<slot />
 			</main>
 		</div>
+
+		<!-- Global Session Expiration Recovery Modal -->
+		<SessionExpiredModal client:load />
 	</body>
 </html>
 
 <script>
 	import { authClient } from "~/lib/auth-client";
+	import { initAuthInterceptor } from "~/lib/client/auth-interceptor";
+
+	initAuthInterceptor();
 
 	const setupDrawer = () => {
 		const btn = document.getElementById("mobile-menu-btn");
