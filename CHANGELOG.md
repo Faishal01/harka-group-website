@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.5.0](https://github.com/Faishal01/harka-group-website/compare/v1.4.0...v1.5.0) (2026-11-02)
+
+
+### Features
+
+* add tag to build notif ([2908eff](https://github.com/Faishal01/harka-group-website/commit/2908eff98baf3e20a283124da55fda3b198c8bc2))
+* deploy_admin | Merge pull request [#30](https://github.com/Faishal01/harka-group-website/issues/30) from mralfarrakhan/master ([857a2d7](https://github.com/Faishal01/harka-group-website/commit/857a2d7db968fa9f358c2fe95ebd8cdc7c54036d))
+* session management improv ([031376b](https://github.com/Faishal01/harka-group-website/commit/031376bde5c2306c257477743205880e51b8e717))
+
 # [1.4.0](https://github.com/Faishal01/harka-group-website/compare/v1.3.0...v1.4.0) (2026-10-30)
 
 
