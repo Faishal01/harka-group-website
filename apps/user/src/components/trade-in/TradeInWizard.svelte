@@ -727,7 +727,7 @@
 					{tradeInCaptions.form.submitAnother}
 				</button>
 				<a
-					href="/cars"
+					href="/"
 					class="px-6 py-3 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-800 transition shadow-sm"
 				>
 					Lihat Stok Tersedia

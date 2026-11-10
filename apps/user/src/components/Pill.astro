@@ -5,6 +5,4 @@ const { title = "", color = "indigo" } = Astro.props;
 const pillClasses = `text-xs px-3 py-1 font-medium rounded-full inline-block ${pillColors[color]}`;
 ---
 
-<span class={pillClasses}>
-	{title}
-</span>
+<span class={pillClasses}>{title}</span>

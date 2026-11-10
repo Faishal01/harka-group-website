@@ -20,7 +20,7 @@ const paginationRange = generatePaginationRange(page, totalPages);
 function generateUrl(pageNum: number | string) {
 	const newParams = new URLSearchParams(searchParams);
 	newParams.set("page", pageNum.toString());
-	return `/cars?${newParams.toString()}`;
+	return `/?${newParams.toString()}`;
 }
 ---
 

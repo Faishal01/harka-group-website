@@ -65,6 +65,7 @@ export class CarFilterParamsSchema extends Schema.Class<CarFilterParamsSchema>(
 	),
 	page: Schema.optional(CoerceNumber),
 	limit: Schema.optional(CoerceNumber),
+	pageSize: Schema.optional(CoerceNumber),
 }) {}
 
 export class CreateCarInputSchema extends Schema.Class<CreateCarInputSchema>(

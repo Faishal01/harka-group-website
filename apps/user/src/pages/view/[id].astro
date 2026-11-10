@@ -64,8 +64,7 @@ const vehicleName = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.mo
 const breadcrumbSchema = car
 	? generateBreadcrumbSchema([
 			{ name: "Beranda", url: "/" },
-			{ name: "Daftar Mobil", url: "/cars" },
-			{ name: car.make, url: `/cars?make=${encodeURIComponent(car.make)}` },
+			{ name: car.make, url: `/?make=${encodeURIComponent(car.make)}` },
 			{ name: vehicleName, url: `/view/${car.id}` },
 		])
 	: undefined;
@@ -92,17 +91,11 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 						</p>
 						<div class="mt-8 flex flex-wrap justify-center gap-4">
 							<a
-								href="/cars"
+								href="/"
 								class="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white bg-gray-900 rounded-lg shadow hover:bg-gray-800 transition gap-2"
 							>
 								<span>←</span>
 								<span>Lihat Stok Tersedia</span>
-							</a>
-							<a
-								href="/"
-								class="inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition"
-							>
-								Kembali ke Beranda
 							</a>
 						</div>
 					</div>
@@ -130,12 +123,8 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 							Beranda
 						</a>
 						<span class="text-gray-400">/</span>
-						<a href="/cars" class="hover:text-gray-900 transition">
-							Daftar Mobil
-						</a>
-						<span class="text-gray-400">/</span>
 						<a
-							href={`/cars?make=${encodeURIComponent(car.make)}`}
+							href={`/?make=${encodeURIComponent(car.make)}`}
 							class="hover:text-gray-900 transition"
 						>
 							{car.make}

@@ -2,16 +2,6 @@ import type { MainMenuItem, MenuNavigation } from "~/types";
 
 export const menuMain: MainMenuItem[] = [
 	{
-		id: "home",
-		label: "Beranda",
-		url: "/",
-	},
-	{
-		id: "cars",
-		label: "Stok",
-		url: "/cars",
-	},
-	{
 		id: "trade-in",
 		label: "Tukar Tambah",
 		url: "/trade-in?type=trade_in",
@@ -39,10 +29,6 @@ export const menuNavigation: MenuNavigation = {
 		{
 			name: "Beranda",
 			url: "/",
-		},
-		{
-			name: "Stok",
-			url: "/cars",
 		},
 		{
 			name: "Tukar Tambah",

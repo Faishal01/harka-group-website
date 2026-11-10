@@ -12,6 +12,9 @@ export default defineConfig({
 	base: "/",
 	integrations: [mdx(), svelte()],
 	output: "server",
+	redirects: {
+		"/cars": "/",
+	},
 	adapter: cloudflare({ persistState: { path: "../../.wrangler/state" } }),
 	vite: {
 		plugins: [tailwindcss()],

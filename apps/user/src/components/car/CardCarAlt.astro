@@ -36,9 +36,7 @@ const { car } = Astro.props;
 		<div class="flex flex-col items-start grow px-4 max-lg:pb-8">
 			<div class="relative w-full flex flex-col items-start mb-8">
 				<div class="mb-4 lg:mb-6">
-					<h2 class="h5 line-clamp-2">
-						{car.title}
-					</h2>
+					<h2 class="h5 line-clamp-2">{car.title}</h2>
 					{car.excerpt && <p class="text-base mt-2 line-clamp-3">{car.excerpt}</p>}
 				</div>
 				<CardPrice price={car.price} />

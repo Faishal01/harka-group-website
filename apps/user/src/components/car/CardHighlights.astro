@@ -29,27 +29,19 @@ const pillClasses =
 <ul class="flex gap-x-2 sm:gap-x-4 items-center gap-y-2 mt-auto flex-wrap text-sm lg:text-base">
 	<li class={pillClasses}>
 		<IconMilage class="size-4 lg:size-5" />
-		<span>
-			{`${mileage} ${mileageUnit}`}
-		</span>
+		<span>{`${mileage} ${mileageUnit}`}</span>
 	</li>
 	<li class={pillClasses}>
 		<IconTransmission class="size-4 lg:size-5" />
-		<span>
-			{transmissionMap[transmissionVal] || transmissionVal}
-		</span>
+		<span>{transmissionMap[transmissionVal] || transmissionVal}</span>
 	</li>
 	<li class={pillClasses}>
 		<IconCalendar class="size-4 lg:size-5 -mt-0.5" />
-		<span>
-			{yearVal}
-		</span>
+		<span>{yearVal}</span>
 	</li>
 	<li class={pillClasses}>
 		<IconFuel class="size-4 lg:size-5 -mt-0.5" />
-		<span>
-			{fuelTypeMap[fuelTypeVal] || fuelTypeVal}
-		</span>
+		<span>{fuelTypeMap[fuelTypeVal] || fuelTypeVal}</span>
 	</li>
 	{
 		horsePowerVal && (
