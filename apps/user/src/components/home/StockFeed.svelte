@@ -3,6 +3,7 @@
 	import type { Car } from "~/types";
 	import { getPrice, getMileage, getMileageUnit } from "~/utils/helpers";
 	import { transmissionMap, fuelTypeMap } from "~/data/constants";
+	import CarImageSlider from "./CarImageSlider.svelte";
 
 	interface Props {
 		initialCars: Car[];
@@ -506,48 +507,8 @@
 						class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200/90 flex flex-col h-full hover:border-red-600"
 					>
 						<a href={`/view/${car.id}`} class="flex flex-col h-full">
-							<!-- Photo Container (4:3 aspect ratio) -->
-							<div class="relative aspect-[4/3] bg-gray-100 overflow-hidden shrink-0">
-								{#if car.gallery && car.gallery[0] && car.gallery[0].image}
-									<img
-										src={car.gallery[0].image}
-										alt={car.gallery[0].alt || car.title}
-										loading="lazy"
-										class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-									/>
-								{:else}
-									<div
-										class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2"
-									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="size-16 opacity-30"
-											viewBox="0 0 24 24"
-											fill="currentColor"
-										>
-											<path
-												d="M19 6H5a3 3 0 00-3 3v8a3 3 0 003 3h14a3 3 0 003-3V9a3 3 0 00-3-3zm-7 8a2 2 0 112-2 2 2 0 01-2 2z"
-											/>
-										</svg>
-										<span class="text-xs font-bold uppercase tracking-wider text-gray-400"
-											>Segera Hadir</span
-										>
-									</div>
-								{/if}
-
-								<!-- SOLD Badge Overlay -->
-								{#if isSold}
-									<div
-										class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-20"
-									>
-										<span
-											class="inline-block bg-red-600 text-white font-black text-xl lg:text-2xl px-5 py-1.5 uppercase tracking-widest rounded shadow-lg transform -skew-x-6 border-2 border-white/90"
-										>
-											SOLD
-										</span>
-									</div>
-								{/if}
-							</div>
+							<!-- Photo Container with Dynamic Image Slider -->
+							<CarImageSlider gallery={car.gallery} title={car.title} {isSold} carId={car.id} />
 
 							<!-- Content Body -->
 							<div class="p-5 sm:p-6 flex flex-col grow">
