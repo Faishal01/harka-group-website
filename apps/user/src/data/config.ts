@@ -6,7 +6,6 @@ export const siteName = "Harka Group";
 export const siteSlogan = "Showroom mobil bekas berkualitas dan terpercaya";
 export const themeColor = "#fef08a";
 export const unitSystem = "metric";
-export const interestRate = 5.12;
 export const defaultPaginationSize = 12;
 export const priceSteps = [20000000, 100000000, 300000000, 500000000, 1000000000, 2000000000];
 

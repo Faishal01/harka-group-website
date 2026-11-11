@@ -30,6 +30,7 @@ export interface CarFilterParams {
 	sort?: "price-asc" | "price-desc" | "mileage-asc" | "mileage-desc" | "year-asc" | "year-desc";
 	page?: number;
 	limit?: number;
+	pageSize?: number;
 }
 
 export interface QueryOptions {

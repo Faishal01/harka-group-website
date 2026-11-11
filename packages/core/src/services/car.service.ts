@@ -46,6 +46,7 @@ export const getFilteredCars = (
 
 		const filterParams: CarFilterParams = {
 			...decoded,
+			limit: decoded.limit || decoded.pageSize,
 			ownershipStatus: decoded.ownershipStatus || decoded.condition,
 		};
 

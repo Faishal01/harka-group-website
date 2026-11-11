@@ -1,70 +1,77 @@
 ---
 export const prerender = false;
+
 import { Image } from "astro:assets";
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
 import Container from "~/components/Container.astro";
 import Button from "~/components/Button.astro";
 import Heading from "~/components/Heading.astro";
-
-import ShowCars from "~/components/ShowCars.astro";
+import StockFeed from "~/components/home/StockFeed.svelte";
 import { homePage } from "~/data/captions";
-import { siteName, siteSlogan } from "~/data/config";
+import { siteName } from "~/data/config";
 import { SITE_URL, generateAutoDealerSchema, DEALER_LOCATION } from "~/utils/seo";
-
-// Images
+import { env } from "cloudflare:workers";
+import { createCore } from "@harka/core";
+import { getDb, cars as carsTable } from "@harka/db";
+import { and, isNull, eq, asc } from "drizzle-orm";
+import type { Car } from "~/types";
 import ImageHeadingBackground from "~/assets/images/WhatsApp_Image_2026-09-22_at_23.25.09.jpeg";
 import CtaTextures from "~/assets/images/prew-o.jpg";
 
+const core = createCore(env);
+const db = getDb(env);
+
+// Initial query params
+const searchParamsRecord = Object.fromEntries(Astro.url.searchParams.entries());
+const initialSearch = searchParamsRecord.search || "";
+const initialMake = searchParamsRecord.make || "all";
+const initialSort = searchParamsRecord.sort || "date-desc";
+
+// Fetch distinct makes for filter chips
+const makeRows = (await db
+	.selectDistinct({ make: carsTable.make })
+	.from(carsTable)
+	.where(and(isNull(carsTable.deletedAt), eq(carsTable.hidden, false)))
+	.orderBy(asc(carsTable.make))) as { make: string }[];
+const availableMakes = makeRows.map((r) => r.make).filter(Boolean);
+
+// Fetch initial cars for SSR rendering
+let allMatchingCars: Car[];
+try {
+	allMatchingCars = await core.cars.getFiltered(searchParamsRecord, {
+		adminView: false,
+	});
+} catch {
+	allMatchingCars = [];
+}
+
+const totalCount = allMatchingCars.length;
+const initialCars = allMatchingCars.slice(0, 12);
+
 const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
-const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas berkualitas di ${DEALER_LOCATION} dengan garansi bebas tabrak & banjir.`;
+const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di ${siteName} ${DEALER_LOCATION}. Pilihan unit prima, inspeksi bebas tabrak & banjir, harga transparan dan tukar tambah mudah.`;
 ---
 
 <Layout
-	pageTitle={`${siteName} | Showroom Mobil Bekas Berkualitas ${DEALER_LOCATION}`}
+	pageTitle={`${siteName} | Showroom & Katalog Mobil Bekas Berkualitas ${DEALER_LOCATION}`}
 	title={`${siteName} - Showroom Mobil Bekas`}
 	description={metaDescription}
 	canonicalUrl={SITE_URL}
 	schema={autoDealerSchema}
 >
-	{/* Main Heading */}
-	<Section class:list={"relative overflow-hidden"}>
-		<Image
-			src={ImageHeadingBackground}
-			alt="Heading background"
-			class:list={"absolute inset-0 w-full h-full object-cover scale-125 origin-[center_40%] md:scale-100 md:origin-center"}
-		/>
-		<div class="absolute inset-0 w-full h-full bg-gray-800/80"></div>
-		<Container class:list={"relative z-10 max-lg:py-10"}>
-			<Heading class:list={"prose-invert max-w-4xl"}>
-				<h1 slot="heading-title" class="mb-0 lg:text-7xl text-balance">
-					{homePage.headingTitle}
-				</h1>
-				<p slot="heading-content">
-					{homePage.headingContent}
-				</p>
-			</Heading>
-			<div class="flex justify-center mt-8">
-				<Button href="/cars" color="white" class:list={"px-8 py-3 text-lg"}
-					>{homePage.browseButtonLabel}</Button
-				>
-			</div>
-		</Container>
-	</Section>
+	<StockFeed
+		client:load
+		backgroundImageSrc={ImageHeadingBackground.src}
+		initialCars={initialCars}
+		totalCount={totalCount}
+		availableMakes={availableMakes}
+		initialSearch={initialSearch}
+		initialMake={initialMake}
+		initialSort={initialSort}
+	/>
 
-	{/* Recent Cars */}
-	<Section class:list={"bg-gray-50"}>
-		<Container>
-			<Heading>
-				<h2 slot="heading-title" class="mb-0">{homePage.recentTitle}</h2>
-				<p slot="heading-content">{homePage.recentContent}</p>
-			</Heading>
-
-			<ShowCars ui="grid" recent />
-		</Container>
-	</Section>
-
-	{/* CTA */}
+	{/* CTA Section */}
 	<Section
 		class:list={"relative overflow-hidden bg-linear-to-br from-gray-900/20 via-gray-800/50 to-gray-950/20"}
 	>
@@ -77,10 +84,10 @@ const metaDescription = `${siteSlogan}. Jual beli & tukar tambah mobil bekas ber
 		<Container class:list={"relative z-10"}>
 			<Heading class:list={"mb-0 lg:mb-0 prose-invert text-center mx-auto"}>
 				<h2 slot="heading-title">{homePage.ctaTitle}</h2>
-
 				<p slot="heading-content">{homePage.ctaContent}</p>
-
-				<Button href="/contact" color="white" class:list={"mt-8"}>{homePage.contactUsLabel}</Button>
+				<Button href="/contact" color="white" class:list={"mt-8"}>
+					{homePage.contactUsLabel}
+				</Button>
 			</Heading>
 		</Container>
 	</Section>

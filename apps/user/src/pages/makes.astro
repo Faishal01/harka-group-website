@@ -71,7 +71,7 @@ const breadcrumbSchema = generateBreadcrumbSchema([
 									<ul>
 										{groupedMakes[letter].map((make) => (
 											<li>
-												<a href={`/cars/?make=${encodeURIComponent(make)}`}>{make}</a>
+												<a href={`/?make=${encodeURIComponent(make)}`}>{make}</a>
 											</li>
 										))}
 									</ul>
