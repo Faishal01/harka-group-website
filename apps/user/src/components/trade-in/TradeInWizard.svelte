@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import ImageCropModal from "./ImageCropModal.svelte";
 	import { tradeInCaptions } from "~/data/captions";
 	import { compressImagesBatch, type ImageSlotItem } from "~/utils/imageCompression";
 	import {
@@ -443,6 +444,72 @@
 			URL.revokeObjectURL(item.previewUrl);
 		}
 		extraPhotos = extraPhotos.filter((p) => p.id !== id);
+	}
+
+	// Cropper Modal State
+	let cropperModalOpen = $state(false);
+	let croppingTargetType = $state<"slot" | "extra" | null>(null);
+	let croppingTargetId = $state<string | null>(null);
+	let croppingImageSrc = $state<string | null>(null);
+
+	function openSlotCropper(slotId: string) {
+		const item = photoMap[slotId];
+		if (!item) return;
+		croppingTargetType = "slot";
+		croppingTargetId = slotId;
+		croppingImageSrc = item.previewUrl;
+		cropperModalOpen = true;
+	}
+
+	function openExtraCropper(extraId: string) {
+		const item = extraPhotos.find((p) => p.id === extraId);
+		if (!item) return;
+		croppingTargetType = "extra";
+		croppingTargetId = extraId;
+		croppingImageSrc = item.previewUrl;
+		cropperModalOpen = true;
+	}
+
+	function handleCropApply(croppedBlob: Blob, croppedUrl: string) {
+		if (croppingTargetType === "slot" && croppingTargetId) {
+			const current = photoMap[croppingTargetId];
+			if (current) {
+				const fileName = current.file.name;
+				const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+				if (current.previewUrl.startsWith("blob:")) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				photoMap = {
+					...photoMap,
+					[croppingTargetId]: { file: newFile, previewUrl: croppedUrl },
+				};
+			}
+		} else if (croppingTargetType === "extra" && croppingTargetId) {
+			const idx = extraPhotos.findIndex((p) => p.id === croppingTargetId);
+			if (idx !== -1) {
+				const current = extraPhotos[idx];
+				const fileName = current.file.name;
+				const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+				if (current.previewUrl.startsWith("blob:")) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				const updated = [...extraPhotos];
+				updated[idx] = { id: current.id, file: newFile, previewUrl: croppedUrl };
+				extraPhotos = updated;
+			}
+		}
+
+		cropperModalOpen = false;
+		croppingTargetType = null;
+		croppingTargetId = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropCancel() {
+		cropperModalOpen = false;
+		croppingTargetType = null;
+		croppingTargetId = null;
+		croppingImageSrc = null;
 	}
 
 	const completedSlotsCount = $derived(slots.filter((s) => Boolean(photoMap[s.id])).length);
@@ -1835,32 +1902,55 @@
 									{#if photoMap[slot.id]}
 										<!-- Photo Preview Thumbnail -->
 										<div
-											class="relative rounded-lg overflow-hidden border border-gray-200 bg-black/5 aspect-video mb-3 flex items-center justify-center"
+											class="relative rounded-lg overflow-hidden border border-gray-200 bg-black/5 aspect-video mb-3 flex items-center justify-center group"
 										>
 											<img
 												src={photoMap[slot.id].previewUrl}
 												alt={slot.label}
 												class="w-full h-full object-cover"
 											/>
-											<button
-												type="button"
-												onclick={() => removeSlotFile(slot.id)}
-												class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-												title="Hapus foto"
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													class="w-4 h-4"
-													viewBox="0 0 20 20"
-													fill="currentColor"
+											<div class="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+												<button
+													type="button"
+													onclick={() => openSlotCropper(slot.id)}
+													class="bg-white/95 text-gray-800 hover:text-red-600 rounded-full p-1.5 shadow hover:bg-white transition cursor-pointer"
+													title="Potong / Sesuaikan foto"
 												>
-													<path
-														fill-rule="evenodd"
-														d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-														clip-rule="evenodd"
-													/>
-												</svg>
-											</button>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-4"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+														stroke-width="2"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+														/>
+													</svg>
+												</button>
+												<button
+													type="button"
+													onclick={() => removeSlotFile(slot.id)}
+													class="bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition cursor-pointer"
+													title="Hapus foto"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-4"
+														viewBox="0 0 20 20"
+														fill="currentColor"
+													>
+														<path
+															fill-rule="evenodd"
+															d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+															clip-rule="evenodd"
+														/>
+													</svg>
+												</button>
+											</div>
 										</div>
 									{:else}
 										<!-- Mobile (< 640px): Dual Action Buttons (Camera & Gallery) -->
@@ -1993,31 +2083,55 @@
 							<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
 								{#each extraPhotos as extra (extra.id)}
 									<div
-										class="relative rounded-lg overflow-hidden border border-gray-200 aspect-square"
+										class="relative rounded-lg overflow-hidden border border-gray-200 aspect-square group"
 									>
 										<img
 											src={extra.previewUrl}
 											alt="Foto Tambahan"
 											class="w-full h-full object-cover"
 										/>
-										<button
-											type="button"
-											onclick={() => removeExtraPhoto(extra.id)}
-											class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="w-3.5 h-3.5"
-												viewBox="0 0 20 20"
-												fill="currentColor"
+										<div class="absolute top-1 right-1 flex items-center gap-1 z-10">
+											<button
+												type="button"
+												onclick={() => openExtraCropper(extra.id)}
+												class="bg-white/95 text-gray-800 hover:text-red-600 rounded-full p-1 shadow hover:bg-white transition cursor-pointer"
+												title="Potong / Sesuaikan foto"
 											>
-												<path
-													fill-rule="evenodd"
-													d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										</button>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-3.5"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+													stroke-width="2"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+													/>
+												</svg>
+											</button>
+											<button
+												type="button"
+												onclick={() => removeExtraPhoto(extra.id)}
+												class="bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition cursor-pointer"
+												title="Hapus foto"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-3.5"
+													viewBox="0 0 20 20"
+													fill="currentColor"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</button>
+										</div>
 									</div>
 								{/each}
 
@@ -2400,4 +2514,13 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Image Cropper Modal -->
+	<ImageCropModal
+		isOpen={cropperModalOpen}
+		imageSrc={croppingImageSrc}
+		initialAspectRatio={4 / 3}
+		onApply={handleCropApply}
+		onCancel={handleCropCancel}
+	/>
 </div>

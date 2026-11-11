@@ -8,6 +8,7 @@
 		type Car,
 	} from "@harka/db";
 	import { compressCarImages } from "~/utils/imageCompression";
+	import ImageCropModal from "./ImageCropModal.svelte";
 
 	interface Props {
 		car?: Partial<Car> | null;
@@ -159,6 +160,50 @@
 		items[index + dir] = temp;
 		galleryItems = items;
 	};
+
+	// Cropper Modal State
+	let cropperModalOpen = $state(false);
+	let croppingIndex = $state<number | null>(null);
+	let croppingImageSrc = $state<string | null>(null);
+
+	function openCropper(idx: number) {
+		const item = galleryItems[idx];
+		if (!item) return;
+		croppingIndex = idx;
+		croppingImageSrc = item.preview;
+		cropperModalOpen = true;
+	}
+
+	function handleCropApply(croppedBlob: Blob, croppedUrl: string) {
+		if (croppingIndex === null || !galleryItems[croppingIndex]) return;
+		const currentItem = galleryItems[croppingIndex];
+
+		const fileName = currentItem.file
+			? currentItem.file.name
+			: `recropped-${croppingIndex + 1}.jpg`;
+		const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+
+		if (currentItem.file && currentItem.preview.startsWith("blob:")) {
+			URL.revokeObjectURL(currentItem.preview);
+		}
+
+		galleryItems[croppingIndex] = {
+			...currentItem,
+			file: newFile,
+			preview: croppedUrl,
+			url: undefined,
+		};
+
+		cropperModalOpen = false;
+		croppingIndex = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropCancel() {
+		cropperModalOpen = false;
+		croppingIndex = null;
+		croppingImageSrc = null;
+	}
 
 	const submitForm = async (e?: SubmitEvent) => {
 		e?.preventDefault();
@@ -736,11 +781,11 @@
 								<img src={item.preview} alt="" class="w-full h-full object-cover" />
 
 								<div
-									class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-xs"
+									class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2 backdrop-blur-xs"
 								>
 									<button
 										type="button"
-										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm cursor-pointer"
 										onclick={() => moveItem(idx, -1)}
 										disabled={idx === 0}
 										title="Pindah ke kiri"
@@ -756,7 +801,22 @@
 									</button>
 									<button
 										type="button"
-										class="bg-red-600/95 p-2 rounded-lg hover:bg-red-700 text-white transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 hover:text-red-700 transition shadow-sm cursor-pointer"
+										onclick={() => openCropper(idx)}
+										title="Potong / Sesuaikan rasio foto"
+									>
+										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+											/>
+										</svg>
+									</button>
+									<button
+										type="button"
+										class="bg-red-600/95 p-2 rounded-lg hover:bg-red-700 text-white transition shadow-sm cursor-pointer"
 										onclick={() => removeGalleryItem(idx)}
 										title="Hapus foto"
 									>
@@ -771,7 +831,7 @@
 									</button>
 									<button
 										type="button"
-										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm cursor-pointer"
 										onclick={() => moveItem(idx, 1)}
 										disabled={idx === galleryItems.length - 1}
 										title="Pindah ke kanan"
@@ -988,6 +1048,15 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Interactive Image Cropper Modal -->
+<ImageCropModal
+	isOpen={cropperModalOpen}
+	imageSrc={croppingImageSrc}
+	initialAspectRatio={4 / 3}
+	onApply={handleCropApply}
+	onCancel={handleCropCancel}
+/>
 
 <style>
 	@keyframes fadeIn {
