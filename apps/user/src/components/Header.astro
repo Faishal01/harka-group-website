@@ -166,31 +166,33 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 	<!-- Backdrop Overlay -->
 	<div
 		id="mobile-drawer-backdrop"
-		class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300"
+		class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300"
 		aria-hidden="true"
 	>
 	</div>
 
-	<!-- Drawer Slide Panel -->
+	<!-- Drawer Slide Panel (Light Theme) -->
 	<div
 		id="mobile-drawer-panel"
-		class="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-gray-950 text-white z-50 shadow-2xl flex flex-col translate-x-full transition-transform duration-300 ease-out"
+		class="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-white text-gray-900 z-50 shadow-2xl flex flex-col translate-x-full transition-transform duration-300 ease-out border-l border-gray-200"
 		role="dialog"
 		aria-modal="true"
 		aria-label="Menu Navigasi Mobile"
 	>
 		<!-- Drawer Header -->
-		<div class="p-5 flex items-center justify-between border-b border-gray-800 shrink-0">
+		<div
+			class="p-5 flex items-center justify-between border-b border-gray-100 bg-gray-50/80 shrink-0"
+		>
 			<div class="flex items-center gap-2">
 				<Image src={icon} class="h-9 w-auto inline-block object-contain" alt="Harka Autocar Logo" />
-				<span class="font-bold text-lg font-header text-white tracking-wide">
-					Harka<span class="font-normal text-red-500">Autocar</span>
+				<span class="font-bold text-lg font-header text-gray-900 tracking-wide">
+					Harka<span class="font-normal text-red-700">Autocar</span>
 				</span>
 			</div>
 			<button
 				id="mobile-drawer-close"
 				type="button"
-				class="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
+				class="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-200/80 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-600"
 				aria-label="Tutup menu"
 			>
 				<svg
@@ -222,16 +224,16 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 							href={item.url}
 							class={`mobile-drawer-link group flex items-center gap-3.5 p-3 rounded-xl transition ${
 								isActive
-									? "bg-red-950/60 border border-red-600/40 text-white"
-									: "text-gray-300 hover:bg-gray-900 hover:text-white border border-transparent"
+									? "bg-red-50 border border-red-200 text-red-700 shadow-xs"
+									: "text-gray-700 hover:bg-gray-50 hover:text-red-700 border border-transparent"
 							}`}
 						>
 							{/* Icon Badge */}
 							<div
 								class={`size-10 rounded-xl flex items-center justify-center shrink-0 transition ${
 									isActive
-										? "bg-red-700 text-white shadow-md shadow-red-900/50"
-										: "bg-gray-900 border border-gray-800 text-red-500 group-hover:bg-red-950/40 group-hover:border-red-600/40"
+										? "bg-red-700 text-white shadow-sm shadow-red-700/30"
+										: "bg-red-50/80 border border-red-100/80 text-red-700 group-hover:bg-red-100 group-hover:text-red-800 group-hover:border-red-200"
 								}`}
 							>
 								{item.icon === "home" && (
@@ -307,12 +309,14 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 							{/* Labels */}
 							<div class="grow min-w-0">
 								<div
-									class={`text-sm font-bold ${isActive ? "text-white" : "text-gray-200 group-hover:text-white"}`}
+									class={`text-sm font-bold ${isActive ? "text-red-700" : "text-gray-800 group-hover:text-red-700"}`}
 								>
 									{item.label}
 								</div>
 								{item.description && (
-									<div class="text-[11px] text-gray-400 group-hover:text-gray-300 truncate">
+									<div
+										class={`text-[11px] truncate ${isActive ? "text-red-600/80" : "text-gray-500 group-hover:text-gray-600"}`}
+									>
 										{item.description}
 									</div>
 								)}
@@ -321,8 +325,10 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 							{/* Arrow Indicator */}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
-								class={`size-4 text-gray-500 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all shrink-0 ${
-									isActive ? "text-red-400" : ""
+								class={`size-4 transition-all shrink-0 ${
+									isActive
+										? "text-red-600"
+										: "text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5"
 								}`}
 								viewBox="0 0 20 20"
 								fill="currentColor"
@@ -340,12 +346,12 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 		</nav>
 
 		<!-- Drawer Footer with WhatsApp Action -->
-		<div class="p-4 border-t border-gray-800 bg-gray-900/60 shrink-0 space-y-3">
+		<div class="p-4 border-t border-gray-100 bg-gray-50/80 shrink-0 space-y-3">
 			<a
 				href="https://wa.me/6281276858079?text=Halo%20Harka%20Autocar,%20saya%20ingin%20bertanya%20mengenai%20unit%20mobil..."
 				target="_blank"
 				rel="noopener noreferrer"
-				class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-950/40 transition"
+				class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-600/20 transition"
 			>
 				<svg class="size-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
 					<path
@@ -354,7 +360,7 @@ const pathname = rmTrailingSlash(Astro.url.pathname);
 				</svg>
 				<span>Chat WhatsApp</span>
 			</a>
-			<div class="text-center text-[11px] text-gray-400">
+			<div class="text-center text-[11px] text-gray-500">
 				📍 Jl. Prof. Dr. Hamka, Padang Panjang
 			</div>
 		</div>
