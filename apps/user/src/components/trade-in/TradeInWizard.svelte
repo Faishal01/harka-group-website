@@ -10,6 +10,7 @@
 		ownershipStatusMap,
 		type OwnershipStatus,
 	} from "@harka/db";
+	import CustomDropdown, { type DropdownOption } from "~/components/CustomDropdown.svelte";
 
 	// Props interface
 	interface AvailableCar {
@@ -94,6 +95,20 @@
 	let transmission = $state("Automatic");
 	let fuelType = $state("Petrol");
 	let sellingPrice = $state<number | "">("");
+
+	const transmissionOptions: DropdownOption[] = [
+		{ value: "Automatic", label: "Automatic (Matic)" },
+		{ value: "Manual", label: "Manual" },
+		{ value: "CVT", label: "CVT" },
+		{ value: "Dual-Clutch", label: "Dual-Clutch" },
+	];
+
+	const fuelTypeOptions: DropdownOption[] = [
+		{ value: "Petrol", label: "Bensin (Petrol)" },
+		{ value: "Diesel", label: "Solar (Diesel)" },
+		{ value: "Hybrid", label: "Hybrid" },
+		{ value: "Electric", label: "Listrik (Electric)" },
+	];
 
 	// Form State: Step 2 (Documents & Condition)
 	let plateNumber = $state("");
@@ -1526,35 +1541,23 @@
 							</div>
 
 							<div>
-								<label for="transmission" class="block text-sm font-semibold text-gray-700 mb-1">
-									{tradeInCaptions.form.transmission} <span class="text-red-600">*</span>
-								</label>
-								<select
-									id="transmission"
-									bind:value={transmission}
-									class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition"
-								>
-									<option value="Automatic">Automatic (Matic)</option>
-									<option value="Manual">Manual</option>
-									<option value="CVT">CVT</option>
-									<option value="Dual-Clutch">Dual-Clutch</option>
-								</select>
+								<CustomDropdown
+									label={`${tradeInCaptions.form.transmission} *`}
+									options={transmissionOptions}
+									value={transmission}
+									onChange={(val) => (transmission = String(val))}
+									placeholder="Pilih Transmisi"
+								/>
 							</div>
 
 							<div>
-								<label for="fuelType" class="block text-sm font-semibold text-gray-700 mb-1">
-									{tradeInCaptions.form.fuelType}
-								</label>
-								<select
-									id="fuelType"
-									bind:value={fuelType}
-									class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition"
-								>
-									<option value="Petrol">Bensin (Petrol)</option>
-									<option value="Diesel">Solar (Diesel)</option>
-									<option value="Hybrid">Hybrid</option>
-									<option value="Electric">Listrik (Electric)</option>
-								</select>
+								<CustomDropdown
+									label={tradeInCaptions.form.fuelType}
+									options={fuelTypeOptions}
+									value={fuelType}
+									onChange={(val) => (fuelType = String(val))}
+									placeholder="Pilih Bahan Bakar"
+								/>
 							</div>
 
 							<div class="sm:col-span-2 bg-red-50/60 p-5 rounded-xl border border-red-100">

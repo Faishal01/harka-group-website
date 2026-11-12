@@ -9,6 +9,7 @@
 	} from "@harka/db";
 	import { compressCarImages } from "~/utils/imageCompression";
 	import ImageCropModal, { type CropResultData } from "./ImageCropModal.svelte";
+	import CustomDropdown, { type DropdownOption } from "./CustomDropdown.svelte";
 
 	interface Props {
 		car?: Partial<Car> | null;
@@ -114,6 +115,40 @@
 
 	const currentYear = new Date().getFullYear();
 	const years = Array.from({ length: 15 }, (_, i) => currentYear - 5 + i);
+
+	const bodyTypeOptions: DropdownOption[] = [
+		{ value: "SUV", label: "SUV" },
+		{ value: "Sedan", label: "Sedan" },
+		{ value: "Hatchback", label: "Hatchback" },
+		{ value: "Coupe", label: "Coupe" },
+		{ value: "Convertible", label: "Convertible" },
+		{ value: "Pickup", label: "Pickup" },
+		{ value: "MPV", label: "MPV" },
+	];
+
+	const transmissionOptions: DropdownOption[] = [
+		{ value: "Automatic", label: "Matic" },
+		{ value: "Manual", label: "Manual" },
+		{ value: "Dual-Clutch", label: "Dual-Clutch" },
+		{ value: "CVT", label: "CVT" },
+	];
+
+	const fuelTypeOptions: DropdownOption[] = [
+		{ value: "Petrol", label: "Bensin" },
+		{ value: "Diesel", label: "Solar" },
+		{ value: "Hybrid", label: "Hybrid" },
+		{ value: "Electric", label: "Listrik" },
+	];
+
+	const taxMonthOptions = $derived<DropdownOption[]>([
+		{ value: "", label: "- Bulan (-) -" },
+		...months,
+	]);
+
+	const taxYearOptions = $derived<DropdownOption[]>([
+		{ value: "", label: "- Tahun (-) -" },
+		...years.map((y) => ({ value: y.toString(), label: y.toString() })),
+	]);
 
 	let hidden = $state(car?.hidden ?? false);
 
@@ -601,19 +636,13 @@
 					{/if}
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipe Body</label>
-					<select
-						bind:value={bodyType}
-						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-					>
-						<option value="SUV">SUV</option>
-						<option value="Sedan">Sedan</option>
-						<option value="Hatchback">Hatchback</option>
-						<option value="Coupe">Coupe</option>
-						<option value="Convertible">Convertible</option>
-						<option value="Pickup">Pickup</option>
-						<option value="MPV">MPV</option>
-					</select>
+					<CustomDropdown
+						label="Tipe Body"
+						options={bodyTypeOptions}
+						value={bodyType}
+						onChange={(val) => (bodyType = String(val))}
+						placeholder="Pilih Tipe Body"
+					/>
 				</div>
 
 				<div class="col-span-1 md:col-span-2 pt-4 border-t border-gray-100">
@@ -702,28 +731,22 @@
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Transmisi</label>
-					<select
-						bind:value={transmission}
-						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-					>
-						<option value="Automatic">Matic</option>
-						<option value="Manual">Manual</option>
-						<option value="Dual-Clutch">Dual-Clutch</option>
-						<option value="CVT">CVT</option>
-					</select>
+					<CustomDropdown
+						label="Transmisi"
+						options={transmissionOptions}
+						value={transmission}
+						onChange={(val) => (transmission = String(val))}
+						placeholder="Pilih Transmisi"
+					/>
 				</div>
 				<div>
-					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Bahan Bakar</label>
-					<select
-						bind:value={fuelType}
-						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-					>
-						<option value="Petrol">Bensin</option>
-						<option value="Diesel">Solar</option>
-						<option value="Hybrid">Hybrid</option>
-						<option value="Electric">Listrik</option>
-					</select>
+					<CustomDropdown
+						label="Bahan Bakar"
+						options={fuelTypeOptions}
+						value={fuelType}
+						onChange={(val) => (fuelType = String(val))}
+						placeholder="Pilih Bahan Bakar"
+					/>
 				</div>
 				<div>
 					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Warna Eksterior</label>
@@ -823,24 +846,18 @@
 						Masa Berlaku Pajak (Status Pajak STNK)
 					</label>
 					<div class="grid grid-cols-2 gap-3">
-						<select
-							bind:value={taxMonth}
-							class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-						>
-							<option value="">- Bulan (-) -</option>
-							{#each months as m (m.value)}
-								<option value={m.value}>{m.label}</option>
-							{/each}
-						</select>
-						<select
-							bind:value={taxYear}
-							class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
-						>
-							<option value="">- Tahun (-) -</option>
-							{#each years as y (y)}
-								<option value={y.toString()}>{y}</option>
-							{/each}
-						</select>
+						<CustomDropdown
+							options={taxMonthOptions}
+							value={taxMonth}
+							onChange={(val) => (taxMonth = String(val))}
+							placeholder="- Bulan (-) -"
+						/>
+						<CustomDropdown
+							options={taxYearOptions}
+							value={taxYear}
+							onChange={(val) => (taxYear = String(val))}
+							placeholder="- Tahun (-) -"
+						/>
 					</div>
 					<p class="mt-1 text-xs text-gray-400">
 						Kosongkan jika belum diketahui atau masih dalam proses.

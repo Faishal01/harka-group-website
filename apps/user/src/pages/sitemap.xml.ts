@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getDb, cars as carsTable } from "@harka/db";
+import { getDb, cars as carsTable, promos as promosTable } from "@harka/db";
 import { and, isNull, eq, ne, or } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 import { SITE_URL } from "~/utils/seo";
@@ -70,6 +70,30 @@ export const GET: APIRoute = async () => {
 				lastmod: isoDate,
 				changefreq: isSold ? "monthly" : "weekly",
 				priority: isSold ? "0.5" : "0.9",
+			});
+		}
+
+		const activePromos = await db
+			.select({
+				slug: promosTable.slug,
+				updatedAt: promosTable.updatedAt,
+				createdAt: promosTable.createdAt,
+			})
+			.from(promosTable)
+			.where(eq(promosTable.isActive, true));
+
+		for (const p of activePromos) {
+			const date = p.updatedAt || p.createdAt || new Date();
+			const isoDate =
+				date instanceof Date
+					? date.toISOString().split("T")[0]
+					: new Date(date).toISOString().split("T")[0];
+
+			dynamicUrls.push({
+				loc: `${SITE_URL}/promo/${p.slug}`,
+				lastmod: isoDate,
+				changefreq: "daily",
+				priority: "0.8",
 			});
 		}
 	} catch (error) {

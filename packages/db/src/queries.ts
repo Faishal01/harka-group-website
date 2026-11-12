@@ -8,6 +8,8 @@ import {
 	type TradeInStatus,
 	teamMembers,
 	type TeamMember,
+	promos,
+	type Promo,
 } from "./schema";
 import { maskPlateNumber } from "./plate";
 import type { Database } from "./client";
@@ -333,4 +335,81 @@ export async function getTeamMembers(
 export async function getTeamMemberById(db: Database, id: string): Promise<TeamMember | undefined> {
 	const results = await db.select().from(teamMembers).where(eq(teamMembers.id, id)).limit(1);
 	return results[0];
+}
+
+/**
+ * Returns active promos currently eligible to display, ordered by display priority.
+ */
+export async function getActivePromos(db: Database): Promise<Promo[]> {
+	const now = new Date();
+	return db
+		.select()
+		.from(promos)
+		.where(
+			and(
+				eq(promos.isActive, true),
+				or(isNull(promos.startDate), lte(promos.startDate, now)),
+				or(isNull(promos.endDate), gte(promos.endDate, now)),
+			),
+		)
+		.orderBy(asc(promos.order), desc(promos.createdAt));
+}
+
+/**
+ * Returns all promos for admin management.
+ */
+export async function getAllPromos(db: Database): Promise<Promo[]> {
+	return db
+		.select()
+		.from(promos)
+		.orderBy(asc(promos.order), desc(promos.createdAt));
+}
+
+/**
+ * Returns a specific promo by ID.
+ */
+export async function getPromoById(db: Database, id: string): Promise<Promo | undefined> {
+	const results = await db.select().from(promos).where(eq(promos.id, id)).limit(1);
+	return results[0];
+}
+
+/**
+ * Returns a specific promo by slug.
+ */
+export async function getPromoBySlug(db: Database, slug: string): Promise<Promo | undefined> {
+	const results = await db.select().from(promos).where(eq(promos.slug, slug)).limit(1);
+	return results[0];
+}
+
+/**
+ * Returns cars by a list of IDs, filtering out deleted and hidden units.
+ */
+export async function getCarsByIds(db: Database, ids: string[]): Promise<Car[]> {
+	if (!ids || ids.length === 0) return [];
+
+	const conditions = [
+		sql`${cars.id} IN (${sql.join(
+			ids.map((id) => sql`${id}`),
+			sql`, `,
+		)})`,
+		isNull(cars.deletedAt),
+		eq(cars.hidden, false),
+		or(isNull(cars.archiveReason), sql`${cars.archiveReason} != 'removed'`),
+	];
+
+	const fetched = await db
+		.select()
+		.from(cars)
+		.where(and(...conditions));
+
+	// Preserve the exact custom order of ids
+	const carMap = new Map(fetched.map((c) => [c.id, c]));
+	const ordered: Car[] = [];
+	for (const id of ids) {
+		const found = carMap.get(id);
+		if (found) {
+			ordered.push(found);
+		}
+	}
+	return ordered;
 }
