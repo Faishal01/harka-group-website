@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import type { Car } from "~/types";
+	import type { Promo } from "@harka/db";
 	import { getPrice, getMileage, getMileageUnit } from "~/utils/helpers";
 	import { transmissionMap, fuelTypeMap } from "~/data/constants";
 	import CarImageSlider from "./CarImageSlider.svelte";
+	import PromoBannerCarousel from "./PromoBannerCarousel.svelte";
 
 	interface Props {
 		initialCars: Car[];
@@ -13,6 +15,7 @@
 		initialMake?: string;
 		initialSort?: string;
 		backgroundImageSrc?: string;
+		promos?: Promo[];
 	}
 
 	let {
@@ -23,6 +26,7 @@
 		initialMake = "all",
 		initialSort = "date-desc",
 		backgroundImageSrc = "",
+		promos = [],
 	}: Props = $props();
 
 	const sortOptions = [
@@ -270,6 +274,11 @@
 
 	<!-- Cockpit content aligned to max-w-6xl -->
 	<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-10 lg:py-14">
+		<!-- Promo Banner Carousel (Cleanly hidden if 0 active promos) -->
+		{#if promos && promos.length > 0}
+			<PromoBannerCarousel {promos} />
+		{/if}
+
 		<!-- Search Bar & Custom Sort Dropdown -->
 		<div class="w-full flex flex-col sm:flex-row items-center gap-3">
 			<!-- Search Bar -->

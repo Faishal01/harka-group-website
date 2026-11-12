@@ -4,6 +4,7 @@ import * as CarService from "./services/car.service";
 import * as StorageService from "./services/storage.service";
 import * as TradeInService from "./services/trade-in.service";
 import * as TeamService from "./services/team.service";
+import * as PromoService from "./services/promo.service";
 import type {
 	Car,
 	QueryOptions,
@@ -11,6 +12,7 @@ import type {
 	PaginatedTradeInSubmissions,
 	TradeInSubmission,
 	TeamMember,
+	Promo,
 } from "@harka/db";
 
 export interface CoreClient {
@@ -62,6 +64,16 @@ export interface CoreClient {
 			photoFile?: File | null,
 			removePhoto?: boolean,
 		) => Promise<{ success: boolean; id: string }>;
+		delete: (id: string) => Promise<{ success: boolean; id: string }>;
+		reorder: (orderedIds: string[]) => Promise<{ success: boolean }>;
+	};
+	promos: {
+		getActive: () => Promise<Promo[]>;
+		getAll: () => Promise<Promo[]>;
+		getById: (id: string) => Promise<Promo>;
+		getBySlug: (slug: string) => Promise<{ promo: Promo; cars: Car[] }>;
+		create: (input: unknown) => Promise<{ success: boolean; id: string; slug: string; title: string }>;
+		update: (id: string, input: unknown) => Promise<{ success: boolean; id: string; slug: string }>;
 		delete: (id: string) => Promise<{ success: boolean; id: string }>;
 		reorder: (orderedIds: string[]) => Promise<{ success: boolean }>;
 	};
@@ -123,6 +135,16 @@ export function createCore(env: unknown): CoreClient {
 				run(TeamService.updateTeamMember(id, input, photoFile, removePhoto)),
 			delete: (id) => run(TeamService.deleteTeamMember(id)),
 			reorder: (orderedIds) => run(TeamService.reorderTeamMembers(orderedIds)),
+		},
+		promos: {
+			getActive: () => run(PromoService.getActivePromos()),
+			getAll: () => run(PromoService.getAllPromos()),
+			getById: (id) => run(PromoService.getPromoById(id)),
+			getBySlug: (slug) => run(PromoService.getPromoBySlug(slug)),
+			create: (input) => run(PromoService.createPromo(input)),
+			update: (id, input) => run(PromoService.updatePromo(id, input)),
+			delete: (id) => run(PromoService.deletePromo(id)),
+			reorder: (orderedIds) => run(PromoService.reorderPromos(orderedIds)),
 		},
 		respond: async <T>(
 			callback: () => Promise<T>,

@@ -16,6 +16,7 @@ import { createCore } from "@harka/core";
 import { getDb, cars as carsTable } from "@harka/db";
 import { and, isNull, eq, asc } from "drizzle-orm";
 import type { Car } from "~/types";
+import type { Promo } from "@harka/db";
 import ImageHeadingBackground from "~/assets/images/WhatsApp_Image_2026-09-22_at_23.25.09.jpeg";
 import CtaTextures from "~/assets/images/prew-o.jpg";
 
@@ -49,6 +50,14 @@ try {
 const totalCount = allMatchingCars.length;
 const initialCars = allMatchingCars.slice(0, 12);
 
+// Fetch active promos for homepage promo bar
+let activePromos: Promo[] = [];
+try {
+	activePromos = await core.promos.getActive();
+} catch (err) {
+	console.error("Failed to load active promos:", err);
+}
+
 const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di ${siteName} ${DEALER_LOCATION}. Pilihan unit prima, inspeksi bebas tabrak & banjir, harga transparan dan tukar tambah mudah.`;
 ---
@@ -69,6 +78,7 @@ const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di
 		initialSearch={initialSearch}
 		initialMake={initialMake}
 		initialSort={initialSort}
+		promos={activePromos}
 	/>
 
 	{/* CTA Section */}

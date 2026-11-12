@@ -47,6 +47,12 @@
 
 	const ratioPresets: { id: string; label: string; value: number | null; desc: string }[] = [
 		{
+			id: "2.5:1",
+			label: "2.5:1 (Banner Promo)",
+			value: 2.5 / 1,
+			desc: "Format banner strip lebar untuk promo beranda",
+		},
+		{
 			id: "4:3",
 			label: "4:3 (Katalog)",
 			value: 4 / 3,

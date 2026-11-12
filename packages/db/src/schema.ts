@@ -271,3 +271,43 @@ export const teamMembers = sqliteTable(
 
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type InsertTeamMember = typeof teamMembers.$inferInsert;
+
+export type PromoMode = "filter" | "custom";
+
+export interface PromoFilterParams {
+	make?: string;
+	bodyType?: BodyType;
+	transmission?: Transmission;
+	maxPrice?: number;
+	minYear?: number;
+	maxMileage?: number;
+}
+
+export const promos = sqliteTable(
+	"promos",
+	{
+		id: text("id").primaryKey(), // 12-char nanoid
+		slug: text("slug").notNull().unique(),
+		title: text("title").notNull(),
+		description: text("description"),
+		bannerImage: text("banner_image").notNull(),
+		bannerOriginalImage: text("banner_original_image"),
+		bannerCropData: text("banner_crop_data", { mode: "json" }).$type<CropData>(),
+		mode: text("mode").$type<PromoMode>().notNull().default("filter"),
+		filterParams: text("filter_params", { mode: "json" }).$type<PromoFilterParams>(),
+		customCarIds: text("custom_car_ids", { mode: "json" }).$type<string[]>(),
+		isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+		startDate: integer("start_date", { mode: "timestamp" }),
+		endDate: integer("end_date", { mode: "timestamp" }),
+		order: integer("order").notNull().default(0),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		index("promos_is_active_idx").on(table.isActive),
+		index("promos_order_idx").on(table.order),
+	],
+);
+
+export type Promo = typeof promos.$inferSelect;
+export type InsertPromo = typeof promos.$inferInsert;

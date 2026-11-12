@@ -15,6 +15,12 @@ export const adminMenus: AdminMenuItem[] = [
 		icon: "lucide:car-front",
 	},
 	{
+		id: "promos",
+		label: "Promosi",
+		url: "/promos",
+		icon: "lucide:badge-percent",
+	},
+	{
 		id: "trade-in",
 		label: "Pengajuan Unit",
 		url: "/trade-in",

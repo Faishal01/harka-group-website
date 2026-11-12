@@ -42,6 +42,17 @@ export class TeamMemberNotFoundError extends Error {
 	}
 }
 
+export class PromoNotFoundError extends Error {
+	readonly _tag = "PromoNotFoundError";
+	readonly status = 404;
+	readonly identifier: string;
+	constructor(args: { identifier: string; message?: string }) {
+		super(args.message ?? `Promo ${args.identifier} tidak ditemukan`);
+		this.name = "PromoNotFoundError";
+		this.identifier = args.identifier;
+	}
+}
+
 export class StorageFileNotFoundError extends Error {
 	readonly _tag = "StorageFileNotFoundError";
 	readonly status = 404;
