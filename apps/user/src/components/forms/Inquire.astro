@@ -13,7 +13,8 @@ interface Props {
 const { car, url = "" } = Astro.props;
 const cleanPhone = phone.href.replace(/[^0-9]/g, "");
 const vehicleTitle = `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}`;
-const priceFormatted = getPrice(car.price);
+const isPromo = car.promoPrice && car.promoPrice < car.price;
+const priceFormatted = isPromo ? `${getPrice(car.promoPrice!)} (Promo)` : getPrice(car.price);
 ---
 
 <h2 class="h4">{inquireForm.title}</h2>

@@ -198,7 +198,18 @@ const allCars = await db.query.cars.findMany({
 												</div>
 											</td>
 											<td class="py-4 px-4 sm:px-6 whitespace-nowrap">
-												<span class="font-bold text-red-700 text-sm">{getPrice(car.price)}</span>
+												{car.promoPrice && car.promoPrice < car.price ? (
+													<div class="flex flex-col">
+														<span class="text-xs text-gray-400 line-through font-medium">
+															{getPrice(car.price)}
+														</span>
+														<span class="font-bold text-red-700 text-sm">
+															{getPrice(car.promoPrice)}
+														</span>
+													</div>
+												) : (
+													<span class="font-bold text-gray-900 text-sm">{getPrice(car.price)}</span>
+												)}
 											</td>
 
 											{tab === "active" ? (

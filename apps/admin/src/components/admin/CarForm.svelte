@@ -53,6 +53,7 @@
 	let make = $state(car?.make || "");
 	let model = $state(car?.model || "");
 	let price = $state(car?.price || 0);
+	let promoPrice = $state<number | null>(car?.promoPrice ?? null);
 	let year = $state(car?.year || new Date().getFullYear());
 	let mileage = $state(car?.mileage ?? 0);
 	let bodyType = $state(car?.bodyType || "SUV");
@@ -146,8 +147,26 @@
 		}),
 	);
 
+	function formatRupiah(val: number | null | undefined): string {
+		if (typeof val !== "number" || isNaN(val) || val <= 0) return "";
+		return new Intl.NumberFormat("id-ID", {
+			style: "currency",
+			currency: "IDR",
+			maximumFractionDigits: 0,
+		}).format(val);
+	}
+
+	const isPromoPriceInvalid = $derived(
+		promoPrice !== null && promoPrice !== undefined && promoPrice > 0 && promoPrice >= price,
+	);
+
 	const isFormValid = $derived(
-		make.trim() !== "" && model.trim() !== "" && price > 0 && year > 0 && mileage >= 0,
+		make.trim() !== "" &&
+			model.trim() !== "" &&
+			price > 0 &&
+			year > 0 &&
+			mileage >= 0 &&
+			!isPromoPriceInvalid,
 	);
 
 	const handleFileSelect = (e: Event) => {
@@ -371,6 +390,7 @@
 				make,
 				model,
 				price,
+				promoPrice: promoPrice && promoPrice > 0 ? promoPrice : null,
 				year,
 				mileage,
 				bodyType,
@@ -550,6 +570,35 @@
 						min="1"
 						class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
 					/>
+					{#if price > 0}
+						<p class="mt-1 text-xs text-gray-400 font-medium">
+							{formatRupiah(price)}
+						</p>
+					{/if}
+				</div>
+				<div>
+					<label class="block text-sm font-semibold text-gray-700 mb-1.5"
+						>Harga Promo (Rp) <span class="text-xs font-normal text-gray-500">(Opsional)</span
+						></label
+					>
+					<input
+						type="number"
+						bind:value={promoPrice}
+						min="1"
+						placeholder="Kosongkan jika tidak ada promo"
+						class="w-full px-4 py-2.5 border {isPromoPriceInvalid
+							? 'border-red-500 ring-1 ring-red-500'
+							: 'border-gray-300'} rounded-xl focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-sm transition"
+					/>
+					{#if isPromoPriceInvalid}
+						<p class="mt-1 text-xs text-red-600 font-medium">
+							Harga promo harus lebih rendah dari harga reguler ({formatRupiah(price)}).
+						</p>
+					{:else if promoPrice && promoPrice > 0}
+						<p class="mt-1 text-xs text-emerald-600 font-medium">
+							Promo aktif: {formatRupiah(promoPrice)} (Diskon {formatRupiah(price - promoPrice)})
+						</p>
+					{/if}
 				</div>
 				<div>
 					<label class="block text-sm font-semibold text-gray-700 mb-1.5">Tipe Body</label>

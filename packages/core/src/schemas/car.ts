@@ -91,6 +91,9 @@ export class CreateCarInputSchema extends Schema.Class<CreateCarInputSchema>(
 	make: Schema.NonEmptyTrimmedString,
 	model: Schema.NonEmptyTrimmedString,
 	price: CoerceNumber.pipe(Schema.clamp(0, 100_000_000_000)),
+	promoPrice: Schema.optional(
+		Schema.NullOr(CoerceNumber.pipe(Schema.clamp(0, 100_000_000_000))),
+	),
 	year: CoerceNumber.pipe(Schema.clamp(1900, 2100)),
 	mileage: CoerceNumber.pipe(Schema.clamp(0, 10_000_000)),
 	bodyType: Schema.optionalWith(BodyTypeSchema, { default: () => "SUV" }),
@@ -126,6 +129,9 @@ export class UpdateCarInputSchema extends Schema.Class<UpdateCarInputSchema>(
 	make: Schema.NonEmptyTrimmedString,
 	model: Schema.NonEmptyTrimmedString,
 	price: CoerceNumber.pipe(Schema.clamp(0, 100_000_000_000)),
+	promoPrice: Schema.optional(
+		Schema.NullOr(CoerceNumber.pipe(Schema.clamp(0, 100_000_000_000))),
+	),
 	year: CoerceNumber.pipe(Schema.clamp(1900, 2100)),
 	mileage: CoerceNumber.pipe(Schema.clamp(0, 10_000_000)),
 	bodyType: Schema.optionalWith(BodyTypeSchema, { default: () => "SUV" }),

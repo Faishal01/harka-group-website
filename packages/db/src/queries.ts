@@ -79,12 +79,13 @@ export async function getFilteredCars(
 		const parts = params.price.split("-");
 		const minPrice = Number(parts[0]);
 		const maxPrice = parts[1] ? Number(parts[1]) : undefined;
+		const effectivePrice = sql`COALESCE(${cars.promoPrice}, ${cars.price})`;
 
 		if (!Number.isNaN(minPrice)) {
-			conditions.push(gte(cars.price, minPrice));
+			conditions.push(gte(effectivePrice, minPrice));
 		}
 		if (maxPrice && !Number.isNaN(maxPrice)) {
-			conditions.push(lte(cars.price, maxPrice));
+			conditions.push(lte(effectivePrice, maxPrice));
 		}
 	}
 
@@ -150,10 +151,10 @@ export async function getFilteredCars(
 	if (params.sort) {
 		switch (params.sort) {
 			case "price-asc":
-				orderClauses.push(asc(cars.price));
+				orderClauses.push(asc(sql`COALESCE(${cars.promoPrice}, ${cars.price})`));
 				break;
 			case "price-desc":
-				orderClauses.push(desc(cars.price));
+				orderClauses.push(desc(sql`COALESCE(${cars.promoPrice}, ${cars.price})`));
 				break;
 			case "mileage-asc":
 				orderClauses.push(asc(cars.mileage));

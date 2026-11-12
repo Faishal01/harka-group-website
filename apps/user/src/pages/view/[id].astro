@@ -168,7 +168,7 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 											</span>
 										</div>
 									) : (
-										<Price price={car.price} />
+										<Price price={car.price} promoPrice={car.promoPrice} />
 									)}
 
 									<FeatureBox car={car} />
@@ -267,7 +267,20 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 				<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-3 shadow-lg flex items-center justify-between gap-3 print:hidden">
 					<div class="min-w-0">
 						<span class="text-xs text-gray-500 block truncate">{vehicleName}</span>
-						<span class="text-base font-extrabold text-gray-900 block">{getPrice(car.price)}</span>
+						{car.promoPrice && car.promoPrice < car.price ? (
+							<div class="flex items-baseline gap-1.5 flex-wrap">
+								<span class="text-xs text-gray-400 line-through font-medium">
+									{getPrice(car.price)}
+								</span>
+								<span class="text-base font-extrabold text-red-700">
+									{getPrice(car.promoPrice)}
+								</span>
+							</div>
+						) : (
+							<span class="text-base font-extrabold text-gray-900 block">
+								{getPrice(car.price)}
+							</span>
+						)}
 					</div>
 					<ButtonCall
 						car={car}

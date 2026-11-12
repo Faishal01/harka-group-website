@@ -3,14 +3,29 @@ import { getPrice } from "~/utils/helpers";
 
 interface Props {
 	price?: number;
-	data?: { price: number };
+	promoPrice?: number | null;
+	data?: { price: number; promoPrice?: number | null };
 }
 
-const { price: propPrice, data } = Astro.props;
+const { price: propPrice, promoPrice: propPromoPrice, data } = Astro.props;
 const rawPrice = propPrice ?? data?.price ?? 0;
-const formattedPrice = getPrice(rawPrice);
+const rawPromoPrice = propPromoPrice !== undefined ? propPromoPrice : data?.promoPrice;
+const isPromo = rawPromoPrice && rawPromoPrice < rawPrice;
 ---
 
-<div class="xxl:pr-8 shrink-0 max-xxl:flex max-xxl:gap-2 max-xxl:items-center max-xxl:mb-6">
-	<span class="price font-semibold">{formattedPrice}</span>
+<div class="xxl:pr-8 shrink-0 max-xxl:flex max-xxl:gap-2 max-xxl:items-baseline max-xxl:mb-6">
+	{
+		isPromo ? (
+			<div class="flex items-baseline gap-2 flex-wrap">
+				<span class="text-xs sm:text-sm text-gray-400 line-through font-medium">
+					{getPrice(rawPrice)}
+				</span>
+				<span class="price font-bold text-lg sm:text-xl text-red-700 tracking-tight font-inter">
+					{getPrice(rawPromoPrice!)}
+				</span>
+			</div>
+		) : (
+			<span class="price font-semibold">{getPrice(rawPrice)}</span>
+		)
+	}
 </div>

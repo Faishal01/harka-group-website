@@ -132,10 +132,12 @@ export interface LoanCalculatorProps {
 
 export interface CardPriceProps {
 	price: number;
+	promoPrice?: number | null;
 }
 
 export interface PriceProps {
 	price: number;
+	promoPrice?: number | null;
 }
 
 export interface SliderProps {
