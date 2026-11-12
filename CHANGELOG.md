@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.6.0](https://github.com/Faishal01/harka-group-website/compare/v1.5.0...v1.6.0) (2026-11-11)
+
+
+### Features
+
+* deploy_user | homepage design overhaul ([e8c42a3](https://github.com/Faishal01/harka-group-website/commit/e8c42a38143d274cafb4845867a154a4e85380fc))
+
 # [1.5.0](https://github.com/Faishal01/harka-group-website/compare/v1.4.0...v1.5.0) (2026-11-02)
 
 
