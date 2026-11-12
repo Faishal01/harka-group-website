@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.7.0](https://github.com/Faishal01/harka-group-website/compare/v1.6.0...v1.7.0) (2026-11-12)
+
+
+### Features
+
+* deploy_admin deploy_user | car image improvements ([84dca43](https://github.com/Faishal01/harka-group-website/commit/84dca43c103d8c77179f47e223daba576371e1f2))
+* nondestructive crop ([6628a34](https://github.com/Faishal01/harka-group-website/commit/6628a3478cdec67d4fa00072751bc396eadd832b))
+
 # [1.6.0](https://github.com/Faishal01/harka-group-website/compare/v1.5.0...v1.6.0) (2026-11-11)
 
 
