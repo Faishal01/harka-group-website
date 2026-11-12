@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { OwnershipStatusSchema } from "./car";
+import { OwnershipStatusSchema, CropDataSchema } from "./car";
 
 export const TradeInStatusSchema = Schema.Literal("pending", "approved", "rejected");
 
@@ -11,6 +11,8 @@ export const TradeInPhotoSchema = Schema.Struct({
 	slot: Schema.String,
 	label: Schema.String,
 	url: Schema.String,
+	originalUrl: Schema.optional(Schema.String),
+	cropData: Schema.optional(CropDataSchema),
 });
 
 export const TradeInDocumentSchema = Schema.Struct({
@@ -31,6 +33,8 @@ export const PhotoMetaItemSchema = Schema.Struct({
 	slot: Schema.String,
 	label: Schema.String,
 	fieldName: Schema.String,
+	originalFieldName: Schema.optional(Schema.String),
+	cropData: Schema.optional(CropDataSchema),
 });
 
 export const PhotoMetaArraySchema = Schema.Array(PhotoMetaItemSchema);

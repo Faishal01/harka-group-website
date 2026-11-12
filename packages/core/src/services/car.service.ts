@@ -180,7 +180,12 @@ export const createCar = (rawInput: unknown) =>
 			seatingCapacity: input.seatingCapacity || null,
 			plateNumber: formattedPlate,
 			gallery: input.gallery
-				? input.gallery.map((g) => ({ image: g.image, alt: g.alt }))
+				? input.gallery.map((g) => ({
+						image: g.image,
+						alt: g.alt,
+						originalImage: g.originalImage,
+						cropData: g.cropData,
+					}))
 				: null,
 			hidden: input.hidden,
 			publishDate: now,
@@ -247,15 +252,28 @@ export const updateCar = (id: string, rawInput: unknown) =>
 
 		// Cleanup orphaned images if gallery was updated
 		const r2 = yield* R2Client;
-		const oldGallery = (existing.gallery as { image: string }[] | null) || [];
+		const oldGallery =
+			(existing.gallery as
+				| { image: string; originalImage?: string }[]
+				| null) || [];
 		const newGallery = input.gallery || [];
-		const newImageUrls = new Set(newGallery.map((g) => g.image));
+		const newImageUrls = new Set(
+			newGallery
+				.flatMap((g) => [g.image, g.originalImage])
+				.filter((url): url is string => Boolean(url)),
+		);
 		const orphanedImages = oldGallery.filter((g) => !newImageUrls.has(g.image));
 
 		for (const img of orphanedImages) {
 			const filename = img.image.split("/").pop();
 			if (filename) {
 				yield* r2.delete(filename).pipe(Effect.ignoreLogged);
+			}
+			if (img.originalImage && !newImageUrls.has(img.originalImage)) {
+				const origFilename = img.originalImage.split("/").pop();
+				if (origFilename) {
+					yield* r2.delete(origFilename).pipe(Effect.ignoreLogged);
+				}
 			}
 		}
 
@@ -312,7 +330,12 @@ export const updateCar = (id: string, rawInput: unknown) =>
 						seatingCapacity: input.seatingCapacity || null,
 						plateNumber: formattedPlate,
 						gallery: input.gallery
-							? input.gallery.map((g) => ({ image: g.image, alt: g.alt }))
+							? input.gallery.map((g) => ({
+									image: g.image,
+									alt: g.alt,
+									originalImage: g.originalImage,
+									cropData: g.cropData,
+								}))
 							: null,
 						hidden: input.hidden,
 						updatedAt: now,

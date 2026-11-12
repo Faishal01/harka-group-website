@@ -8,6 +8,7 @@
 		type Car,
 	} from "@harka/db";
 	import { compressCarImages } from "~/utils/imageCompression";
+	import ImageCropModal, { type CropResultData } from "./ImageCropModal.svelte";
 
 	interface Props {
 		car?: Partial<Car> | null;
@@ -115,15 +116,34 @@
 
 	let hidden = $state(car?.hidden ?? false);
 
-	// Gallery State
-	type GalleryItem = { id: string; url?: string; file?: File; alt: string; preview: string };
+	// Gallery State (Non-destructive master + derivative model)
+	type GalleryItem = {
+		id: string;
+		url?: string;
+		file?: File;
+		alt: string;
+		preview: string;
+		originalUrl?: string;
+		originalFile?: File;
+		originalPreview: string;
+		cropData?: CropResultData;
+		isCropped: boolean;
+	};
+
 	let galleryItems = $state<GalleryItem[]>(
-		(car?.gallery || []).map((g, i) => ({
-			id: `existing-${i}`,
-			url: g.image,
-			alt: g.alt,
-			preview: g.image,
-		})),
+		(car?.gallery || []).map((g, i) => {
+			const hasCrop = Boolean(g.cropData && g.originalImage);
+			return {
+				id: `existing-${i}`,
+				url: g.image,
+				alt: g.alt,
+				preview: g.image,
+				originalUrl: g.originalImage || g.image,
+				originalPreview: g.originalImage || g.image,
+				cropData: g.cropData as CropResultData | undefined,
+				isCropped: hasCrop,
+			};
+		}),
 	);
 
 	const isFormValid = $derived(
@@ -134,12 +154,19 @@
 		const target = e.target as HTMLInputElement;
 		if (target.files) {
 			const newFiles = Array.from(target.files);
-			const newItems = newFiles.map((file) => ({
-				id: `new-${Math.random().toString(36).substring(2, 9)}`,
-				file,
-				alt: "",
-				preview: URL.createObjectURL(file),
-			}));
+			const newItems: GalleryItem[] = newFiles.map((file) => {
+				const previewUrl = URL.createObjectURL(file);
+				return {
+					id: `new-${Math.random().toString(36).substring(2, 9)}`,
+					file,
+					alt: "",
+					preview: previewUrl,
+					originalFile: file,
+					originalPreview: previewUrl,
+					cropData: undefined,
+					isCropped: false,
+				};
+			});
 			galleryItems = [...galleryItems, ...newItems];
 		}
 		target.value = "";
@@ -147,7 +174,12 @@
 
 	const removeGalleryItem = (index: number) => {
 		const item = galleryItems[index];
-		if (item.file) URL.revokeObjectURL(item.preview);
+		if (item.preview.startsWith("blob:")) {
+			URL.revokeObjectURL(item.preview);
+		}
+		if (item.originalPreview.startsWith("blob:") && item.originalPreview !== item.preview) {
+			URL.revokeObjectURL(item.originalPreview);
+		}
 		galleryItems = galleryItems.filter((_, i) => i !== index);
 	};
 
@@ -160,6 +192,81 @@
 		galleryItems = items;
 	};
 
+	// Cropper Modal State
+	let cropperModalOpen = $state(false);
+	let croppingIndex = $state<number | null>(null);
+	let croppingImageSrc = $state<string | null>(null);
+
+	function openCropper(idx: number) {
+		const item = galleryItems[idx];
+		if (!item) return;
+		croppingIndex = idx;
+		// Always crop from the untouched master image!
+		croppingImageSrc = item.originalPreview;
+		cropperModalOpen = true;
+	}
+
+	function handleCropApply(croppedBlob: Blob, croppedUrl: string, cropData: CropResultData) {
+		if (croppingIndex === null || !galleryItems[croppingIndex]) return;
+		const currentItem = galleryItems[croppingIndex];
+
+		const fileName = currentItem.file
+			? currentItem.file.name
+			: `recropped-${croppingIndex + 1}.jpg`;
+		const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+
+		if (
+			currentItem.preview.startsWith("blob:") &&
+			currentItem.preview !== currentItem.originalPreview
+		) {
+			URL.revokeObjectURL(currentItem.preview);
+		}
+
+		galleryItems[croppingIndex] = {
+			...currentItem,
+			file: newFile,
+			preview: croppedUrl,
+			cropData,
+			isCropped: true,
+			url: undefined, // Cleared because the new cropped version must be uploaded to R2
+		};
+
+		cropperModalOpen = false;
+		croppingIndex = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropRevert() {
+		if (croppingIndex === null || !galleryItems[croppingIndex]) return;
+		const currentItem = galleryItems[croppingIndex];
+
+		if (
+			currentItem.preview.startsWith("blob:") &&
+			currentItem.preview !== currentItem.originalPreview
+		) {
+			URL.revokeObjectURL(currentItem.preview);
+		}
+
+		galleryItems[croppingIndex] = {
+			...currentItem,
+			file: currentItem.originalFile,
+			preview: currentItem.originalPreview,
+			url: currentItem.originalFile ? undefined : currentItem.originalUrl,
+			cropData: undefined,
+			isCropped: false,
+		};
+
+		cropperModalOpen = false;
+		croppingIndex = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropCancel() {
+		cropperModalOpen = false;
+		croppingIndex = null;
+		croppingImageSrc = null;
+	}
+
 	const submitForm = async (e?: SubmitEvent) => {
 		e?.preventDefault();
 		const finalTitle = title.trim() || `${make} ${model} ${year}`;
@@ -169,15 +276,39 @@
 		successMessage = "";
 
 		try {
-			// Step 1: Upload new images if any
-			const newFiles = galleryItems.filter((item) => item.file).map((item) => item.file as File);
-			let uploadedUrls: string[] = [];
+			// Step 1: Upload new images if any (Smart dual upload: cropped derivative + untouched master)
+			type UploadQueueItem = {
+				itemIndex: number;
+				role: "image" | "originalImage";
+				file: File;
+			};
 
-			if (newFiles.length > 0) {
-				statusMessage = `Mengompresi foto (0/${newFiles.length})...`;
-				const { compressed, totalBytes } = await compressCarImages(newFiles, (current, total) => {
-					statusMessage = `Mengompresi foto (${current}/${total})...`;
-				});
+			const uploadQueue: UploadQueueItem[] = [];
+
+			galleryItems.forEach((item, index) => {
+				if (item.file) {
+					uploadQueue.push({ itemIndex: index, role: "image", file: item.file });
+				}
+				if (item.isCropped && item.originalFile) {
+					uploadQueue.push({
+						itemIndex: index,
+						role: "originalImage",
+						file: item.originalFile,
+					});
+				}
+			});
+
+			const uploadedUrlMap: Record<string, string> = {};
+
+			if (uploadQueue.length > 0) {
+				const filesToCompress = uploadQueue.map((q) => q.file);
+				statusMessage = `Mengompresi foto (0/${filesToCompress.length})...`;
+				const { compressed, totalBytes } = await compressCarImages(
+					filesToCompress,
+					(current, total) => {
+						statusMessage = `Mengompresi foto (${current}/${total})...`;
+					},
+				);
 
 				const mbFormatted = (totalBytes / (1024 * 1024)).toFixed(1);
 				statusMessage = `Mengunggah ${compressed.length} foto (${mbFormatted} MB)...`;
@@ -189,20 +320,39 @@
 					method: "POST",
 					body: uploadFormData,
 				});
-				const uploadData = (await uploadRes.json()) as { error?: string; urls?: string[] };
+				const uploadData = (await uploadRes.json()) as {
+					error?: string;
+					urls?: string[];
+				};
 				if (!uploadRes.ok) throw new Error(uploadData.error || "Gagal mengunggah foto");
 
-				uploadedUrls = uploadData.urls || [];
+				const uploadedUrls = uploadData.urls || [];
+				uploadQueue.forEach((q, idx) => {
+					uploadedUrlMap[`${q.itemIndex}-${q.role}`] = uploadedUrls[idx];
+				});
 			}
 
 			// Step 2: Construct final gallery
-			let newFileIndex = 0;
-			const finalGallery = galleryItems.map((item) => {
-				if (item.file) {
-					const url = uploadedUrls[newFileIndex++];
-					return { image: url, alt: item.alt };
+			const finalGallery = galleryItems.map((item, index) => {
+				const displayImageUrl = item.file ? uploadedUrlMap[`${index}-image`] : item.url!;
+
+				if (item.isCropped && item.cropData) {
+					const origUrl = item.originalFile
+						? uploadedUrlMap[`${index}-originalImage`]
+						: item.originalUrl || displayImageUrl;
+
+					return {
+						image: displayImageUrl,
+						originalImage: origUrl,
+						cropData: item.cropData,
+						alt: item.alt,
+					};
 				}
-				return { image: item.url as string, alt: item.alt };
+
+				return {
+					image: displayImageUrl,
+					alt: item.alt,
+				};
 			});
 
 			// Tax Expiration Date calculation
@@ -734,13 +884,35 @@
 							{/if}
 							<div class="relative h-36 bg-gray-100 flex-shrink-0">
 								<img src={item.preview} alt="" class="w-full h-full object-cover" />
+								{#if item.isCropped}
+									<span
+										class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-xs pointer-events-none z-10"
+										title="Foto telah dipotong (tersimpan non-destruktif)"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="size-2.5 text-emerald-400"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											stroke-width="2.5"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+											/>
+										</svg>
+										Tercrop
+									</span>
+								{/if}
 
 								<div
-									class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-xs"
+									class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2 backdrop-blur-xs"
 								>
 									<button
 										type="button"
-										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm cursor-pointer"
 										onclick={() => moveItem(idx, -1)}
 										disabled={idx === 0}
 										title="Pindah ke kiri"
@@ -756,7 +928,22 @@
 									</button>
 									<button
 										type="button"
-										class="bg-red-600/95 p-2 rounded-lg hover:bg-red-700 text-white transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 hover:text-red-700 transition shadow-sm cursor-pointer"
+										onclick={() => openCropper(idx)}
+										title="Potong / Sesuaikan rasio foto"
+									>
+										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+											/>
+										</svg>
+									</button>
+									<button
+										type="button"
+										class="bg-red-600/95 p-2 rounded-lg hover:bg-red-700 text-white transition shadow-sm cursor-pointer"
 										onclick={() => removeGalleryItem(idx)}
 										title="Hapus foto"
 									>
@@ -771,7 +958,7 @@
 									</button>
 									<button
 										type="button"
-										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm"
+										class="bg-white/95 p-2 rounded-lg hover:bg-white text-gray-800 disabled:opacity-40 transition shadow-sm cursor-pointer"
 										onclick={() => moveItem(idx, 1)}
 										disabled={idx === galleryItems.length - 1}
 										title="Pindah ke kanan"
@@ -988,6 +1175,18 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Interactive Image Cropper Modal -->
+<ImageCropModal
+	isOpen={cropperModalOpen}
+	imageSrc={croppingImageSrc}
+	initialAspectRatio={4 / 3}
+	initialCropData={croppingIndex !== null ? galleryItems[croppingIndex]?.cropData : undefined}
+	isCropped={croppingIndex !== null ? galleryItems[croppingIndex]?.isCropped : false}
+	onApply={handleCropApply}
+	onRevert={handleCropRevert}
+	onCancel={handleCropCancel}
+/>
 
 <style>
 	@keyframes fadeIn {

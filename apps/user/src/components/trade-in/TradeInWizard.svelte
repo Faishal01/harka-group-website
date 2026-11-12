@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import ImageCropModal, { type CropResultData } from "./ImageCropModal.svelte";
 	import { tradeInCaptions } from "~/data/captions";
 	import { compressImagesBatch, type ImageSlotItem } from "~/utils/imageCompression";
 	import {
@@ -177,11 +178,30 @@
 	// Form State: Step 3 (10 Guided Photo Slots)
 	const slots = tradeInCaptions.photoSlots;
 
-	// Map of slotId -> { file: File, previewUrl: string }
-	let photoMap = $state<Record<string, { file: File; previewUrl: string }>>({});
+	interface PhotoSlotState {
+		file: File;
+		previewUrl: string;
+		originalFile?: File;
+		originalPreviewUrl?: string;
+		cropData?: CropResultData;
+		isCropped?: boolean;
+	}
+
+	interface ExtraPhotoState {
+		id: string;
+		file: File;
+		previewUrl: string;
+		originalFile?: File;
+		originalPreviewUrl?: string;
+		cropData?: CropResultData;
+		isCropped?: boolean;
+	}
+
+	// Map of slotId -> PhotoSlotState
+	let photoMap = $state<Record<string, PhotoSlotState>>({});
 
 	// Extra optional photos
-	let extraPhotos = $state<{ id: string; file: File; previewUrl: string }[]>([]);
+	let extraPhotos = $state<ExtraPhotoState[]>([]);
 
 	// Form State: Step 4 (Contact Details)
 	let customerName = $state("");
@@ -401,22 +421,40 @@
 		const files = target.files;
 		if (files && files.length > 0) {
 			const file = files[0];
-			if (photoMap[slotId]?.previewUrl) {
+			if (photoMap[slotId]?.previewUrl?.startsWith("blob:")) {
 				URL.revokeObjectURL(photoMap[slotId].previewUrl);
 			}
+			if (
+				photoMap[slotId]?.originalPreviewUrl?.startsWith("blob:") &&
+				photoMap[slotId]?.originalPreviewUrl !== photoMap[slotId]?.previewUrl
+			) {
+				URL.revokeObjectURL(photoMap[slotId].originalPreviewUrl!);
+			}
+			const previewUrl = URL.createObjectURL(file);
 			photoMap = {
 				...photoMap,
 				[slotId]: {
 					file,
-					previewUrl: URL.createObjectURL(file),
+					previewUrl,
+					originalFile: file,
+					originalPreviewUrl: previewUrl,
+					cropData: undefined,
+					isCropped: false,
 				},
 			};
 		}
 	}
 
 	function removeSlotFile(slotId: string) {
-		if (photoMap[slotId]?.previewUrl) {
-			URL.revokeObjectURL(photoMap[slotId].previewUrl);
+		const item = photoMap[slotId];
+		if (item?.previewUrl?.startsWith("blob:")) {
+			URL.revokeObjectURL(item.previewUrl);
+		}
+		if (
+			item?.originalPreviewUrl?.startsWith("blob:") &&
+			item.originalPreviewUrl !== item.previewUrl
+		) {
+			URL.revokeObjectURL(item.originalPreviewUrl);
 		}
 		const updated = { ...photoMap };
 		delete updated[slotId];
@@ -428,21 +466,169 @@
 		const target = event.target as HTMLInputElement;
 		const files = target.files;
 		if (files && files.length > 0) {
-			const newExtras = Array.from(files).map((file, idx) => ({
-				id: `extra_${Date.now()}_${idx}`,
-				file,
-				previewUrl: URL.createObjectURL(file),
-			}));
+			const newExtras: ExtraPhotoState[] = Array.from(files).map((file, idx) => {
+				const previewUrl = URL.createObjectURL(file);
+				return {
+					id: `extra_${Date.now()}_${idx}`,
+					file,
+					previewUrl,
+					originalFile: file,
+					originalPreviewUrl: previewUrl,
+					cropData: undefined,
+					isCropped: false,
+				};
+			});
 			extraPhotos = [...extraPhotos, ...newExtras];
 		}
 	}
 
 	function removeExtraPhoto(id: string) {
 		const item = extraPhotos.find((p) => p.id === id);
-		if (item?.previewUrl) {
+		if (item?.previewUrl?.startsWith("blob:")) {
 			URL.revokeObjectURL(item.previewUrl);
 		}
+		if (
+			item?.originalPreviewUrl?.startsWith("blob:") &&
+			item.originalPreviewUrl !== item.previewUrl
+		) {
+			URL.revokeObjectURL(item.originalPreviewUrl);
+		}
 		extraPhotos = extraPhotos.filter((p) => p.id !== id);
+	}
+
+	// Cropper Modal State
+	let cropperModalOpen = $state(false);
+	let croppingTargetType = $state<"slot" | "extra" | null>(null);
+	let croppingTargetId = $state<string | null>(null);
+	let croppingImageSrc = $state<string | null>(null);
+
+	function openSlotCropper(slotId: string) {
+		const item = photoMap[slotId];
+		if (!item) return;
+		croppingTargetType = "slot";
+		croppingTargetId = slotId;
+		// Always open the master uncropped image!
+		croppingImageSrc = item.originalPreviewUrl || item.previewUrl;
+		cropperModalOpen = true;
+	}
+
+	function openExtraCropper(extraId: string) {
+		const item = extraPhotos.find((p) => p.id === extraId);
+		if (!item) return;
+		croppingTargetType = "extra";
+		croppingTargetId = extraId;
+		// Always open the master uncropped image!
+		croppingImageSrc = item.originalPreviewUrl || item.previewUrl;
+		cropperModalOpen = true;
+	}
+
+	function handleCropApply(croppedBlob: Blob, croppedUrl: string, cropData: CropResultData) {
+		if (croppingTargetType === "slot" && croppingTargetId) {
+			const current = photoMap[croppingTargetId];
+			if (current) {
+				const fileName = current.file.name;
+				const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+				if (
+					current.previewUrl.startsWith("blob:") &&
+					current.previewUrl !== current.originalPreviewUrl
+				) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				photoMap = {
+					...photoMap,
+					[croppingTargetId]: {
+						...current,
+						file: newFile,
+						previewUrl: croppedUrl,
+						cropData,
+						isCropped: true,
+					},
+				};
+			}
+		} else if (croppingTargetType === "extra" && croppingTargetId) {
+			const idx = extraPhotos.findIndex((p) => p.id === croppingTargetId);
+			if (idx !== -1) {
+				const current = extraPhotos[idx];
+				const fileName = current.file.name;
+				const newFile = new File([croppedBlob], fileName, { type: "image/jpeg" });
+				if (
+					current.previewUrl.startsWith("blob:") &&
+					current.previewUrl !== current.originalPreviewUrl
+				) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				const updated = [...extraPhotos];
+				updated[idx] = {
+					...current,
+					file: newFile,
+					previewUrl: croppedUrl,
+					cropData,
+					isCropped: true,
+				};
+				extraPhotos = updated;
+			}
+		}
+
+		cropperModalOpen = false;
+		croppingTargetType = null;
+		croppingTargetId = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropRevert() {
+		if (croppingTargetType === "slot" && croppingTargetId) {
+			const current = photoMap[croppingTargetId];
+			if (current) {
+				if (
+					current.previewUrl.startsWith("blob:") &&
+					current.previewUrl !== current.originalPreviewUrl
+				) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				photoMap = {
+					...photoMap,
+					[croppingTargetId]: {
+						...current,
+						file: current.originalFile || current.file,
+						previewUrl: current.originalPreviewUrl || current.previewUrl,
+						cropData: undefined,
+						isCropped: false,
+					},
+				};
+			}
+		} else if (croppingTargetType === "extra" && croppingTargetId) {
+			const idx = extraPhotos.findIndex((p) => p.id === croppingTargetId);
+			if (idx !== -1) {
+				const current = extraPhotos[idx];
+				if (
+					current.previewUrl.startsWith("blob:") &&
+					current.previewUrl !== current.originalPreviewUrl
+				) {
+					URL.revokeObjectURL(current.previewUrl);
+				}
+				const updated = [...extraPhotos];
+				updated[idx] = {
+					...current,
+					file: current.originalFile || current.file,
+					previewUrl: current.originalPreviewUrl || current.previewUrl,
+					cropData: undefined,
+					isCropped: false,
+				};
+				extraPhotos = updated;
+			}
+		}
+
+		cropperModalOpen = false;
+		croppingTargetType = null;
+		croppingTargetId = null;
+		croppingImageSrc = null;
+	}
+
+	function handleCropCancel() {
+		cropperModalOpen = false;
+		croppingTargetType = null;
+		croppingTargetId = null;
+		croppingImageSrc = null;
 	}
 
 	const completedSlotsCount = $derived(slots.filter((s) => Boolean(photoMap[s.id])).length);
@@ -508,25 +694,41 @@
 		submitProgressText = "Menyiapkan berkas foto kendaraan...";
 
 		try {
-			// 1. Gather all photos
+			// 1. Gather all photos (smart dual upload: display derivative + untouched master if cropped)
 			const photoItems: ImageSlotItem[] = [];
 			for (const slot of slots) {
 				const item = photoMap[slot.id];
 				if (item) {
 					photoItems.push({
-						slot: slot.id,
+						slot: `slot_${slot.id}_display`,
 						label: slot.label,
 						file: item.file,
 					});
+					if (item.isCropped && item.originalFile) {
+						photoItems.push({
+							slot: `slot_${slot.id}_original`,
+							label: `${slot.label} (Original)`,
+							file: item.originalFile,
+						});
+					}
 				}
 			}
 			for (let i = 0; i < extraPhotos.length; i++) {
 				const extra = extraPhotos[i];
+				const extraSlotId = `extra_${i + 1}`;
+				const extraLabel = `Foto Tambahan ${i + 1}`;
 				photoItems.push({
-					slot: `extra_${i + 1}`,
-					label: `Foto Tambahan ${i + 1}`,
+					slot: `${extraSlotId}_display`,
+					label: extraLabel,
 					file: extra.file,
 				});
+				if (extra.isCropped && extra.originalFile) {
+					photoItems.push({
+						slot: `${extraSlotId}_original`,
+						label: `${extraLabel} (Original)`,
+						file: extra.originalFile,
+					});
+				}
 			}
 
 			// 2. Compress photos adaptively to guarantee < 5 MB total payload
@@ -538,6 +740,11 @@
 					submitPhaseTitle = tradeInCaptions.form.progressStageCompressing;
 				}
 				submitProgressText = prog.message;
+			});
+
+			const compressedMap: Record<string, File> = {};
+			compressed.forEach((c) => {
+				compressedMap[c.slot] = c.file;
 			});
 
 			submitProgressPercent = 88;
@@ -581,18 +788,70 @@
 			formData.append("customerCity", customerCity.trim());
 			formData.append("customerEmail", customerEmail.trim());
 
-			// Photo metadata
-			const photoMeta = compressed.map((item, idx) => ({
-				slot: item.slot,
-				label: item.label,
-				fieldName: `photo_${idx}`,
-			}));
-			formData.append("photoMeta", JSON.stringify(photoMeta));
+			// Photo metadata & file payload
+			type PhotoMetaPayload = {
+				slot: string;
+				label: string;
+				fieldName: string;
+				originalFieldName?: string;
+				cropData?: CropResultData;
+			};
 
-			// Append compressed photo files
-			compressed.forEach((item, idx) => {
-				formData.append(`photo_${idx}`, item.file, item.file.name);
-			});
+			const photoMeta: PhotoMetaPayload[] = [];
+			let fileIdx = 0;
+
+			for (const slot of slots) {
+				const item = photoMap[slot.id];
+				if (item) {
+					const displayFile = compressedMap[`slot_${slot.id}_display`] || item.file;
+					const fieldName = `photo_${fileIdx}`;
+					formData.append(fieldName, displayFile, displayFile.name);
+
+					let originalFieldName: string | undefined;
+					if (item.isCropped && item.originalFile) {
+						const origFile = compressedMap[`slot_${slot.id}_original`] || item.originalFile;
+						originalFieldName = `photo_${fileIdx}_orig`;
+						formData.append(originalFieldName, origFile, origFile.name);
+					}
+
+					photoMeta.push({
+						slot: slot.id,
+						label: slot.label,
+						fieldName,
+						...(originalFieldName ? { originalFieldName } : {}),
+						...(item.cropData ? { cropData: item.cropData } : {}),
+					});
+					fileIdx++;
+				}
+			}
+
+			for (let i = 0; i < extraPhotos.length; i++) {
+				const extra = extraPhotos[i];
+				const extraSlotId = `extra_${i + 1}`;
+				const extraLabel = `Foto Tambahan ${i + 1}`;
+
+				const displayFile = compressedMap[`${extraSlotId}_display`] || extra.file;
+				const fieldName = `photo_${fileIdx}`;
+				formData.append(fieldName, displayFile, displayFile.name);
+
+				let originalFieldName: string | undefined;
+				if (extra.isCropped && extra.originalFile) {
+					const origFile = compressedMap[`${extraSlotId}_original`] || extra.originalFile;
+					originalFieldName = `photo_${fileIdx}_orig`;
+					formData.append(originalFieldName, origFile, origFile.name);
+				}
+
+				photoMeta.push({
+					slot: extraSlotId,
+					label: extraLabel,
+					fieldName,
+					...(originalFieldName ? { originalFieldName } : {}),
+					...(extra.cropData ? { cropData: extra.cropData } : {}),
+				});
+				fileIdx++;
+			}
+
+			formData.append("photoMeta", JSON.stringify(photoMeta));
 
 			// 4. Send POST request
 			const response = await fetch("/api/trade-in/submit", {
@@ -1835,32 +2094,77 @@
 									{#if photoMap[slot.id]}
 										<!-- Photo Preview Thumbnail -->
 										<div
-											class="relative rounded-lg overflow-hidden border border-gray-200 bg-black/5 aspect-video mb-3 flex items-center justify-center"
+											class="relative rounded-lg overflow-hidden border border-gray-200 bg-black/5 aspect-video mb-3 flex items-center justify-center group"
 										>
 											<img
 												src={photoMap[slot.id].previewUrl}
 												alt={slot.label}
 												class="w-full h-full object-cover"
 											/>
-											<button
-												type="button"
-												onclick={() => removeSlotFile(slot.id)}
-												class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-												title="Hapus foto"
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													class="w-4 h-4"
-													viewBox="0 0 20 20"
-													fill="currentColor"
+											{#if photoMap[slot.id].isCropped}
+												<span
+													class="absolute bottom-2 left-2 px-1.5 py-0.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-semibold rounded-md flex items-center gap-1 shadow-xs pointer-events-none z-10"
+													title="Foto telah dipotong (tersimpan non-destruktif)"
 												>
-													<path
-														fill-rule="evenodd"
-														d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-														clip-rule="evenodd"
-													/>
-												</svg>
-											</button>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-2.5 text-emerald-400"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+														stroke-width="2.5"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+														/>
+													</svg>
+													Tercrop
+												</span>
+											{/if}
+											<div class="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+												<button
+													type="button"
+													onclick={() => openSlotCropper(slot.id)}
+													class="bg-white/95 text-gray-800 hover:text-red-600 rounded-full p-1.5 shadow hover:bg-white transition cursor-pointer"
+													title="Potong / Sesuaikan foto"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-4"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+														stroke-width="2"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+														/>
+													</svg>
+												</button>
+												<button
+													type="button"
+													onclick={() => removeSlotFile(slot.id)}
+													class="bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition cursor-pointer"
+													title="Hapus foto"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="size-4"
+														viewBox="0 0 20 20"
+														fill="currentColor"
+													>
+														<path
+															fill-rule="evenodd"
+															d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+															clip-rule="evenodd"
+														/>
+													</svg>
+												</button>
+											</div>
 										</div>
 									{:else}
 										<!-- Mobile (< 640px): Dual Action Buttons (Camera & Gallery) -->
@@ -1993,31 +2297,77 @@
 							<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
 								{#each extraPhotos as extra (extra.id)}
 									<div
-										class="relative rounded-lg overflow-hidden border border-gray-200 aspect-square"
+										class="relative rounded-lg overflow-hidden border border-gray-200 aspect-square group"
 									>
 										<img
 											src={extra.previewUrl}
 											alt="Foto Tambahan"
 											class="w-full h-full object-cover"
 										/>
-										<button
-											type="button"
-											onclick={() => removeExtraPhoto(extra.id)}
-											class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="w-3.5 h-3.5"
-												viewBox="0 0 20 20"
-												fill="currentColor"
+										{#if extra.isCropped}
+											<span
+												class="absolute bottom-1 left-1 px-1 py-0.5 bg-black/75 backdrop-blur-xs text-white text-[9px] font-semibold rounded flex items-center gap-0.5 shadow-xs pointer-events-none z-10"
+												title="Foto telah dipotong (tersimpan non-destruktif)"
 											>
-												<path
-													fill-rule="evenodd"
-													d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										</button>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-2 text-emerald-400"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+													stroke-width="2.5"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+													/>
+												</svg>
+												Tercrop
+											</span>
+										{/if}
+										<div class="absolute top-1 right-1 flex items-center gap-1 z-10">
+											<button
+												type="button"
+												onclick={() => openExtraCropper(extra.id)}
+												class="bg-white/95 text-gray-800 hover:text-red-600 rounded-full p-1 shadow hover:bg-white transition cursor-pointer"
+												title="Potong / Sesuaikan foto"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-3.5"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+													stroke-width="2"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+													/>
+												</svg>
+											</button>
+											<button
+												type="button"
+												onclick={() => removeExtraPhoto(extra.id)}
+												class="bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 transition cursor-pointer"
+												title="Hapus foto"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="size-3.5"
+													viewBox="0 0 20 20"
+													fill="currentColor"
+												>
+													<path
+														fill-rule="evenodd"
+														d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+														clip-rule="evenodd"
+													/>
+												</svg>
+											</button>
+										</div>
 									</div>
 								{/each}
 
@@ -2400,4 +2750,24 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Image Cropper Modal -->
+	<ImageCropModal
+		isOpen={cropperModalOpen}
+		imageSrc={croppingImageSrc}
+		initialAspectRatio={4 / 3}
+		initialCropData={croppingTargetType === "slot" && croppingTargetId
+			? photoMap[croppingTargetId]?.cropData
+			: croppingTargetType === "extra" && croppingTargetId
+				? extraPhotos.find((p) => p.id === croppingTargetId)?.cropData
+				: undefined}
+		isCropped={croppingTargetType === "slot" && croppingTargetId
+			? Boolean(photoMap[croppingTargetId]?.isCropped)
+			: croppingTargetType === "extra" && croppingTargetId
+				? Boolean(extraPhotos.find((p) => p.id === croppingTargetId)?.isCropped)
+				: false}
+		onApply={handleCropApply}
+		onRevert={handleCropRevert}
+		onCancel={handleCropCancel}
+	/>
 </div>
