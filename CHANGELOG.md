@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.8.0](https://github.com/Faishal01/harka-group-website/compare/v1.7.0...v1.8.0) (2026-11-12)
+
+
+### Features
+
+* dynamic promo bar ([0d853f2](https://github.com/Faishal01/harka-group-website/commit/0d853f2e8cb012c60946e4d2ff7aaaf26a2172d5))
+* migrate_db deploy_admin deploy_user | add back promo price ([30b2d19](https://github.com/Faishal01/harka-group-website/commit/30b2d19a708ac2b0a3acfc49e91bfa6edb88dfc5))
+
 # [1.7.0](https://github.com/Faishal01/harka-group-website/compare/v1.6.0...v1.7.0) (2026-11-12)
 
 
