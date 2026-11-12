@@ -11,7 +11,7 @@
 		options: DropdownOption[];
 		placeholder?: string;
 		label?: string;
-		onChange: (value: any) => void;
+		onChange: (value: string | number) => void;
 	}
 
 	let { value, options = [], placeholder = "Pilih...", label, onChange }: Props = $props();
@@ -91,7 +91,7 @@
 	{#if isOpen}
 		<div
 			role="listbox"
-			class="absolute left-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl p-1 z-40 max-h-56 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150"
+			class="absolute left-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl p-1 z-50 max-h-56 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150"
 		>
 			{#each options as opt (opt.value)}
 				{@const isSelected = opt.value === value || (opt.value === "" && !value)}
