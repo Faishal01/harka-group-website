@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import Cropper from "cropperjs";
 	import "cropperjs/dist/cropper.css";
 
@@ -15,24 +16,55 @@
 
 	let selectedRatio = $state<number | null>(initialAspectRatio);
 	let isProcessing = $state(false);
+	let isReady = $state(false);
 	let imageElement = $state<HTMLImageElement | null>(null);
-	let cropper = $state<Cropper | null>(null);
 
-	const ratioPresets = [
-		{ label: "4:3 (Katalog)", value: 4 / 3, desc: "Rekomendasi untuk tampilan kartu mobil" },
-		{ label: "16:9 (Landscape)", value: 16 / 9, desc: "Format lebar / sinematik" },
-		{ label: "Bebas", value: null, desc: "Atur ukuran secara fleksibel tanpa batasan" },
+	// Keep Cropper instance non-reactive so mutating it never triggers $effect loops
+	let cropper: Cropper | null = null;
+
+	const ratioPresets: { id: string; label: string; value: number | null; desc: string }[] = [
+		{
+			id: "4:3",
+			label: "4:3 (Katalog)",
+			value: 4 / 3,
+			desc: "Rekomendasi untuk tampilan kartu mobil",
+		},
+		{
+			id: "16:9",
+			label: "16:9 (Landscape)",
+			value: 16 / 9,
+			desc: "Format lebar / sinematik",
+		},
+		{
+			id: "free",
+			label: "Bebas",
+			value: null,
+			desc: "Atur ukuran secara fleksibel tanpa batasan",
+		},
 	];
 
-	function initCropper() {
-		if (!imageElement) return;
+	function isPresetActive(presetValue: number | null, current: number | null): boolean {
+		if (presetValue === null && current === null) return true;
+		if (presetValue === null || current === null) return false;
+		return Math.abs(presetValue - current) < 0.001;
+	}
+
+	function destroyCropper() {
 		if (cropper) {
 			cropper.destroy();
 			cropper = null;
 		}
+		isReady = false;
+	}
+
+	function initCropper() {
+		if (!imageElement) return;
+		destroyCropper();
+
+		const ratioToUse = untrack(() => selectedRatio);
 
 		cropper = new Cropper(imageElement, {
-			aspectRatio: selectedRatio ?? NaN,
+			aspectRatio: ratioToUse ?? NaN,
 			viewMode: 1,
 			dragMode: "move",
 			autoCropArea: 0.95,
@@ -44,27 +76,36 @@
 			cropBoxResizable: true,
 			toggleDragModeOnDblclick: false,
 			checkCrossOrigin: false,
+			checkOrientation: false,
 			responsive: true,
+			ready() {
+				isReady = true;
+			},
 		});
 	}
 
+	function handleImageLoad() {
+		if (!cropper) {
+			initCropper();
+		}
+	}
+
+	// Only react to modal open/close and imageSrc changes
 	$effect(() => {
 		if (isOpen && imageSrc) {
-			selectedRatio = initialAspectRatio;
-			// If imageElement is already in DOM and completed loading
-			if (imageElement && imageElement.complete) {
+			const defaultRatio = untrack(() => initialAspectRatio);
+			selectedRatio = defaultRatio;
+			isReady = false;
+
+			if (imageElement && imageElement.complete && imageElement.naturalWidth > 0) {
 				initCropper();
 			}
-		} else if (!isOpen && cropper) {
-			cropper.destroy();
-			cropper = null;
+		} else {
+			destroyCropper();
 		}
 
 		return () => {
-			if (cropper) {
-				cropper.destroy();
-				cropper = null;
-			}
+			destroyCropper();
 		};
 	});
 
@@ -76,26 +117,26 @@
 	}
 
 	function handleRotate(deg: number) {
-		if (cropper) {
+		if (cropper && isReady) {
 			cropper.rotate(deg);
 		}
 	}
 
 	function handleZoom(ratio: number) {
-		if (cropper) {
+		if (cropper && isReady) {
 			cropper.zoom(ratio);
 		}
 	}
 
 	function handleReset() {
-		if (cropper) {
+		if (cropper && isReady) {
 			cropper.reset();
 			cropper.setAspectRatio(selectedRatio ?? NaN);
 		}
 	}
 
 	async function handleApply() {
-		if (!cropper) return;
+		if (!cropper || !isReady) return;
 		isProcessing = true;
 
 		try {
@@ -199,16 +240,26 @@
 				</button>
 			</div>
 
-			<!-- Crop Stage Viewport -->
+			<!-- Crop Stage Viewport (Block container with explicit height required by Cropper.js) -->
 			<div
-				class="relative flex-1 min-h-[320px] max-h-[55vh] bg-gray-950 flex items-center justify-center overflow-hidden p-2"
+				class="relative w-full h-[50vh] sm:h-[55vh] min-h-[300px] max-h-[540px] bg-gray-950 overflow-hidden"
 			>
+				{#if !isReady}
+					<div
+						class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-gray-950 text-gray-400"
+					>
+						<div
+							class="size-7 border-2 border-white/20 border-t-red-500 rounded-full animate-spin"
+						></div>
+						<span class="text-xs font-medium">Memuat gambar...</span>
+					</div>
+				{/if}
 				<img
 					bind:this={imageElement}
 					src={imageSrc}
 					alt="Pratinjau crop"
-					onload={initCropper}
-					class="max-w-full max-h-full block opacity-0"
+					onload={handleImageLoad}
+					class="block max-w-full max-h-full opacity-0"
 				/>
 			</div>
 
@@ -218,12 +269,13 @@
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<!-- Ratio Buttons -->
 					<div class="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
-						{#each ratioPresets as preset (preset.label)}
+						{#each ratioPresets as preset (preset.id)}
+							{@const active = isPresetActive(preset.value, selectedRatio)}
 							<button
 								type="button"
 								onclick={() => handleRatioChange(preset.value)}
 								class={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-									selectedRatio === preset.value
+									active
 										? "bg-white text-red-700 shadow-xs ring-1 ring-gray-200"
 										: "text-gray-600 hover:text-gray-900"
 								}`}
@@ -356,7 +408,7 @@
 						<button
 							type="button"
 							onclick={handleApply}
-							disabled={isProcessing}
+							disabled={isProcessing || !isReady}
 							class="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm hover:shadow transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
 						>
 							{#if isProcessing}
