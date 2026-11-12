@@ -39,7 +39,7 @@ const { car } = Astro.props;
 					<h2 class="h5 line-clamp-2">{car.title}</h2>
 					{car.excerpt && <p class="text-base mt-2 line-clamp-3">{car.excerpt}</p>}
 				</div>
-				<CardPrice price={car.price} />
+				<CardPrice price={car.price} promoPrice={car.promoPrice} />
 			</div>
 			<div class="mt-auto lg:mb-4">
 				<CarHighlights car={car} />

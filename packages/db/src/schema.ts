@@ -32,6 +32,7 @@ export const cars = sqliteTable(
 		make: text("make").notNull(),
 		model: text("model").notNull(),
 		price: integer("price").notNull(), // IDR
+		promoPrice: integer("promo_price"), // IDR (optional discounted promo price)
 		year: integer("year").notNull(),
 		mileage: integer("mileage").notNull(), // km
 		bodyType: text("body_type").$type<BodyType>().notNull(),

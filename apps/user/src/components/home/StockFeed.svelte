@@ -539,12 +539,23 @@
 								</div>
 
 								<!-- Price: Clean font-inter, Vertically Fixed Across All Cards -->
-								<div class="mb-4">
-									<span
-										class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight font-inter"
-									>
-										{getPrice(car.price)}
-									</span>
+								<div class="mb-4 flex items-baseline gap-2 flex-wrap min-h-[1.75rem]">
+									{#if car.promoPrice && car.promoPrice < car.price}
+										<span class="text-xs sm:text-sm text-gray-400 line-through font-medium">
+											{getPrice(car.price)}
+										</span>
+										<span
+											class="text-lg sm:text-xl font-bold text-red-700 tracking-tight font-inter"
+										>
+											{getPrice(car.promoPrice)}
+										</span>
+									{:else}
+										<span
+											class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight font-inter"
+										>
+											{getPrice(car.price)}
+										</span>
+									{/if}
 								</div>
 
 								<!-- Trust Badges (Verified against Production Database) -->

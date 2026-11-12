@@ -127,6 +127,13 @@
       "when": 1789576219820,
       "tag": "0017_create_team_members",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1789576219830,
+      "tag": "0018_add_car_promo_price",
+      "breakpoints": true
     }
   ]
 }

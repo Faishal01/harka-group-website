@@ -21,7 +21,12 @@ const { car, url, class: className = "" } = Astro.props;
 
 const shareUrl = url || Astro.url.href;
 const vehicleTitle = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}` : siteName;
-const priceFormatted = car ? getPrice(car.price) : "";
+const isPromo = car?.promoPrice && car.promoPrice < car.price;
+const priceFormatted = car
+	? isPromo
+		? `${getPrice(car.promoPrice!)} (Promo)`
+		: getPrice(car.price)
+	: "";
 const shareTitle = vehicleTitle ? `${vehicleTitle} | ${siteName}` : siteName;
 const shareDescription = car ? `${vehicleTitle} (${priceFormatted}) - ${siteName}` : siteName;
 

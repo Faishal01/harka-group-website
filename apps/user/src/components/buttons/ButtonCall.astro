@@ -19,7 +19,8 @@ const cleanPhone = phone.href.replace(/[^0-9]/g, "");
 let waHref = phone.href;
 if (car) {
 	const vehicleTitle = `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}`;
-	const priceStr = getPrice(car.price);
+	const isPromo = car.promoPrice && car.promoPrice < car.price;
+	const priceStr = isPromo ? `${getPrice(car.promoPrice!)} (Promo)` : getPrice(car.price);
 	const messageLines = [
 		`Halo Harka Group, saya tertarik dengan unit *${vehicleTitle}* (Harga: ${priceStr}).`,
 		`Apakah unit ini masih tersedia?`,
