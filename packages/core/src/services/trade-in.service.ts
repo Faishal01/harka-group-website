@@ -177,7 +177,27 @@ export const submitTradeIn = (formData: FormData, webhookUrl?: string) =>
 			}
 
 			const photo = yield* uploadTradeInPhoto(file, id, item.slot, item.label);
-			uploadedPhotos.push(photo);
+			let originalUrl: string | undefined;
+
+			if (item.originalFieldName) {
+				const origFile = formData.get(item.originalFieldName) as File | null;
+				if (origFile && origFile.size > 0) {
+					const origSlot = `${item.slot}-original`;
+					const origPhoto = yield* uploadTradeInPhoto(
+						origFile,
+						id,
+						origSlot,
+						`${item.label} (Original)`,
+					);
+					originalUrl = origPhoto.url;
+				}
+			}
+
+			uploadedPhotos.push({
+				...photo,
+				...(originalUrl ? { originalUrl } : {}),
+				...(item.cropData ? { cropData: item.cropData } : {}),
+			});
 		}
 
 		const uploadedDocs: TradeInDocument[] = [];

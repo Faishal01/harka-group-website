@@ -3,16 +3,39 @@
 	import Cropper from "cropperjs";
 	import "cropperjs/dist/cropper.css";
 
+	export interface CropResultData {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+		rotate?: number;
+		scaleX?: number;
+		scaleY?: number;
+		aspectRatio?: number | null;
+	}
+
 	interface Props {
 		isOpen: boolean;
 		imageSrc: string | null;
 		fileName?: string;
 		initialAspectRatio?: number | null;
-		onApply: (croppedBlob: Blob, croppedUrl: string) => void;
+		initialCropData?: CropResultData | null;
+		isCropped?: boolean;
+		onApply: (croppedBlob: Blob, croppedUrl: string, cropData: CropResultData) => void;
+		onRevert?: () => void;
 		onCancel: () => void;
 	}
 
-	let { isOpen, imageSrc, initialAspectRatio = 4 / 3, onApply, onCancel }: Props = $props();
+	let {
+		isOpen,
+		imageSrc,
+		initialAspectRatio = 4 / 3,
+		initialCropData = null,
+		isCropped = false,
+		onApply,
+		onRevert,
+		onCancel,
+	}: Props = $props();
 
 	let selectedRatio = $state<number | null>(initialAspectRatio);
 	let isProcessing = $state(false);
@@ -80,6 +103,13 @@
 			responsive: true,
 			ready() {
 				isReady = true;
+				if (initialCropData) {
+					if (initialCropData.aspectRatio !== undefined && initialCropData.aspectRatio !== null) {
+						selectedRatio = initialCropData.aspectRatio;
+						cropper?.setAspectRatio(initialCropData.aspectRatio);
+					}
+					cropper?.setData(initialCropData);
+				}
 			},
 		});
 	}
@@ -93,7 +123,16 @@
 	// Only react to modal open/close and imageSrc changes
 	$effect(() => {
 		if (isOpen && imageSrc) {
-			const defaultRatio = untrack(() => initialAspectRatio);
+			const defaultRatio = untrack(() => {
+				if (
+					initialCropData &&
+					initialCropData.aspectRatio !== undefined &&
+					initialCropData.aspectRatio !== null
+				) {
+					return initialCropData.aspectRatio;
+				}
+				return initialAspectRatio;
+			});
 			selectedRatio = defaultRatio;
 			isReady = false;
 
@@ -151,6 +190,18 @@
 				throw new Error("Gagal mengambil area gambar yang dipotong.");
 			}
 
+			const rawCropData = cropper.getData(true);
+			const cropData: CropResultData = {
+				x: Math.round(rawCropData.x),
+				y: Math.round(rawCropData.y),
+				width: Math.round(rawCropData.width),
+				height: Math.round(rawCropData.height),
+				rotate: rawCropData.rotate,
+				scaleX: rawCropData.scaleX,
+				scaleY: rawCropData.scaleY,
+				aspectRatio: selectedRatio,
+			};
+
 			canvas.toBlob(
 				(blob) => {
 					if (!blob) {
@@ -159,7 +210,7 @@
 					}
 					const croppedUrl = URL.createObjectURL(blob);
 					isProcessing = false;
-					onApply(blob, croppedUrl);
+					onApply(blob, croppedUrl, cropData);
 				},
 				"image/jpeg",
 				0.92,
@@ -217,7 +268,7 @@
 						Sesuaikan & Potong Foto Mobil
 					</h3>
 					<p class="text-xs text-gray-500 mt-0.5">
-						Atur posisi agar atap, roda, dan bodi mobil terlihat proporsional.
+						Atur posisi agar atap, roda, dan bodi mobil terlihat proporsional di katalog.
 					</p>
 				</div>
 				<button
@@ -390,10 +441,37 @@
 				<div
 					class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-100"
 				>
-					<div class="text-xs text-gray-500 flex items-center gap-1.5">
-						<span class="text-emerald-600 font-bold">💡 Tip:</span>
-						Gunakan rasio <strong>4:3 (Katalog)</strong> agar bodi mobil dan atap terlihat utuh tanpa
-						terpotong.
+					<div class="flex flex-wrap items-center gap-3">
+						<div class="text-xs text-gray-500 flex items-center gap-1.5">
+							<span class="text-emerald-600 font-bold">💡 Tip:</span>
+							Gunakan rasio <strong>4:3 (Katalog)</strong> agar bodi mobil dan atap terlihat utuh tanpa
+							terpotong.
+						</div>
+						{#if isCropped && onRevert}
+							<button
+								type="button"
+								onclick={onRevert}
+								disabled={isProcessing}
+								class="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+								title="Hapus pemotongan dan kembalikan ke foto asli tanpa crop"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="size-3.5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+									/>
+								</svg>
+								<span>Kembalikan ke Foto Asli</span>
+							</button>
+						{/if}
 					</div>
 
 					<div class="flex items-center gap-2 self-end sm:self-auto">

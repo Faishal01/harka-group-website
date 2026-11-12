@@ -29,9 +29,22 @@ export const OwnershipStatusSchema = Schema.Literal(
 	"leasing",
 );
 
+export const CropDataSchema = Schema.Struct({
+	x: Schema.Number,
+	y: Schema.Number,
+	width: Schema.Number,
+	height: Schema.Number,
+	rotate: Schema.optional(Schema.Number),
+	scaleX: Schema.optional(Schema.Number),
+	scaleY: Schema.optional(Schema.Number),
+	aspectRatio: Schema.optional(Schema.NullOr(Schema.Number)),
+});
+
 export const CarGalleryItemSchema = Schema.Struct({
 	image: Schema.String,
 	alt: Schema.optionalWith(Schema.String, { default: () => "" }),
+	originalImage: Schema.optional(Schema.String),
+	cropData: Schema.optional(CropDataSchema),
 });
 
 export const CoerceNumber = Schema.Union(Schema.Number, Schema.NumberFromString);

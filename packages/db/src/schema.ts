@@ -1,6 +1,24 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { BodyType, FuelType, OwnershipStatus, Transmission } from "./constants";
 
+export interface CropData {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	rotate?: number;
+	scaleX?: number;
+	scaleY?: number;
+	aspectRatio?: number | null;
+}
+
+export interface CarGalleryItem {
+	image: string;
+	alt: string;
+	originalImage?: string;
+	cropData?: CropData;
+}
+
 export const cars = sqliteTable(
 	"cars",
 	{
@@ -36,7 +54,7 @@ export const cars = sqliteTable(
 		plateNumber: text("plate_number"),
 
 		// Media (Single JSON Column)
-		gallery: text("gallery", { mode: "json" }).$type<{ image: string; alt: string }[]>(),
+		gallery: text("gallery", { mode: "json" }).$type<CarGalleryItem[]>(),
 
 		// Flags & Lifecycle
 		hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
@@ -152,6 +170,8 @@ export interface TradeInPhoto {
 	slot: string;
 	label: string;
 	url: string;
+	originalUrl?: string;
+	cropData?: CropData;
 }
 
 export interface TradeInDocument {
