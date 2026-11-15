@@ -31,10 +31,16 @@ const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 					>
 						<div>
 							<Heading class:list={"mb-8"}>
-								<h1 class="h3 font-bold text-gray-900" slot="heading-title">
+								<h1
+									class="text-2xl sm:text-3xl font-bold text-gray-900 font-header"
+									slot="heading-title"
+								>
 									{contactPage.headingTitle}
 								</h1>
-								<p slot="heading-content" class="text-base text-gray-600 leading-relaxed">
+								<p
+									slot="heading-content"
+									class="text-sm sm:text-base text-gray-600 leading-relaxed"
+								>
 									{contactPage.headingContent}
 								</p>
 							</Heading>
@@ -139,7 +145,12 @@ const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
 					<!-- Right Column: WhatsApp Form -->
 					<div class="p-8 sm:p-10 lg:p-12 flex flex-col justify-between">
 						<div>
-							<h2 class="h4 mb-6 font-bold text-gray-900">{contactForm.title}</h2>
+							<h2
+								class="text-base sm:text-lg font-bold text-gray-900 font-header flex items-center gap-2 mb-6"
+							>
+								<span class="inline-block w-1 h-5 rounded-full bg-red-600"></span>
+								<span>{contactForm.title}</span>
+							</h2>
 							<FormContact />
 						</div>
 					</div>

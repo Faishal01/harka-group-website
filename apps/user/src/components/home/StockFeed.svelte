@@ -6,6 +6,7 @@
 	import { transmissionMap, fuelTypeMap } from "~/data/constants";
 	import CarImageSlider from "./CarImageSlider.svelte";
 	import PromoBannerCarousel from "./PromoBannerCarousel.svelte";
+	import FeaturedCarsCarousel from "./FeaturedCarsCarousel.svelte";
 
 	interface Props {
 		initialCars: Car[];
@@ -16,6 +17,7 @@
 		initialSort?: string;
 		backgroundImageSrc?: string;
 		promos?: Promo[];
+		latestCars?: Car[];
 	}
 
 	let {
@@ -27,6 +29,7 @@
 		initialSort = "date-desc",
 		backgroundImageSrc = "",
 		promos = [],
+		latestCars = [],
 	}: Props = $props();
 
 	const sortOptions = [
@@ -43,6 +46,11 @@
 	let selectedMake = $state(initialMake);
 	let selectedSort = $state(initialSort);
 	let isSortDropdownOpen = $state(false);
+	let gridSection = $state<HTMLElement | null>(null);
+
+	function scrollToGrid() {
+		gridSection?.scrollIntoView({ behavior: "smooth" });
+	}
 	let sortDropdownRef = $state<HTMLElement | null>(null);
 
 	let activeSortLabel = $derived(
@@ -454,8 +462,13 @@
 	</div>
 </section>
 
+<!-- FEATURED LATEST CARS CAROUSEL (Auto-hides when searching or filtering) -->
+{#if latestCars.length > 0 && !searchQuery.trim() && selectedMake === "all"}
+	<FeaturedCarsCarousel cars={latestCars} onViewMore={scrollToGrid} />
+{/if}
+
 <!-- MAIN VEHICLE FEED SECTION (Aligned to max-w-6xl) -->
-<section class="bg-gray-50 py-10 lg:py-14 min-h-[600px]">
+<section bind:this={gridSection} id="stok-mobil" class="bg-gray-50 py-10 lg:py-14 min-h-[600px]">
 	<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 		<!-- Active Status & Counter Bar -->
 		<div class="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">

@@ -14,7 +14,7 @@ import { SITE_URL, generateAutoDealerSchema, DEALER_LOCATION } from "~/utils/seo
 import { env } from "cloudflare:workers";
 import { createCore } from "@harka/core";
 import { getDb, cars as carsTable } from "@harka/db";
-import { and, isNull, eq, asc } from "drizzle-orm";
+import { and, isNull, eq, asc, desc } from "drizzle-orm";
 import type { Car } from "~/types";
 import type { Promo } from "@harka/db";
 import ImageHeadingBackground from "~/assets/images/WhatsApp_Image_2026-09-22_at_23.25.09.jpeg";
@@ -50,6 +50,25 @@ try {
 const totalCount = allMatchingCars.length;
 const initialCars = allMatchingCars.slice(0, 12);
 
+// Fetch 6 latest available (non-sold) cars for homepage featured carousel
+let latestCars: Car[] = [];
+try {
+	latestCars = (await db
+		.select()
+		.from(carsTable)
+		.where(
+			and(
+				isNull(carsTable.deletedAt),
+				eq(carsTable.hidden, false),
+				isNull(carsTable.archiveReason),
+			),
+		)
+		.orderBy(desc(carsTable.publishDate))
+		.limit(6)) as Car[];
+} catch (err) {
+	console.error("Failed to load latest cars:", err);
+}
+
 // Fetch active promos for homepage promo bar
 let activePromos: Promo[] = [];
 try {
@@ -79,6 +98,7 @@ const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di
 		initialMake={initialMake}
 		initialSort={initialSort}
 		promos={activePromos}
+		latestCars={latestCars}
 	/>
 
 	{/* CTA Section */}

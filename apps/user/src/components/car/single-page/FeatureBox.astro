@@ -24,46 +24,50 @@ const ownershipLabel = car.ownershipStatus
 	: null;
 ---
 
-<div class="rounded-md ring-1 ring-gray-800 w-full p-4 my-8 text-base">
-	<dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-		<div class="flex items-start gap-x-2">
-			<IconFuel class="size-5 mt-0.5" />
-			<div>
-				<dt class="flex items-center text-gray-500">Jenis Bahan Bakar</dt>
-				<dd class="font-semibold">{fuelTypeMap[car.fuelType] || car.fuelType}</dd>
+<div class="rounded-xl bg-gray-50 border border-gray-200/80 w-full p-4 my-6">
+	<dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-x-4 gap-y-3.5">
+		<div class="flex items-start gap-2.5">
+			<IconFuel class="size-4 mt-0.5 text-gray-500 shrink-0" />
+			<div class="min-w-0">
+				<dt class="text-xs text-gray-500">Bahan Bakar</dt>
+				<dd class="text-sm font-semibold text-gray-900 truncate">
+					{fuelTypeMap[car.fuelType] || car.fuelType}
+				</dd>
 			</div>
 		</div>
 
-		<div class="flex items-start gap-x-2">
-			<IconTransmission class="size-5 mt-0.5" />
-			<div>
-				<dt class="flex items-center text-gray-500">Transmisi</dt>
-				<dd class="font-semibold">{transmissionMap[car.transmission] || car.transmission}</dd>
+		<div class="flex items-start gap-2.5">
+			<IconTransmission class="size-4 mt-0.5 text-gray-500 shrink-0" />
+			<div class="min-w-0">
+				<dt class="text-xs text-gray-500">Transmisi</dt>
+				<dd class="text-sm font-semibold text-gray-900 truncate">
+					{transmissionMap[car.transmission] || car.transmission}
+				</dd>
 			</div>
 		</div>
 
-		<div class="flex items-start gap-x-2">
-			<IconMilage class="size-5 mt-0.5" />
-			<div>
-				<dt class="flex items-center text-gray-500">Jarak Tempuh</dt>
-				<dd class="font-semibold">{`${mileage} ${mileageUnit}`}</dd>
+		<div class="flex items-start gap-2.5">
+			<IconMilage class="size-4 mt-0.5 text-gray-500 shrink-0" />
+			<div class="min-w-0">
+				<dt class="text-xs text-gray-500">Jarak Tempuh</dt>
+				<dd class="text-sm font-semibold text-gray-900 truncate">{`${mileage} ${mileageUnit}`}</dd>
 			</div>
 		</div>
 
-		<div class="flex items-start gap-x-2">
-			<IconCalendar class="size-5 mt-0.5" />
-			<div>
-				<dt class="flex items-center text-gray-500">Tahun</dt>
-				<dd class="font-semibold">{car.year}</dd>
+		<div class="flex items-start gap-2.5">
+			<IconCalendar class="size-4 mt-0.5 text-gray-500 shrink-0" />
+			<div class="min-w-0">
+				<dt class="text-xs text-gray-500">Tahun</dt>
+				<dd class="text-sm font-semibold text-gray-900 truncate">{car.year}</dd>
 			</div>
 		</div>
 
 		{
 			ownershipLabel && (
-				<div class="flex items-start gap-x-2">
+				<div class="flex items-start gap-2.5">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
-						class="size-5 mt-0.5 text-gray-700"
+						class="size-4 mt-0.5 text-gray-500 shrink-0"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -75,29 +79,29 @@ const ownershipLabel = car.ownershipStatus
 							d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
 						/>
 					</svg>
-					<div>
-						<dt class="flex items-center text-gray-500">{viewPage.ownershipStatus}</dt>
-						<dd class="font-semibold text-blue-700">{ownershipLabel}</dd>
+					<div class="min-w-0">
+						<dt class="text-xs text-gray-500">{viewPage.ownershipStatus}</dt>
+						<dd class="text-sm font-semibold text-gray-900 truncate">{ownershipLabel}</dd>
 					</div>
 				</div>
 			)
 		}
 
-		<div class="flex items-start gap-x-2">
-			<IconColor class="size-5 mt-0.5" />
-			<div>
-				<dt class="flex items-center text-gray-500">Warna</dt>
-				<dd class="font-semibold">{car.color}</dd>
+		<div class="flex items-start gap-2.5">
+			<IconColor class="size-4 mt-0.5 text-gray-500 shrink-0" />
+			<div class="min-w-0">
+				<dt class="text-xs text-gray-500">Warna</dt>
+				<dd class="text-sm font-semibold text-gray-900 truncate">{car.color}</dd>
 			</div>
 		</div>
 
 		{
 			car.horsePower ? (
-				<div class="flex items-start gap-x-2">
-					<IconOdometer class="size-5 mt-0.5" />
-					<div>
-						<dt class="flex items-center text-gray-500">Tenaga</dt>
-						<dd class="font-semibold">
+				<div class="flex items-start gap-2.5">
+					<IconOdometer class="size-4 mt-0.5 text-gray-500 shrink-0" />
+					<div class="min-w-0">
+						<dt class="text-xs text-gray-500">Tenaga</dt>
+						<dd class="text-sm font-semibold text-gray-900 truncate">
 							{car.horsePower} {viewPage.bhp}
 						</dd>
 					</div>

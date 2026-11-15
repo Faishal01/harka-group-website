@@ -25,10 +25,15 @@ const taxFormatted = car.taxExpirationDate
 		: `Mati (${new Date(car.taxExpirationDate).toLocaleDateString("id-ID", { month: "long", year: "numeric" })})`
 	: "-";
 
-const sections = [
+interface FeatureItem {
+	label: string;
+	value: string | number | null | undefined;
+	badge?: "safe" | "warn";
+}
+
+const sections: { title: string; items: FeatureItem[] }[] = [
 	{
 		title: "Spesifikasi Kendaraan",
-		icon: "general",
 		items: [
 			{ label: "Merek", value: car.make },
 			{ label: "Model", value: car.model },
@@ -46,7 +51,6 @@ const sections = [
 	},
 	{
 		title: "Performa & Mesin",
-		icon: "technical",
 		items: [
 			{
 				label: "Tenaga",
@@ -60,7 +64,6 @@ const sections = [
 	},
 	{
 		title: "Riwayat & Legalitas",
-		icon: "history",
 		items: [
 			{
 				label: viewPage.ownershipStatus,
@@ -76,30 +79,49 @@ const sections = [
 			},
 			{
 				label: viewPage.floodHistory,
-				value: car.isFloodFree ? "Tidak Ada" : "Ada",
+				value: car.isFloodFree ? "Bebas Banjir" : "Pernah Terendam",
+				badge: (car.isFloodFree ? "safe" : "warn") as "safe" | "warn",
 			},
 			{
 				label: viewPage.accidentHistory,
-				value: car.isAccidentFree ? "Tidak Ada" : "Ada",
+				value: car.isAccidentFree ? "Bebas Tabrak" : "Ada Riwayat",
+				badge: (car.isAccidentFree ? "safe" : "warn") as "safe" | "warn",
 			},
 		].filter((i) => i.value !== null && i.value !== undefined && i.value !== ""),
 	},
 ].filter((s) => s.items.length > 0);
 ---
 
-{
-	sections.map((section) => (
-		<div class="grid grid-cols-1 lg:grid-cols-3 pb-12 first:mt-12 feature-list-item">
-			<h2 class={`h6 feature-icon feature-icon-${section.icon}`}>{section.title}</h2>
+<div class="space-y-8">
+	{
+		sections.map((section) => (
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 items-start">
+				<h2 class="text-base sm:text-lg font-bold text-gray-900 font-header flex items-center gap-2">
+					<span class="inline-block w-1 h-5 rounded-full bg-red-600" />
+					<span>{section.title}</span>
+				</h2>
 
-			<dl class="lg:col-span-2 grid grid-cols-2 gap-x-2 md:gap-x-8 max-w-lg gap-y-2 text-base max-lg:mt-8">
-				{section.items.map((item) => (
-					<>
-						<dt>{item.label}</dt>
-						<dd class="font-bold md:whitespace-nowrap">{item.value}</dd>
-					</>
-				))}
-			</dl>
-		</div>
-	))
-}
+				<dl class="lg:col-span-2 rounded-xl border border-gray-200/80 bg-gray-50/60 divide-y divide-gray-200/70 px-4">
+					{section.items.map((item) => (
+						<div class="py-3 flex items-center justify-between gap-4 text-sm">
+							<dt class="text-gray-500">{item.label}</dt>
+							<dd class="font-semibold text-gray-900 text-right">
+								{item.badge === "safe" ? (
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs font-semibold">
+										{item.value}
+									</span>
+								) : item.badge === "warn" ? (
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/70 text-xs font-semibold">
+										{item.value}
+									</span>
+								) : (
+									item.value
+								)}
+							</dd>
+						</div>
+					))}
+				</dl>
+			</div>
+		))
+	}
+</div>
