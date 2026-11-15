@@ -131,8 +131,10 @@
 			</div>
 		{:else}
 			<!-- Multi-card carousel (Carsome style strip) -->
-			<div bind:this={emblaNode} class="overflow-hidden">
-				<div class="flex gap-3 touch-pan-y">
+			<div bind:this={emblaNode} class="-mx-4 sm:mx-0 overflow-hidden">
+				<div
+					class="flex gap-3 touch-pan-y pl-4 sm:pl-0 after:content-[''] after:shrink-0 after:w-1 sm:after:hidden"
+				>
 					{#each promos as promo (promo.id)}
 						<div class="min-w-0 flex-[0_0_260px] sm:flex-[0_0_280px]">
 							<a
