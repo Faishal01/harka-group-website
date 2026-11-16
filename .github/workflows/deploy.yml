@@ -210,7 +210,9 @@ jobs:
     name: Notify Discord
     runs-on: ubuntu-latest
     needs: [lint, migrate-db, deploy-user, deploy-admin, deploy-gas, release]
-    if: always()
+    if: |
+      always() &&
+      (needs.migrate-db.result != 'skipped' || needs.deploy-user.result != 'skipped' || needs.deploy-admin.result != 'skipped')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
