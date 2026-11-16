@@ -2,9 +2,14 @@
 import IconMessage from "~/assets/images/icons/message.svg";
 import Button from "~/components/Button.astro";
 import { buttonLabels } from "~/data/captions";
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
 ---
 
-<Button href="#ask-a-question" class:list={"gap-1"}>
-	<IconMessage class="size-4 inline-block -mt-0.5 mr-1" />
+<Button href="#ask-a-question" class:list={["gap-1.5", className]}>
+	<IconMessage class="size-4 inline-block shrink-0" />
 	<span>{buttonLabels.askAQuestion}</span>
 </Button>

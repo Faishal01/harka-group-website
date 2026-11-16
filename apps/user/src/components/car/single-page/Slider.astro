@@ -7,27 +7,32 @@ const gallery = Astro.props.gallery || [];
 ---
 
 <!-- Main Slider -->
-<div class="embla bg-gray-900 max-w-full m-auto relative">
-	<div class="embla__viewport overflow-hidden">
+<div class="embla bg-gray-950 max-w-full m-auto relative rounded-xl overflow-hidden">
+	<div class="embla__viewport overflow-hidden relative">
 		<div class="embla__container flex touch-pinch-zoom">
 			{
-				gallery.map((image) => (
+				gallery.map((image, idx) => (
 					<a
 						href={image.image}
 						target="_blank"
-						aria-label={image.alt}
+						aria-label={image.alt || `Foto ${idx + 1}`}
 						class="embla__slide relative select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
 					>
 						<div class="absolute inset-0 w-full h-full overflow-hidden">
 							<img
 								src={image.image}
 								alt=""
-								class="w-full h-full object-cover blur-3xl scale-110 opacity-60"
+								aria-hidden="true"
+								loading={idx === 0 ? "eager" : "lazy"}
+								decoding="async"
+								class="w-full h-full object-cover blur-3xl scale-110 opacity-55"
 							/>
 						</div>
 						<img
 							src={image.image}
-							alt={image.alt}
+							alt={image.alt || `Foto ${idx + 1}`}
+							loading={idx === 0 ? "eager" : "lazy"}
+							decoding="async"
 							class="relative w-full h-full object-contain aspect-[4/3] z-10"
 						/>
 					</a>
@@ -35,35 +40,50 @@ const gallery = Astro.props.gallery || [];
 			}
 		</div>
 
-		<button
-			aria-label="go to previous slide"
-			class="embla__button embla-button-prev left-0 top-1/2 -translate-y-1/2"
-			type="button"
-		>
-			<IconChevronLeft class="text-white/90" />
-		</button>
+		{
+			gallery.length > 1 && (
+				<>
+					<button
+						aria-label="Foto sebelumnya"
+						class="embla-button-prev absolute left-3 top-1/2 -translate-y-1/2 z-20 size-9 rounded-full bg-gray-950/75 hover:bg-red-700 border border-white/20 text-white backdrop-blur-xs flex items-center justify-center transition shadow-md cursor-pointer"
+						type="button"
+					>
+						<IconChevronLeft class="size-4 text-white" />
+					</button>
 
-		<button
-			aria-label="go to next slide"
-			class="embla__button embla-button-next right-0 top-1/2 -translate-y-1/2"
-			type="button"
-		>
-			<IconChevronRight class="text-white/90" />
-		</button>
+					<button
+						aria-label="Foto berikutnya"
+						class="embla-button-next absolute right-3 top-1/2 -translate-y-1/2 z-20 size-9 rounded-full bg-gray-950/75 hover:bg-red-700 border border-white/20 text-white backdrop-blur-xs flex items-center justify-center transition shadow-md cursor-pointer"
+						type="button"
+					>
+						<IconChevronRight class="size-4 text-white" />
+					</button>
+
+					<div
+						class="embla-counter absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-full bg-gray-950/75 border border-white/15 text-white text-xs font-semibold backdrop-blur-xs pointer-events-none"
+						data-total={gallery.length}
+					>
+						1 / {gallery.length}
+					</div>
+				</>
+			)
+		}
 	</div>
 </div>
 
 <!-- Thumbnail Nav -->
 {
-	gallery.length > 0 && (
-		<div class="embla-thumbs bg-gray-900">
+	gallery.length > 1 && (
+		<div class="embla-thumbs mt-2.5">
 			<div class="embla-thumbs__viewport overflow-hidden">
-				<div class="embla-thumbs__container flex">
-					{gallery.map((image) => (
-						<div class="embla-thumbs__slide relative overflow-hidden select-none min-w-0 border-t-4 border-transparent basis-[30%] md:basis-[15%] shrink-0 grow-0 transition mr-1">
+				<div class="embla-thumbs__container flex gap-2">
+					{gallery.map((image, idx) => (
+						<div class="embla-thumbs__slide relative rounded-lg overflow-hidden select-none min-w-0 border-2 border-transparent basis-[22%] sm:basis-[16%] shrink-0 grow-0 transition cursor-pointer bg-gray-900">
 							<img
 								src={image.image}
-								alt={image.alt}
+								alt={image.alt || `Thumbnail ${idx + 1}`}
+								loading="lazy"
+								decoding="async"
 								class="w-full h-full object-cover aspect-[4/3]"
 							/>
 						</div>
@@ -90,7 +110,7 @@ const gallery = Astro.props.gallery || [];
 			".embla-thumbs__viewport",
 		) as NodeListOf<HTMLElement>;
 
-		if (!viewportNodesMainCarousel.length || !viewportNodesThumbCarousel.length) return;
+		if (!viewportNodesMainCarousel.length) return;
 
 		const OPTIONS = {
 			loop: true,
@@ -101,18 +121,26 @@ const gallery = Astro.props.gallery || [];
 		};
 
 		viewportNodesMainCarousel.forEach((viewportNodeMainCarousel, index) => {
-			const viewportNodeThumbCarousel = viewportNodesThumbCarousel[index];
-			if (!viewportNodeThumbCarousel) return;
-
-			const prevBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(
-				".embla-button-prev",
-			) as HTMLElement;
-			const nextBtnNode = viewportNodeMainCarousel.parentNode?.querySelector(
-				".embla-button-next",
-			) as HTMLElement;
-
 			const emblaApiMain = EmblaCarousel(viewportNodeMainCarousel, OPTIONS);
-			const emblaApiThumb = EmblaCarousel(viewportNodeThumbCarousel, OPTIONS_THUMBS);
+
+			const prevBtnNode = viewportNodeMainCarousel.querySelector(
+				".embla-button-prev",
+			) as HTMLElement | null;
+			const nextBtnNode = viewportNodeMainCarousel.querySelector(
+				".embla-button-next",
+			) as HTMLElement | null;
+			const counterNode = viewportNodeMainCarousel.querySelector(
+				".embla-counter",
+			) as HTMLElement | null;
+
+			if (counterNode) {
+				const total = counterNode.dataset.total || "1";
+				const updateCounter = () => {
+					counterNode.textContent = `${emblaApiMain.selectedScrollSnap() + 1} / ${total}`;
+				};
+				emblaApiMain.on("select", updateCounter);
+				updateCounter();
+			}
 
 			if (prevBtnNode && nextBtnNode) {
 				const removePrevNextBtnsClickHandlers = addPrevNextBtnsClickHandlers(
@@ -122,16 +150,21 @@ const gallery = Astro.props.gallery || [];
 				);
 				emblaApiMain.on("destroy", removePrevNextBtnsClickHandlers);
 			}
-			const removeThumbBtnsClickHandlers = addThumbBtnsClickHandlers(emblaApiMain, emblaApiThumb);
-			const removeToggleThumbBtnsActive = addToggleThumbBtnsActive(emblaApiMain, emblaApiThumb);
 
-			emblaApiMain
-				.on("destroy", removeThumbBtnsClickHandlers)
-				.on("destroy", removeToggleThumbBtnsActive);
+			const viewportNodeThumbCarousel = viewportNodesThumbCarousel[index];
+			if (viewportNodeThumbCarousel) {
+				const emblaApiThumb = EmblaCarousel(viewportNodeThumbCarousel, OPTIONS_THUMBS);
+				const removeThumbBtnsClickHandlers = addThumbBtnsClickHandlers(emblaApiMain, emblaApiThumb);
+				const removeToggleThumbBtnsActive = addToggleThumbBtnsActive(emblaApiMain, emblaApiThumb);
 
-			emblaApiThumb
-				.on("destroy", removeThumbBtnsClickHandlers)
-				.on("destroy", removeToggleThumbBtnsActive);
+				emblaApiMain
+					.on("destroy", removeThumbBtnsClickHandlers)
+					.on("destroy", removeToggleThumbBtnsActive);
+
+				emblaApiThumb
+					.on("destroy", removeThumbBtnsClickHandlers)
+					.on("destroy", removeToggleThumbBtnsActive);
+			}
 		});
 	});
 </script>
