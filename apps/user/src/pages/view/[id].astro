@@ -1,7 +1,6 @@
 ---
-import { maskPlateNumber, getDb, cars as carsTable } from "@harka/db";
+import { maskPlateNumber } from "@harka/db";
 import { createCore } from "@harka/core";
-import { and, desc, eq, isNull, ne, notInArray } from "drizzle-orm";
 import type { Car } from "~/types";
 
 import Layout from "~/layouts/Layout.astro";
@@ -69,42 +68,7 @@ const vehicleName = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.mo
 let similarCars: Car[] = [];
 if (isSold && car) {
 	try {
-		const db = getDb(env);
-		const baseConditions = [
-			isNull(carsTable.deletedAt),
-			eq(carsTable.hidden, false),
-			isNull(carsTable.archiveReason),
-			ne(carsTable.id, car.id),
-		];
-
-		const sameMakeCars = (await db
-			.select()
-			.from(carsTable)
-			.where(and(...baseConditions, eq(carsTable.make, car.make)))
-			.orderBy(desc(carsTable.publishDate))
-			.limit(4)) as Car[];
-
-		similarCars = sameMakeCars;
-
-		if (similarCars.length < 4 && car.bodyType) {
-			const excludeIds = [car.id, ...similarCars.map((c) => c.id)];
-			const sameBodyCars = (await db
-				.select()
-				.from(carsTable)
-				.where(
-					and(
-						isNull(carsTable.deletedAt),
-						eq(carsTable.hidden, false),
-						isNull(carsTable.archiveReason),
-						notInArray(carsTable.id, excludeIds),
-						eq(carsTable.bodyType, car.bodyType),
-					),
-				)
-				.orderBy(desc(carsTable.publishDate))
-				.limit(4 - similarCars.length)) as Car[];
-
-			similarCars = [...similarCars, ...sameBodyCars];
-		}
+		similarCars = await core.cars.getSimilar(car, 4);
 	} catch (err) {
 		console.error("Failed to load similar cars:", err);
 	}

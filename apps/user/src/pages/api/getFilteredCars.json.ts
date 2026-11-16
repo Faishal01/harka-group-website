@@ -18,17 +18,16 @@ export const GET: APIRoute = async ({ request }) => {
 
 	return core.respond(
 		async () => {
-			const allCars = await core.cars.getFiltered(searchParams, {
-				adminView: false,
-			});
+			const { cars: paginatedCars, total } = await core.cars.getFilteredPaginated(
+				{ ...searchParams, page, pageSize },
+				{ adminView: false },
+			);
 			const afterSort = performance.now();
 			const performanceResults = {
 				"Total time": afterSort - start,
 			};
 
-			const total = allCars?.length ?? 0;
 			const totalPages = Math.ceil(total / pageSize);
-			const paginatedCars = allCars ? allCars.slice((page - 1) * pageSize, page * pageSize) : [];
 			const hasMore = page < totalPages;
 
 			return {
