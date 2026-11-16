@@ -1,6 +1,8 @@
 ---
-import { maskPlateNumber } from "@harka/db";
+import { maskPlateNumber, getDb, cars as carsTable } from "@harka/db";
 import { createCore } from "@harka/core";
+import { and, desc, eq, isNull, ne, notInArray } from "drizzle-orm";
+import type { Car } from "~/types";
 
 import Layout from "~/layouts/Layout.astro";
 import Section from "~/components/Section.astro";
@@ -12,6 +14,7 @@ import Slider from "~/components/car/single-page/Slider.astro";
 import Price from "~/components/car/single-page/Price.astro";
 import FeatureBox from "~/components/car/single-page/FeatureBox.astro";
 import FeaturesList from "~/components/car/single-page/FeaturesList.astro";
+import SimilarCars from "~/components/car/single-page/SimilarCars.astro";
 import FormInquire from "~/components/forms/Inquire.astro";
 import ModalSlider from "~/components/modals/ModalSlider.astro";
 
@@ -55,11 +58,57 @@ const car = rawCar
 	: null;
 
 const isSold = car?.archiveReason === "sold";
+const effectivePrice = car?.promoPrice && car.promoPrice < car.price ? car.promoPrice : car?.price;
 const pageTitle = car ? formatCarMetaTitle(car) : "404 - Mobil Tidak Ditemukan";
 const pageDescription = car ? formatCarMetaDesc(car) : "Unit mobil tidak ditemukan";
 const coverImageKey = car?.gallery?.[0]?.image;
 const ogImage = resolveImageUrl(coverImageKey, SITE_URL);
 const vehicleName = car ? `${car.year ? `${car.year} ` : ""}${car.make} ${car.model}` : "";
+
+// Fetch up to 4 similar active cars when viewing a sold unit (same make first, then same bodyType)
+let similarCars: Car[] = [];
+if (isSold && car) {
+	try {
+		const db = getDb(env);
+		const baseConditions = [
+			isNull(carsTable.deletedAt),
+			eq(carsTable.hidden, false),
+			isNull(carsTable.archiveReason),
+			ne(carsTable.id, car.id),
+		];
+
+		const sameMakeCars = (await db
+			.select()
+			.from(carsTable)
+			.where(and(...baseConditions, eq(carsTable.make, car.make)))
+			.orderBy(desc(carsTable.publishDate))
+			.limit(4)) as Car[];
+
+		similarCars = sameMakeCars;
+
+		if (similarCars.length < 4 && car.bodyType) {
+			const excludeIds = [car.id, ...similarCars.map((c) => c.id)];
+			const sameBodyCars = (await db
+				.select()
+				.from(carsTable)
+				.where(
+					and(
+						isNull(carsTable.deletedAt),
+						eq(carsTable.hidden, false),
+						isNull(carsTable.archiveReason),
+						notInArray(carsTable.id, excludeIds),
+						eq(carsTable.bodyType, car.bodyType),
+					),
+				)
+				.orderBy(desc(carsTable.publishDate))
+				.limit(4 - similarCars.length)) as Car[];
+
+			similarCars = [...similarCars, ...sameBodyCars];
+		}
+	} catch (err) {
+		console.error("Failed to load similar cars:", err);
+	}
+}
 
 const breadcrumbSchema = car
 	? generateBreadcrumbSchema([
@@ -110,6 +159,8 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 			image={ogImage}
 			imageAlt={`Foto mobil bekas ${vehicleName} di Harka Group`}
 			ogType="product"
+			productPrice={effectivePrice}
+			productAvailability={isSold ? "out of stock" : "in stock"}
 			canonicalUrl={`${SITE_URL}/view/${car.id}`}
 			schema={pageSchemas}
 		>
@@ -142,7 +193,7 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 						<div class="grid grid-cols-1 lg:grid-cols-12">
 							<div id="gallery-wrapper" class="relative lg:col-span-7 p-3 sm:p-5 lg:p-6">
 								{car.gallery && car.gallery.length > 0 ? (
-									<Slider gallery={car.gallery} />
+									<Slider gallery={car.gallery} vehicleName={vehicleName} />
 								) : (
 									<div class="aspect-[4/3] rounded-xl text-gray-200 w-full bg-gray-50 border border-gray-200/80 flex flex-col gap-4 items-center justify-center">
 										<IconLogo class="h-20" />
@@ -293,6 +344,8 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 							</div>
 						)}
 					</div>
+
+					{isSold && similarCars.length > 0 && <SimilarCars cars={similarCars} />}
 				</Container>
 			</Section>
 

@@ -3,7 +3,8 @@ import IconChevronLeft from "~/assets/images/icons/chevron-left.svg";
 import IconChevronRight from "~/assets/images/icons/chevron-right.svg";
 import type { SliderProps as Props } from "~/types";
 
-const gallery = Astro.props.gallery || [];
+const { gallery: rawGallery, vehicleName } = Astro.props;
+const gallery = rawGallery || [];
 ---
 
 <!-- Main Slider -->
@@ -11,32 +12,37 @@ const gallery = Astro.props.gallery || [];
 	<div class="embla__viewport overflow-hidden relative">
 		<div class="embla__container flex touch-pinch-zoom">
 			{
-				gallery.map((image, idx) => (
-					<a
-						href={image.image}
-						target="_blank"
-						aria-label={image.alt || `Foto ${idx + 1}`}
-						class="embla__slide relative select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
-					>
-						<div class="absolute inset-0 w-full h-full overflow-hidden">
+				gallery.map((image, idx) => {
+					const fallbackAlt = vehicleName ? `${vehicleName} - Foto ${idx + 1}` : `Foto ${idx + 1}`;
+					const resolvedAlt = image.alt || fallbackAlt;
+					return (
+						<a
+							href={image.image}
+							target="_blank"
+							aria-label={resolvedAlt}
+							class="embla__slide relative select-none min-w-0 basis-full shrink-0 grow-0 [transform:_translate3d(0,_0,_0)] glightbox"
+						>
+							<div class="absolute inset-0 w-full h-full overflow-hidden">
+								<img
+									src={image.image}
+									alt=""
+									aria-hidden="true"
+									loading={idx === 0 ? "eager" : "lazy"}
+									decoding="async"
+									class="w-full h-full object-cover blur-3xl scale-110 opacity-55"
+								/>
+							</div>
 							<img
 								src={image.image}
-								alt=""
-								aria-hidden="true"
+								alt={resolvedAlt}
 								loading={idx === 0 ? "eager" : "lazy"}
+								fetchpriority={idx === 0 ? "high" : undefined}
 								decoding="async"
-								class="w-full h-full object-cover blur-3xl scale-110 opacity-55"
+								class="relative w-full h-full object-contain aspect-[4/3] z-10"
 							/>
-						</div>
-						<img
-							src={image.image}
-							alt={image.alt || `Foto ${idx + 1}`}
-							loading={idx === 0 ? "eager" : "lazy"}
-							decoding="async"
-							class="relative w-full h-full object-contain aspect-[4/3] z-10"
-						/>
-					</a>
-				))
+						</a>
+					);
+				})
 			}
 		</div>
 

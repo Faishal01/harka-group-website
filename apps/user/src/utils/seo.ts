@@ -168,6 +168,7 @@ export function generateCarSchema(
 		make: string;
 		model: string;
 		price?: number | null;
+		promoPrice?: number | null;
 		mileage?: number | null;
 		odometer?: number | null;
 		bodyType?: string | null;
@@ -176,6 +177,8 @@ export function generateCarSchema(
 		fuel?: string | null;
 		color?: string | null;
 		seatingCapacity?: number | null;
+		engineSizeCC?: number | null;
+		horsePower?: number | null;
 		coverImage?: string | null;
 		gallery?: { image: string; alt?: string }[] | null;
 		images?: string[] | null;
@@ -213,6 +216,9 @@ export function generateCarSchema(
 	const nextYear = new Date().getFullYear() + 1;
 	const kmVal = car.mileage ?? car.odometer;
 	const fuelVal = car.fuelType ?? car.fuel;
+	const effectivePrice =
+		car.promoPrice && car.price && car.promoPrice < car.price ? car.promoPrice : car.price || 0;
+	const hasEngineSpecs = Boolean(car.engineSizeCC || car.horsePower);
 
 	return {
 		"@context": "https://schema.org",
@@ -243,10 +249,36 @@ export function generateCarSchema(
 					},
 				}
 			: {}),
+		...(hasEngineSpecs
+			? {
+					vehicleEngine: {
+						"@type": "EngineSpecification",
+						...(car.engineSizeCC
+							? {
+									engineDisplacement: {
+										"@type": "QuantitativeValue",
+										value: car.engineSizeCC,
+										unitCode: "CMQ",
+									},
+								}
+							: {}),
+						...(car.horsePower
+							? {
+									enginePower: {
+										"@type": "QuantitativeValue",
+										value: car.horsePower,
+										unitCode: "N12",
+										unitText: "PS",
+									},
+								}
+							: {}),
+					},
+				}
+			: {}),
 		offers: {
 			"@type": "Offer",
 			url: carUrl,
-			price: car.price || 0,
+			price: effectivePrice,
 			priceCurrency: "IDR",
 			priceValidUntil: `${nextYear}-12-31`,
 			availability: isSold ? "https://schema.org/SoldOut" : "https://schema.org/InStock",

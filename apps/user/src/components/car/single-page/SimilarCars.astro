@@ -1,0 +1,121 @@
+---
+import type { Car } from "~/types";
+import { getPrice, getMileage, getMileageUnit } from "~/utils/helpers";
+import { transmissionMap, fuelTypeMap } from "~/data/constants";
+
+interface Props {
+	cars: Car[];
+}
+
+const { cars } = Astro.props;
+const mileageUnit = getMileageUnit();
+---
+
+{
+	cars.length > 0 && (
+		<section class="mt-8 lg:mt-10 print:hidden" aria-labelledby="similar-cars-heading">
+			<div class="flex items-center justify-between gap-4 mb-4">
+				<h2
+					id="similar-cars-heading"
+					class="text-lg sm:text-xl font-bold text-gray-900 font-header flex items-center gap-2"
+				>
+					<span class="inline-block w-1 h-5 rounded-full bg-red-600" />
+					<span>Rekomendasi Unit Serupa</span>
+				</h2>
+				<a
+					href="/"
+					class="text-xs sm:text-sm font-semibold text-red-700 hover:text-red-800 transition shrink-0"
+				>
+					Lihat Semua Stok →
+				</a>
+			</div>
+
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				{cars.map((car) => {
+					const coverImage = car.gallery?.[0]?.image;
+					const coverAlt = car.gallery?.[0]?.alt || car.title;
+					const formattedMileage = getMileage(car.mileage ?? 0);
+					const transmissionLabel = transmissionMap[car.transmission || ""] || car.transmission;
+					const fuelLabel = fuelTypeMap[car.fuelType || ""] || car.fuelType;
+
+					return (
+						<article class="bg-white rounded-2xl border border-gray-200/90 hover:border-red-600 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden group flex flex-col">
+							<a href={`/view/${car.id}`} class="flex flex-col h-full">
+								<div class="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
+									{coverImage ? (
+										<img
+											src={coverImage}
+											alt={coverAlt}
+											loading="lazy"
+											decoding="async"
+											class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+										/>
+									) : (
+										<div class="size-full flex items-center justify-center text-gray-400 text-xs font-medium">
+											Foto Segera Hadir
+										</div>
+									)}
+
+									{car.promoPrice && car.promoPrice < car.price && (
+										<span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm">
+											Promo
+										</span>
+									)}
+								</div>
+
+								<div class="p-4 flex flex-col grow">
+									<div class="h-11 flex items-start mb-1.5 overflow-hidden">
+										<h3 class="text-sm sm:text-base font-bold text-gray-900 group-hover:text-red-700 transition-colors line-clamp-2 leading-snug">
+											{car.title}
+										</h3>
+									</div>
+
+									<div class="flex items-center gap-1.5 text-xs text-gray-500 mb-3 truncate">
+										<span>
+											{formattedMileage} {mileageUnit}
+										</span>
+										{transmissionLabel && (
+											<>
+												<span class="text-gray-300">•</span>
+												<span>{transmissionLabel}</span>
+											</>
+										)}
+										{fuelLabel && (
+											<>
+												<span class="text-gray-300">•</span>
+												<span>{fuelLabel}</span>
+											</>
+										)}
+										{car.year && (
+											<>
+												<span class="text-gray-300">•</span>
+												<span>{car.year}</span>
+											</>
+										)}
+									</div>
+
+									<div class="mt-auto flex items-baseline gap-2 flex-wrap">
+										{car.promoPrice && car.promoPrice < car.price ? (
+											<>
+												<span class="text-xs text-gray-400 line-through font-medium">
+													{getPrice(car.price)}
+												</span>
+												<span class="text-base sm:text-lg font-bold text-red-700 tracking-tight font-inter">
+													{getPrice(car.promoPrice)}
+												</span>
+											</>
+										) : (
+											<span class="text-base sm:text-lg font-bold text-gray-900 tracking-tight font-inter">
+												{getPrice(car.price)}
+											</span>
+										)}
+									</div>
+								</div>
+							</a>
+						</article>
+					);
+				})}
+			</div>
+		</section>
+	)
+}
