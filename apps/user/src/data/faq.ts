@@ -13,21 +13,20 @@ export interface FaqItem {
 export const faqItems: FaqItem[] = [
 	{
 		question: "Apakah semua unit mobil di Harka Group dijamin bebas banjir dan tabrak?",
-		answer: "Ya. Kami selektif dalam pencarian unit-unit untuk stok di Showroom kami. Kami juga memberikan garansi jika kedapatan unit yang sudah dibeli ternyata bekas tabrak atau banjir.",
+		answer:
+			"Ya. Kami selektif dalam pencarian unit-unit untuk stok di Showroom kami. Kami juga memberikan garansi jika kedapatan unit yang sudah dibeli ternyata bekas tabrak atau banjir.",
 	},
 	{
 		question: "Apakah bisa tukar tambah (trade-in) dengan mobil lama saya?",
 		answer: "Bisa langsung menghubungi nomor owner HarkaAutocar.",
-
 	},
 	{
 		question: "Bagaimana cara membayar pajak?",
 		answer: "Bisa melalui kami dengan cara mengirim foto STNK.",
-
 	},
 	{
 		question: "Bagaimana prosedur balik nama?",
-		answer: "Dengan cara mengirim fotokopi KTP dan STNK. Lalu berkas akan diproses selama 20 hari masa kerja. Customer tinggal menunggu berkas di rumah.",
-
-	}
+		answer:
+			"Dengan cara mengirim fotokopi KTP dan STNK. Lalu berkas akan diproses selama 20 hari masa kerja. Customer tinggal menunggu berkas di rumah.",
+	},
 ];

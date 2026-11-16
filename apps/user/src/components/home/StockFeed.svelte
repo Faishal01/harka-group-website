@@ -281,7 +281,7 @@
 	</div>
 
 	<!-- Cockpit content aligned to max-w-6xl -->
-	<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-10 lg:py-14">
+	<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-10 lg:py-4">
 		<!-- Promo Banner Carousel (Cleanly hidden if 0 active promos) -->
 		{#if promos && promos.length > 0}
 			<PromoBannerCarousel {promos} />
