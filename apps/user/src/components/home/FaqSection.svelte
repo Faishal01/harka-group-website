@@ -25,7 +25,7 @@
 					Informasi Pembeli
 				</span>
 				<h2 class="text-2xl sm:text-3xl font-bold text-gray-900 font-header mt-1.5">
-					Pertanyaan yang Sering Diajukan
+					FAQ
 				</h2>
 				<p class="text-sm sm:text-base text-gray-600 mt-2">
 					Jawaban singkat seputar unit, inspeksi, dan proses pembelian di Harka Group.
