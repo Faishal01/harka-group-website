@@ -142,6 +142,7 @@ export interface PriceProps {
 
 export interface SliderProps {
 	gallery: { image: string; alt: string }[] | null;
+	vehicleName?: string;
 }
 
 export interface WidgetLoanProps {

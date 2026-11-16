@@ -14,6 +14,9 @@ interface Props {
 	image?: string;
 	imageAlt?: string;
 	ogType?: "website" | "article" | "product";
+	productPrice?: number;
+	productCurrency?: string;
+	productAvailability?: "in stock" | "out of stock";
 	canonicalUrl?: string;
 	schema?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
@@ -26,6 +29,9 @@ const {
 	image,
 	imageAlt = `${siteName} - Showroom Mobil Bekas`,
 	ogType = "website",
+	productPrice,
+	productCurrency = "IDR",
+	productAvailability = "in stock",
 	canonicalUrl,
 	schema,
 } = Astro.props;
@@ -86,6 +92,15 @@ const schemasToRender = schema ? (Array.isArray(schema) ? schema : [schema]) : [
 		<meta property="og:image:height" content="630" />
 		<meta property="og:site_name" content={siteName} />
 		<meta property="og:locale" content={siteLang.replace("-", "_")} />
+		{
+			ogType === "product" && productPrice !== undefined && productPrice > 0 && (
+				<>
+					<meta property="product:price:amount" content={String(productPrice)} />
+					<meta property="product:price:currency" content={productCurrency} />
+					<meta property="product:availability" content={productAvailability} />
+				</>
+			)
+		}
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
