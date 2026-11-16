@@ -8,6 +8,8 @@ import Container from "~/components/Container.astro";
 import Button from "~/components/Button.astro";
 import Heading from "~/components/Heading.astro";
 import StockFeed from "~/components/home/StockFeed.svelte";
+import FaqSection from "~/components/home/FaqSection.svelte";
+import { faqItems } from "~/data/faq";
 import { homePage } from "~/data/captions";
 import { siteName } from "~/data/config";
 import { SITE_URL, generateAutoDealerSchema, DEALER_LOCATION } from "~/utils/seo";
@@ -78,6 +80,22 @@ try {
 }
 
 const autoDealerSchema = generateAutoDealerSchema(SITE_URL);
+const faqSchema =
+	faqItems.length > 0
+		? {
+				"@context": "https://schema.org",
+				"@type": "FAQPage",
+				mainEntity: faqItems.map((item) => ({
+					"@type": "Question",
+					name: item.question,
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: item.answer,
+					},
+				})),
+			}
+		: null;
+const pageSchemas = [autoDealerSchema, faqSchema].filter(Boolean) as Record<string, unknown>[];
 const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di ${siteName} ${DEALER_LOCATION}. Pilihan unit prima, inspeksi bebas tabrak & banjir, harga transparan dan tukar tambah mudah.`;
 ---
 
@@ -86,7 +104,7 @@ const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di
 	title={`${siteName} - Showroom Mobil Bekas`}
 	description={metaDescription}
 	canonicalUrl={SITE_URL}
-	schema={autoDealerSchema}
+	schema={pageSchemas}
 >
 	<StockFeed
 		client:load
@@ -100,6 +118,8 @@ const metaDescription = `Katalog lengkap mobil bekas berkualitas & bergaransi di
 		promos={activePromos}
 		latestCars={latestCars}
 	/>
+
+	{faqItems.length > 0 && <FaqSection client:visible items={faqItems} />}
 
 	{/* CTA Section */}
 	<Section
