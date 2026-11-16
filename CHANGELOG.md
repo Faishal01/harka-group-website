@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.9.0](https://github.com/Faishal01/harka-group-website/compare/v1.8.0...v1.9.0) (2026-11-12)
+
+
+### Features
+
+* fix promo bar ([41dd47a](https://github.com/Faishal01/harka-group-website/commit/41dd47af4103c5df4e8c820ece3e63e4bb1a6bea))
+* migrate_db deploy_admin deploy_user | promo bar ([2ad2485](https://github.com/Faishal01/harka-group-website/commit/2ad248564ecee92b0adb0e13dd5c152e9c75044c))
+* stylize dropdowns ([63c489e](https://github.com/Faishal01/harka-group-website/commit/63c489ec1b975469f89360fc38d1fd56fd45446c))
+
 # [1.8.0](https://github.com/Faishal01/harka-group-website/compare/v1.7.0...v1.8.0) (2026-11-12)
 
 
