@@ -13,12 +13,10 @@ export interface FaqItem {
 export const faqItems: FaqItem[] = [
 	{
 		question: "Apakah semua unit mobil di Harka Group dijamin bebas banjir dan tabrak?",
-		answer:
-			"Ya.",
+		answer: "Ya.",
 	},
 	{
 		question: "Apakah bisa tukar tambah (trade-in) dengan mobil lama saya?",
-		answer:
-			"Bisa.",
+		answer: "Bisa.",
 	},
 ];
