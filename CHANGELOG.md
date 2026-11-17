@@ -1,5 +1,15 @@
 # Changelog
 
+# [1.10.0](https://github.com/Faishal01/harka-group-website/compare/v1.9.0...v1.10.0) (2026-11-17)
+
+
+### Features
+
+* car carousel image slider ([b8a5935](https://github.com/Faishal01/harka-group-website/commit/b8a593522cebfa042a01c6c24e9b6fd9dced2f72))
+* deploy_user | Merge pull request [#37](https://github.com/Faishal01/harka-group-website/issues/37) from Faishal01/carsome-2 ([870fc5c](https://github.com/Faishal01/harka-group-website/commit/870fc5c0ef0ee78f33158655f116a70c02979187))
+* header font style ([c75ecc8](https://github.com/Faishal01/harka-group-website/commit/c75ecc850d45b352dc40ca21960ae9f96f691c01))
+* overhaul ([bc34905](https://github.com/Faishal01/harka-group-website/commit/bc3490594da5c44c6beb78d6f62904c730c21c9b))
+
 # [1.9.0](https://github.com/Faishal01/harka-group-website/compare/v1.8.0...v1.9.0) (2026-11-12)
 
 
