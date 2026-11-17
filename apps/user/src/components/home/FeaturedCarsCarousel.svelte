@@ -3,6 +3,7 @@
 	import type { Car } from "~/types";
 	import { getPrice, getMileage, getMileageUnit } from "~/utils/helpers";
 	import { transmissionMap, fuelTypeMap } from "~/data/constants";
+	import CarImageSlider from "./CarImageSlider.svelte";
 
 	interface Props {
 		cars?: Car[];
@@ -195,8 +196,7 @@
 						class="flex gap-4 touch-pan-y pl-4 sm:pl-0 after:content-[''] after:shrink-0 after:w-px sm:after:hidden"
 					>
 						{#each cars as car (car.id)}
-							{@const coverImage = car.gallery?.[0]?.image}
-							{@const coverAlt = car.gallery?.[0]?.alt || car.title}
+							{@const isSold = car.archiveReason === "sold"}
 							{@const formattedMileage = getMileage(car.mileage ?? 0)}
 							{@const transmissionLabel =
 								transmissionMap[car.transmission || ""] || car.transmission}
@@ -206,27 +206,19 @@
 								class="min-w-0 flex-[0_0_265px] sm:flex-[0_0_285px] bg-white rounded-2xl border border-gray-200/90 hover:border-red-600 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden group flex flex-col"
 							>
 								<a href={`/view/${car.id}`} class="flex flex-col h-full">
-									<!-- Single Cover Image -->
-									<div class="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-										{#if coverImage}
-											<img
-												src={coverImage}
-												alt={coverAlt}
-												loading="lazy"
-												decoding="async"
-												class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-											/>
-										{:else}
-											<div
-												class="size-full flex items-center justify-center text-gray-400 text-xs font-medium"
-											>
-												Foto Segera Hadir
-											</div>
-										{/if}
+									<!-- Image Slider (capped at 5 photos + "Lihat Semua" slide) -->
+									<div class="relative">
+										<CarImageSlider
+											gallery={car.gallery}
+											title={car.title}
+											{isSold}
+											carId={car.id}
+											maxImages={5}
+										/>
 
 										{#if car.promoPrice && car.promoPrice < car.price}
 											<span
-												class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm"
+												class="absolute top-2.5 left-2.5 z-30 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm pointer-events-none"
 											>
 												Promo
 											</span>
