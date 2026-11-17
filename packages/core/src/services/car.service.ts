@@ -3,15 +3,18 @@ import {
 	cars as carsTable,
 	tradeInSubmissions as tradeInTable,
 	getFilteredCars as getFilteredCarsFromDb,
+	getFilteredCarsPaginated as getFilteredCarsPaginatedFromDb,
+	maskPlateNumber,
 	generateCarId,
 	validatePlateNumber,
 	formatPlateNumber,
 	type Car,
 	type InsertCar,
 	type CarFilterParams,
+	type PaginatedCarsResult,
 	type QueryOptions,
 } from "@harka/db";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, asc, desc, ne, notInArray, or } from "drizzle-orm";
 import { DatabaseClient } from "../clients/database";
 import { R2Client } from "../clients/r2";
 import {
@@ -25,35 +28,188 @@ import {
 	UpdateCarInputSchema,
 } from "../schemas/car";
 
+const decodeCarFilterParams = (rawParams: unknown) =>
+	Schema.decodeUnknown(CarFilterParamsSchema)(rawParams).pipe(
+		Effect.map(
+			(decoded): CarFilterParams => ({
+				...decoded,
+				limit: decoded.limit || decoded.pageSize,
+				ownershipStatus: decoded.ownershipStatus || decoded.condition,
+			}),
+		),
+		Effect.mapError(
+			(err) =>
+				new ValidationError({
+					message: "Invalid car search parameters",
+					details: err,
+				}),
+		),
+	);
+
 export const getFilteredCars = (
 	rawParams: unknown,
 	options: QueryOptions = {},
 ) =>
 	Effect.gen(function* () {
-		const decoded = yield* Schema.decodeUnknown(CarFilterParamsSchema)(
-			rawParams,
-		).pipe(
-			Effect.mapError(
-				(err) =>
-					new ValidationError({
-						message: "Invalid car search parameters",
-						details: err,
-					}),
-			),
-		);
-
+		const filterParams = yield* decodeCarFilterParams(rawParams);
 		const db = yield* DatabaseClient;
-
-		const filterParams: CarFilterParams = {
-			...decoded,
-			limit: decoded.limit || decoded.pageSize,
-			ownershipStatus: decoded.ownershipStatus || decoded.condition,
-		};
 
 		return yield* Effect.tryPromise({
 			try: () => getFilteredCarsFromDb(db, filterParams, options),
 			catch: (cause) => new DatabaseError({ cause }),
 		});
+	});
+
+export const getFilteredCarsPaginated = (
+	rawParams: unknown,
+	options: QueryOptions = {},
+): Effect.Effect<PaginatedCarsResult, ValidationError | DatabaseError, DatabaseClient> =>
+	Effect.gen(function* () {
+		const filterParams = yield* decodeCarFilterParams(rawParams);
+		const db = yield* DatabaseClient;
+
+		return yield* Effect.tryPromise({
+			try: () => getFilteredCarsPaginatedFromDb(db, filterParams, options),
+			catch: (cause) => new DatabaseError({ cause }),
+		});
+	});
+
+export const getDistinctMakes = (adminView = false) =>
+	Effect.gen(function* () {
+		const db = yield* DatabaseClient;
+		const conditions = [isNull(carsTable.deletedAt)];
+		if (!adminView) {
+			conditions.push(eq(carsTable.hidden, false));
+		}
+
+		const rows = yield* Effect.tryPromise({
+			try: () =>
+				db
+					.selectDistinct({ make: carsTable.make })
+					.from(carsTable)
+					.where(and(...conditions))
+					.orderBy(asc(carsTable.make)),
+			catch: (cause) => new DatabaseError({ cause }),
+		});
+
+		return (rows as { make: string }[]).map((r) => r.make).filter(Boolean);
+	});
+
+export const getLatestAvailableCars = (limit = 6) =>
+	Effect.gen(function* () {
+		const db = yield* DatabaseClient;
+		const rows = yield* Effect.tryPromise({
+			try: () =>
+				db
+					.select()
+					.from(carsTable)
+					.where(
+						and(
+							isNull(carsTable.deletedAt),
+							eq(carsTable.hidden, false),
+							isNull(carsTable.archiveReason),
+						),
+					)
+					.orderBy(desc(carsTable.publishDate))
+					.limit(limit),
+			catch: (cause) => new DatabaseError({ cause }),
+		});
+
+		return (rows as Car[]).map((car) => ({
+			...car,
+			plateNumber: maskPlateNumber(car.plateNumber),
+		}));
+	});
+
+export const getSimilarCars = (
+	car: Pick<Car, "id" | "make" | "bodyType">,
+	limit = 4,
+) =>
+	Effect.gen(function* () {
+		const db = yield* DatabaseClient;
+		const baseConditions = [
+			isNull(carsTable.deletedAt),
+			eq(carsTable.hidden, false),
+			isNull(carsTable.archiveReason),
+			ne(carsTable.id, car.id),
+		];
+
+		const sameMake = (yield* Effect.tryPromise({
+			try: () =>
+				db
+					.select()
+					.from(carsTable)
+					.where(and(...baseConditions, eq(carsTable.make, car.make)))
+					.orderBy(desc(carsTable.publishDate))
+					.limit(limit),
+			catch: (cause) => new DatabaseError({ cause }),
+		})) as Car[];
+
+		let combined = sameMake;
+		if (combined.length < limit && car.bodyType) {
+			const excludeIds = [car.id, ...combined.map((c) => c.id)];
+			const sameBody = (yield* Effect.tryPromise({
+				try: () =>
+					db
+						.select()
+						.from(carsTable)
+						.where(
+							and(
+								isNull(carsTable.deletedAt),
+								eq(carsTable.hidden, false),
+								isNull(carsTable.archiveReason),
+								notInArray(carsTable.id, excludeIds),
+								eq(carsTable.bodyType, car.bodyType),
+							),
+						)
+						.orderBy(desc(carsTable.publishDate))
+						.limit(limit - combined.length),
+				catch: (cause) => new DatabaseError({ cause }),
+			})) as Car[];
+
+			combined = [...combined, ...sameBody];
+		}
+
+		return combined.map((item) => ({
+			...item,
+			plateNumber: maskPlateNumber(item.plateNumber),
+		}));
+	});
+
+export interface SitemapCarEntry {
+	id: string;
+	archiveReason: string | null;
+	updatedAt: Date | string | null;
+	createdAt: Date | string | null;
+}
+
+export const getSitemapCarEntries = () =>
+	Effect.gen(function* () {
+		const db = yield* DatabaseClient;
+		const rows = yield* Effect.tryPromise({
+			try: () =>
+				db
+					.select({
+						id: carsTable.id,
+						archiveReason: carsTable.archiveReason,
+						updatedAt: carsTable.updatedAt,
+						createdAt: carsTable.createdAt,
+					})
+					.from(carsTable)
+					.where(
+						and(
+							isNull(carsTable.deletedAt),
+							eq(carsTable.hidden, false),
+							or(
+								isNull(carsTable.archiveReason),
+								ne(carsTable.archiveReason, "removed"),
+							),
+						),
+					),
+			catch: (cause) => new DatabaseError({ cause }),
+		});
+
+		return rows as SitemapCarEntry[];
 	});
 
 export const getCarById = (id: string, options: { adminView?: boolean } = {}) =>

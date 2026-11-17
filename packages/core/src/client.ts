@@ -7,6 +7,7 @@ import * as TeamService from "./services/team.service";
 import * as PromoService from "./services/promo.service";
 import type {
 	Car,
+	PaginatedCarsResult,
 	QueryOptions,
 	TradeInQueryParams,
 	PaginatedTradeInSubmissions,
@@ -18,8 +19,16 @@ import type {
 export interface CoreClient {
 	cars: {
 		getFiltered: (params: unknown, options?: QueryOptions) => Promise<Car[]>;
+		getFilteredPaginated: (
+			params: unknown,
+			options?: QueryOptions,
+		) => Promise<PaginatedCarsResult>;
 		getById: (id: string, options?: { adminView?: boolean }) => Promise<Car>;
+		getDistinctMakes: (options?: { adminView?: boolean }) => Promise<string[]>;
 		getDistinctModels: (make: string, options?: { adminView?: boolean }) => Promise<string[]>;
+		getLatestAvailable: (limit?: number) => Promise<Car[]>;
+		getSimilar: (car: Pick<Car, "id" | "make" | "bodyType">, limit?: number) => Promise<Car[]>;
+		getSitemapEntries: () => Promise<CarService.SitemapCarEntry[]>;
 		create: (input: unknown) => Promise<{ success: boolean; id: string; title: string }>;
 		update: (
 			id: string,
@@ -92,9 +101,15 @@ export function createCore(env: unknown): CoreClient {
 	return {
 		cars: {
 			getFiltered: (params, options) => run(CarService.getFilteredCars(params, options)),
+			getFilteredPaginated: (params, options) =>
+				run(CarService.getFilteredCarsPaginated(params, options)),
 			getById: (id, options) => run(CarService.getCarById(id, options)),
+			getDistinctMakes: (options) => run(CarService.getDistinctMakes(options?.adminView)),
 			getDistinctModels: (make, options) =>
 				run(CarService.getDistinctModelsByMake(make, options?.adminView)),
+			getLatestAvailable: (limit) => run(CarService.getLatestAvailableCars(limit)),
+			getSimilar: (car, limit) => run(CarService.getSimilarCars(car, limit)),
+			getSitemapEntries: () => run(CarService.getSitemapCarEntries()),
 			create: (input) => run(CarService.createCar(input)),
 			update: (id, input) => run(CarService.updateCar(id, input)),
 			softDelete: (id, reason) => run(CarService.softDeleteCar(id, reason)),

@@ -21,11 +21,12 @@
 		emblaApi = EmblaCarousel(
 			emblaNode,
 			{
+				loop: true,
 				align: "start",
 				containScroll: "trimSnaps",
 				dragFree: false,
 			},
-			promos.length > 2 ? [Autoplay({ delay: 5000, stopOnInteraction: true })] : [],
+			[Autoplay({ delay: 5000, stopOnInteraction: true })],
 		);
 
 		const updateButtons = () => {
@@ -59,8 +60,8 @@
 		<!-- Section Label / Subtitle & Controls -->
 		<div class="flex items-center justify-between mb-2.5">
 			<div class="flex items-center gap-2">
-				<span class="inline-block size-2 rounded-full bg-red-500 animate-pulse"></span>
-				<span class="text-xs font-bold uppercase tracking-wider text-gray-400">
+				<span class="inline-block size-2 rounded-full bg-red-600 animate-pulse"></span>
+				<span class="text-xs font-bold uppercase tracking-wider text-gray-600">
 					Promo & Program Spesial
 				</span>
 			</div>
@@ -73,7 +74,7 @@
 						onclick={scrollPrev}
 						disabled={!canScrollPrev}
 						aria-label="Promo sebelumnya"
-						class="size-7 rounded-lg border border-gray-800 bg-gray-900/80 hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-gray-300 hover:text-white transition shadow-xs cursor-pointer"
+						class="size-7 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-gray-600 hover:text-gray-900 transition shadow-xs cursor-pointer"
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +94,7 @@
 						onclick={scrollNext}
 						disabled={!canScrollNext}
 						aria-label="Promo berikutnya"
-						class="size-7 rounded-lg border border-gray-800 bg-gray-900/80 hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-gray-300 hover:text-white transition shadow-xs cursor-pointer"
+						class="size-7 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-gray-600 hover:text-gray-900 transition shadow-xs cursor-pointer"
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +118,7 @@
 			<div class="flex items-center">
 				<a
 					href={`/promo/${promos[0].slug}`}
-					class="block relative rounded-xl overflow-hidden border border-gray-800 hover:border-red-600/60 shadow-lg group w-[280px] sm:w-[320px] aspect-[2.5/1] bg-gray-900 transition-all duration-300 hover:scale-[1.01]"
+					class="block relative rounded-xl overflow-hidden border border-gray-200 hover:border-red-500 shadow-sm group w-[280px] sm:w-[320px] aspect-[2.5/1] bg-gray-100 transition-all duration-300 hover:scale-[1.01]"
 				>
 					<img
 						src={promos[0].bannerImage}
@@ -125,7 +126,7 @@
 						class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
 					/>
 					<div
-						class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+						class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 					></div>
 				</a>
 			</div>
@@ -139,7 +140,7 @@
 						<div class="min-w-0 flex-[0_0_260px] sm:flex-[0_0_280px]">
 							<a
 								href={`/promo/${promo.slug}`}
-								class="block relative rounded-xl overflow-hidden border border-gray-800 hover:border-red-600/60 shadow-lg group aspect-[2.5/1] bg-gray-900 transition-all duration-300 hover:scale-[1.02]"
+								class="block relative rounded-xl overflow-hidden border border-gray-200 hover:border-red-500 shadow-sm group aspect-[2.5/1] bg-gray-100 transition-all duration-300 hover:scale-[1.02]"
 							>
 								<img
 									src={promo.bannerImage}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { slide } from "svelte/transition";
 	import type { FaqItem } from "~/data/faq";
 
 	interface Props {
@@ -78,7 +79,8 @@
 								id={`faq-panel-${idx}`}
 								role="region"
 								aria-labelledby={`faq-trigger-${idx}`}
-								class="px-5 pb-5 sm:px-6 sm:pb-5 pt-0"
+								transition:slide={{ duration: 220 }}
+								class="px-5 pb-5 sm:px-6 sm:pb-5 pt-0 overflow-hidden"
 							>
 								<p
 									class="text-sm text-gray-600 leading-relaxed whitespace-pre-line border-t border-gray-100 pt-3"

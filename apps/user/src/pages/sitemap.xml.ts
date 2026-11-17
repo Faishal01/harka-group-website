@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
-import { getDb, cars as carsTable, promos as promosTable } from "@harka/db";
-import { and, isNull, eq, ne, or } from "drizzle-orm";
+import { createCore } from "@harka/core";
 import { env } from "cloudflare:workers";
 import { SITE_URL } from "~/utils/seo";
 
@@ -21,9 +20,9 @@ export const GET: APIRoute = async () => {
 			priority: "1.0",
 		},
 		{
-			loc: `${SITE_URL}/makes`,
-			changefreq: "weekly",
-			priority: "0.8",
+			loc: `${SITE_URL}/cars`,
+			changefreq: "daily",
+			priority: "0.9",
 		},
 		{
 			loc: `${SITE_URL}/trade-in`,
@@ -40,22 +39,11 @@ export const GET: APIRoute = async () => {
 	const dynamicUrls: SitemapUrl[] = [];
 
 	try {
-		const db = getDb(env);
-		const inventory = await db
-			.select({
-				id: carsTable.id,
-				archiveReason: carsTable.archiveReason,
-				updatedAt: carsTable.updatedAt,
-				createdAt: carsTable.createdAt,
-			})
-			.from(carsTable)
-			.where(
-				and(
-					isNull(carsTable.deletedAt),
-					eq(carsTable.hidden, false),
-					or(isNull(carsTable.archiveReason), ne(carsTable.archiveReason, "removed")),
-				),
-			);
+		const core = createCore(env);
+		const [inventory, activePromos] = await Promise.all([
+			core.cars.getSitemapEntries(),
+			core.promos.getActive(),
+		]);
 
 		for (const item of inventory) {
 			const date = item.updatedAt || item.createdAt || new Date();
@@ -72,15 +60,6 @@ export const GET: APIRoute = async () => {
 				priority: isSold ? "0.5" : "0.9",
 			});
 		}
-
-		const activePromos = await db
-			.select({
-				slug: promosTable.slug,
-				updatedAt: promosTable.updatedAt,
-				createdAt: promosTable.createdAt,
-			})
-			.from(promosTable)
-			.where(eq(promosTable.isActive, true));
 
 		for (const p of activePromos) {
 			const date = p.updatedAt || p.createdAt || new Date();

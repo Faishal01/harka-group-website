@@ -29,10 +29,22 @@ export interface CarFilterParams {
 	color?: string;
 	ownershipStatus?: OwnershipStatus | "all" | string;
 	search?: string;
-	sort?: "price-asc" | "price-desc" | "mileage-asc" | "mileage-desc" | "year-asc" | "year-desc";
+	sort?:
+		| "date-desc"
+		| "price-asc"
+		| "price-desc"
+		| "mileage-asc"
+		| "mileage-desc"
+		| "year-asc"
+		| "year-desc";
 	page?: number;
 	limit?: number;
 	pageSize?: number;
+}
+
+export interface PaginatedCarsResult {
+	cars: Car[];
+	total: number;
 }
 
 export interface QueryOptions {
@@ -41,11 +53,7 @@ export interface QueryOptions {
 	adminView?: boolean;
 }
 
-export async function getFilteredCars(
-	db: Database,
-	params: CarFilterParams = {},
-	options: QueryOptions = {},
-): Promise<Car[]> {
+function buildCarFilterConditions(params: CarFilterParams = {}, options: QueryOptions = {}) {
 	const conditions = [];
 
 	if (!options.includeDeleted) {
@@ -143,6 +151,10 @@ export async function getFilteredCars(
 		}
 	}
 
+	return conditions;
+}
+
+function buildCarOrderClauses(params: CarFilterParams = {}, options: QueryOptions = {}) {
 	const orderClauses = [];
 
 	if (!options.adminView) {
@@ -170,27 +182,77 @@ export async function getFilteredCars(
 			case "year-desc":
 				orderClauses.push(desc(cars.year));
 				break;
+			case "date-desc":
+			default:
+				orderClauses.push(desc(cars.publishDate));
+				break;
 		}
 	} else {
 		orderClauses.push(desc(cars.publishDate));
 	}
 
-	const query = db
-		.select()
-		.from(cars)
-		.where(conditions.length > 0 ? and(...conditions) : undefined)
-		.orderBy(...orderClauses);
+	return orderClauses;
+}
 
-	const results: Car[] = await query;
-
+function maskCarsIfPublic(results: Car[], options: QueryOptions): Car[] {
 	if (!options.adminView) {
 		return results.map((car) => ({
 			...car,
 			plateNumber: maskPlateNumber(car.plateNumber),
 		}));
 	}
-
 	return results;
+}
+
+export async function getFilteredCars(
+	db: Database,
+	params: CarFilterParams = {},
+	options: QueryOptions = {},
+): Promise<Car[]> {
+	const conditions = buildCarFilterConditions(params, options);
+	const orderClauses = buildCarOrderClauses(params, options);
+
+	const results: Car[] = await db
+		.select()
+		.from(cars)
+		.where(conditions.length > 0 ? and(...conditions) : undefined)
+		.orderBy(...orderClauses);
+
+	return maskCarsIfPublic(results, options);
+}
+
+export async function getFilteredCarsPaginated(
+	db: Database,
+	params: CarFilterParams = {},
+	options: QueryOptions = {},
+): Promise<PaginatedCarsResult> {
+	const conditions = buildCarFilterConditions(params, options);
+	const orderClauses = buildCarOrderClauses(params, options);
+	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+	const page = Math.max(1, Number(params.page) || 1);
+	const pageSize = Math.max(1, Number(params.pageSize || params.limit) || 12);
+	const offset = (page - 1) * pageSize;
+
+	const [countRow, rows] = await Promise.all([
+		db
+			.select({ count: sql<number>`count(*)` })
+			.from(cars)
+			.where(whereClause)
+			.get(),
+		db
+			.select()
+			.from(cars)
+			.where(whereClause)
+			.orderBy(...orderClauses)
+			.limit(pageSize)
+			.offset(offset),
+	]);
+
+	return {
+		cars: maskCarsIfPublic(rows as Car[], options),
+		total: Number(countRow?.count ?? 0),
+	};
 }
 
 /**

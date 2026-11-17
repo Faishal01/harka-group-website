@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+
+import Layout from "~/layouts/Layout.astro";
+import StockFeed from "~/components/home/StockFeed.svelte";
+import { siteName } from "~/data/config";
+import {
+	SITE_URL,
+	DEALER_LOCATION,
+	generateAutoDealerSchema,
+	generateBreadcrumbSchema,
+} from "~/utils/seo";
+import { env } from "cloudflare:workers";
+import { createCore } from "@harka/core";
+import type { Car } from "~/types";
+import type { Promo } from "@harka/db";
+
+const core = createCore(env);
+const searchParamsRecord = Object.fromEntries(Astro.url.searchParams.entries());
+
+const initialSearch = searchParamsRecord.search || "";
+const initialMake = searchParamsRecord.make || "all";
+const initialModel = searchParamsRecord.model || "all";
+const initialBodyType = searchParamsRecord.bodyType || "all";
+const initialTransmission = searchParamsRecord.transmission || "all";
+const initialFuelType = searchParamsRecord.fuelType || "all";
+const initialPrice = searchParamsRecord.price || "all";
+const initialYearFrom = searchParamsRecord.yearFrom || "";
+const initialYearTo = searchParamsRecord.yearTo || "";
+const initialSort = searchParamsRecord.sort || "date-desc";
+
+const [availableMakes, initialModels, paginatedResult, activePromos] = await Promise.all([
+	core.cars.getDistinctMakes({ adminView: false }).catch(() => [] as string[]),
+	initialMake !== "all"
+		? core.cars.getDistinctModels(initialMake, { adminView: false }).catch(() => [] as string[])
+		: Promise.resolve([] as string[]),
+	core.cars
+		.getFilteredPaginated({ ...searchParamsRecord, page: 1, pageSize: 12 }, { adminView: false })
+		.catch(() => ({ cars: [] as Car[], total: 0 })),
+	core.promos.getActive().catch(() => [] as Promo[]),
+]);
+
+const pageSchemas = [
+	generateAutoDealerSchema(SITE_URL),
+	generateBreadcrumbSchema([
+		{ name: "Beranda", url: "/" },
+		{ name: "Stok Mobil", url: "/cars" },
+	]),
+];
+const metaDescription = `Jelajahi katalog lengkap mobil bekas berkualitas & terinspeksi di ${siteName} ${DEALER_LOCATION}. Filter berdasarkan merek, tipe bodi, transmisi, dan budget.`;
+---
+
+<Layout
+	pageTitle={`Stok Mobil Bekas Berkualitas | ${siteName}`}
+	title="Stok Mobil Bekas"
+	description={metaDescription}
+	canonicalUrl={`${SITE_URL}/cars`}
+	schema={pageSchemas}
+>
+	<StockFeed
+		client:load
+		initialCars={paginatedResult.cars}
+		totalCount={paginatedResult.total}
+		availableMakes={availableMakes}
+		initialModels={initialModels}
+		initialSearch={initialSearch}
+		initialMake={initialMake}
+		initialModel={initialModel}
+		initialBodyType={initialBodyType}
+		initialTransmission={initialTransmission}
+		initialFuelType={initialFuelType}
+		initialPrice={initialPrice}
+		initialYearFrom={initialYearFrom}
+		initialYearTo={initialYearTo}
+		initialSort={initialSort}
+		promos={activePromos}
+	/>
+</Layout>

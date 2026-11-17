@@ -68,6 +68,7 @@ export class CarFilterParamsSchema extends Schema.Class<CarFilterParamsSchema>(
 	search: Schema.optional(Schema.String),
 	sort: Schema.optional(
 		Schema.Literal(
+			"date-desc",
 			"price-asc",
 			"price-desc",
 			"mileage-asc",

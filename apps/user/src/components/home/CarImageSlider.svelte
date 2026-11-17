@@ -6,9 +6,10 @@
 		title: string;
 		isSold: boolean;
 		carId?: string;
+		maxImages?: number;
 	}
 
-	let { gallery, title, isSold }: Props = $props();
+	let { gallery, title, isSold, maxImages }: Props = $props();
 
 	let currentIndex = $state(0);
 	let outgoingIndex = $state<number | null>(null);
@@ -18,8 +19,12 @@
 	let isPending = $state(false);
 	let showSpinner = $state(false);
 
-	const images = $derived(gallery && gallery.length > 0 ? gallery : []);
-	const total = $derived(images.length);
+	const rawImages = $derived(gallery && gallery.length > 0 ? gallery : []);
+	const hasSeeMoreSlide = $derived(
+		Boolean(maxImages && maxImages > 0 && rawImages.length > maxImages),
+	);
+	const images = $derived(hasSeeMoreSlide && maxImages ? rawImages.slice(0, maxImages) : rawImages);
+	const total = $derived(images.length + (hasSeeMoreSlide ? 1 : 0));
 	const hasMultiple = $derived(total > 1);
 
 	// In-memory set of URLs already downloaded
@@ -77,6 +82,16 @@
 		if (isSliding || newIndex === currentIndex || newIndex < 0 || newIndex >= total) return;
 
 		const dir = direction ?? (newIndex > currentIndex ? "next" : "prev");
+
+		// Special "See more" slide at the end (no image fetch needed)
+		if (hasSeeMoreSlide && newIndex === images.length) {
+			isPending = false;
+			showSpinner = false;
+			if (spinnerTimer) clearTimeout(spinnerTimer);
+			startSlide(newIndex, dir);
+			return;
+		}
+
 		const targetUrl = images[newIndex]?.image;
 		if (!targetUrl) return;
 
@@ -176,19 +191,31 @@
 	role="region"
 	aria-label={`Galeri foto ${title}`}
 >
-	{#if images.length > 0 && images[currentIndex]?.image}
+	{#if images.length > 0}
 		<!-- Outgoing Slide during transition -->
-		{#if outgoingIndex !== null && images[outgoingIndex]?.image}
+		{#if outgoingIndex !== null}
 			<div
 				class="absolute inset-0 w-full h-full pointer-events-none z-10 {slideDirection === 'next'
 					? 'slide-out-left'
 					: 'slide-out-right'}"
 			>
-				<img
-					src={images[outgoingIndex].image}
-					alt={images[outgoingIndex].alt || title}
-					class="w-full h-full object-cover"
-				/>
+				{#if hasSeeMoreSlide && outgoingIndex === images.length}
+					<div class="relative w-full h-full bg-gray-900 flex items-center justify-center">
+						{#if images[images.length - 1]?.image}
+							<img
+								src={images[images.length - 1].image}
+								alt=""
+								class="w-full h-full object-cover opacity-25 blur-xs"
+							/>
+						{/if}
+					</div>
+				{:else if images[outgoingIndex]?.image}
+					<img
+						src={images[outgoingIndex].image}
+						alt={images[outgoingIndex].alt || title}
+						class="w-full h-full object-cover"
+					/>
+				{/if}
 			</div>
 		{/if}
 
@@ -199,12 +226,46 @@
 				: 'z-0'}"
 			onanimationend={finishSlide}
 		>
-			<img
-				src={images[currentIndex].image}
-				alt={images[currentIndex].alt || title}
-				loading="lazy"
-				class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-			/>
+			{#if hasSeeMoreSlide && currentIndex === images.length}
+				<div
+					class="relative w-full h-full bg-gray-950 flex flex-col items-center justify-center p-4 text-center"
+				>
+					{#if images[images.length - 1]?.image}
+						<img
+							src={images[images.length - 1].image}
+							alt={title}
+							class="absolute inset-0 w-full h-full object-cover opacity-30 blur-[2px] scale-105"
+						/>
+					{/if}
+					<div class="relative z-10 flex flex-col items-center gap-2 text-white">
+						<span
+							class="size-10 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="size-5"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						</span>
+						<span class="text-sm font-bold">Lihat Semua ({rawImages.length} Foto)</span>
+						<span class="text-[11px] text-gray-300">Buka detail unit</span>
+					</div>
+				</div>
+			{:else if images[currentIndex]?.image}
+				<img
+					src={images[currentIndex].image}
+					alt={images[currentIndex].alt || title}
+					loading="lazy"
+					class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+				/>
+			{/if}
 		</div>
 
 		<!-- Loading Spinner Overlay (only shown if loading exceeds 150ms) -->
@@ -269,11 +330,13 @@
 			<div
 				class="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-30 max-w-[85%] flex items-center gap-1 px-2 py-1 rounded-full bg-gray-950/50 backdrop-blur-xs pointer-events-auto"
 			>
-				{#each images as _, i (i)}
+				{#each Array(total) as _, i (i)}
 					<button
 						type="button"
 						onclick={(e) => handleGoTo(i, e)}
-						aria-label={`Lihat foto ${i + 1}`}
+						aria-label={hasSeeMoreSlide && i === images.length
+							? "Lihat semua foto"
+							: `Lihat foto ${i + 1}`}
 						class={`rounded-full transition-all duration-200 cursor-pointer ${
 							i === currentIndex
 								? "w-3.5 h-1.5 bg-white shadow-xs"

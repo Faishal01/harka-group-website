@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from "astro/config";
-import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import cloudflare from "@astrojs/cloudflare";
 
@@ -10,11 +9,8 @@ import svelte from "@astrojs/svelte";
 export default defineConfig({
 	site: "https://harkagroup.id",
 	base: "/",
-	integrations: [mdx(), svelte()],
+	integrations: [svelte()],
 	output: "server",
-	redirects: {
-		"/cars": "/",
-	},
 	adapter: cloudflare({ persistState: { path: "../../.wrangler/state" } }),
 	vite: {
 		plugins: [tailwindcss()],

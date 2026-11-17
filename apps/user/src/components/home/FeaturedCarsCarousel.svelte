@@ -3,13 +3,15 @@
 	import type { Car } from "~/types";
 	import { getPrice, getMileage, getMileageUnit } from "~/utils/helpers";
 	import { transmissionMap, fuelTypeMap } from "~/data/constants";
+	import CarImageSlider from "./CarImageSlider.svelte";
 
 	interface Props {
 		cars?: Car[];
 		onViewMore?: () => void;
+		viewMoreHref?: string;
 	}
 
-	let { cars = [], onViewMore }: Props = $props();
+	let { cars = [], onViewMore, viewMoreHref = "/cars" }: Props = $props();
 
 	let emblaNode = $state<HTMLElement | null>(null);
 	let emblaApi: EmblaCarouselType | null = null;
@@ -97,14 +99,24 @@
 	>
 		<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 			<!-- Header -->
-			<div class="mb-4">
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block size-2 rounded-full bg-red-500"></span>
-					<span class="text-xs font-bold uppercase tracking-wider text-red-300">
-						Baru Masuk Showroom
-					</span>
+			<div class="flex items-end justify-between gap-4 mb-4">
+				<div>
+					<div class="flex items-center gap-2 mb-1">
+						<span class="inline-block size-2 rounded-full bg-red-500"></span>
+						<span class="text-xs font-bold uppercase tracking-wider text-red-300">
+							Baru Masuk Showroom
+						</span>
+					</div>
+					<h2 class="text-xl sm:text-2xl font-bold text-white font-header">Unit Terbaru Harka</h2>
 				</div>
-				<h2 class="text-xl sm:text-2xl font-bold text-white font-header">Unit Terbaru Harka</h2>
+				{#if viewMoreHref}
+					<a
+						href={viewMoreHref}
+						class="text-xs sm:text-sm font-bold text-red-300 hover:text-white transition shrink-0"
+					>
+						Lihat Semua Stok →
+					</a>
+				{/if}
 			</div>
 
 			<!-- Trust Highlights -->
@@ -184,8 +196,7 @@
 						class="flex gap-4 touch-pan-y pl-4 sm:pl-0 after:content-[''] after:shrink-0 after:w-px sm:after:hidden"
 					>
 						{#each cars as car (car.id)}
-							{@const coverImage = car.gallery?.[0]?.image}
-							{@const coverAlt = car.gallery?.[0]?.alt || car.title}
+							{@const isSold = car.archiveReason === "sold"}
 							{@const formattedMileage = getMileage(car.mileage ?? 0)}
 							{@const transmissionLabel =
 								transmissionMap[car.transmission || ""] || car.transmission}
@@ -195,27 +206,19 @@
 								class="min-w-0 flex-[0_0_265px] sm:flex-[0_0_285px] bg-white rounded-2xl border border-gray-200/90 hover:border-red-600 shadow-xs hover:shadow-lg transition-all duration-300 overflow-hidden group flex flex-col"
 							>
 								<a href={`/view/${car.id}`} class="flex flex-col h-full">
-									<!-- Single Cover Image -->
-									<div class="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden">
-										{#if coverImage}
-											<img
-												src={coverImage}
-												alt={coverAlt}
-												loading="lazy"
-												decoding="async"
-												class="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-											/>
-										{:else}
-											<div
-												class="size-full flex items-center justify-center text-gray-400 text-xs font-medium"
-											>
-												Foto Segera Hadir
-											</div>
-										{/if}
+									<!-- Image Slider (capped at 5 photos + "Lihat Semua" slide) -->
+									<div class="relative">
+										<CarImageSlider
+											gallery={car.gallery}
+											title={car.title}
+											{isSold}
+											carId={car.id}
+											maxImages={5}
+										/>
 
 										{#if car.promoPrice && car.promoPrice < car.price}
 											<span
-												class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm"
+												class="absolute top-2.5 left-2.5 z-30 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase tracking-wide shadow-sm pointer-events-none"
 											>
 												Promo
 											</span>
@@ -305,6 +308,38 @@
 										</p>
 									</div>
 								</button>
+							</div>
+						{:else if viewMoreHref}
+							<div class="min-w-0 flex-[0_0_265px] sm:flex-[0_0_285px] flex">
+								<a
+									href={viewMoreHref}
+									class="w-full rounded-2xl border border-dashed border-white/25 bg-white/10 hover:bg-white/15 hover:border-red-400 transition-all duration-300 p-6 flex flex-col items-center justify-center text-center gap-3 group shadow-xs hover:shadow-lg backdrop-blur-xs"
+								>
+									<span
+										class="size-12 rounded-full bg-white/15 border border-white/20 group-hover:border-red-400 group-hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-xs"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="size-5"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</span>
+									<div>
+										<p
+											class="text-base font-bold text-white group-hover:text-red-300 transition-colors"
+										>
+											Lihat Semua Stok
+										</p>
+										<p class="text-xs text-gray-300 mt-1">Jelajahi katalog lengkap dengan filter</p>
+									</div>
+								</a>
 							</div>
 						{/if}
 					</div>
