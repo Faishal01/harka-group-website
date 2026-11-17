@@ -10,6 +10,11 @@ export interface MobileMenuItem {
 
 export const menuMain: MainMenuItem[] = [
 	{
+		id: "cars",
+		label: "Stok Mobil",
+		url: "/cars",
+	},
+	{
 		id: "services",
 		label: "Tukar Tambah & Jual",
 		submenu: [
@@ -43,7 +48,14 @@ export const menuMobile: MobileMenuItem[] = [
 		label: "Beranda",
 		url: "/",
 		icon: "home",
-		description: "Katalog stok & unit pilihan",
+		description: "Halaman utama & promo",
+	},
+	{
+		id: "cars",
+		label: "Stok Mobil",
+		url: "/cars",
+		icon: "home",
+		description: "Cari & filter semua unit",
 	},
 	{
 		id: "trade-in",
@@ -81,6 +93,10 @@ export const menuNavigation: MenuNavigation = {
 		{
 			name: "Beranda",
 			url: "/",
+		},
+		{
+			name: "Stok Mobil",
+			url: "/cars",
 		},
 		{
 			name: "Tukar Tambah",

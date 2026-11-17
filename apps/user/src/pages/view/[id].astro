@@ -77,7 +77,8 @@ if (isSold && car) {
 const breadcrumbSchema = car
 	? generateBreadcrumbSchema([
 			{ name: "Beranda", url: "/" },
-			{ name: car.make, url: `/?make=${encodeURIComponent(car.make)}` },
+			{ name: "Stok Mobil", url: "/cars" },
+			{ name: car.make, url: `/cars?make=${encodeURIComponent(car.make)}` },
 			{ name: vehicleName, url: `/view/${car.id}` },
 		])
 	: undefined;
@@ -138,8 +139,12 @@ const pageSchemas = [dealerSchema, carSchema, breadcrumbSchema].filter(Boolean) 
 							Beranda
 						</a>
 						<span class="text-gray-400">/</span>
+						<a href="/cars" class="hover:text-gray-900 transition">
+							Stok Mobil
+						</a>
+						<span class="text-gray-400">/</span>
 						<a
-							href={`/?make=${encodeURIComponent(car.make)}`}
+							href={`/cars?make=${encodeURIComponent(car.make)}`}
 							class="hover:text-gray-900 transition"
 						>
 							{car.make}

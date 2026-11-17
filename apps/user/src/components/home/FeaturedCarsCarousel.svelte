@@ -7,9 +7,10 @@
 	interface Props {
 		cars?: Car[];
 		onViewMore?: () => void;
+		viewMoreHref?: string;
 	}
 
-	let { cars = [], onViewMore }: Props = $props();
+	let { cars = [], onViewMore, viewMoreHref = "/cars" }: Props = $props();
 
 	let emblaNode = $state<HTMLElement | null>(null);
 	let emblaApi: EmblaCarouselType | null = null;
@@ -97,14 +98,24 @@
 	>
 		<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 			<!-- Header -->
-			<div class="mb-4">
-				<div class="flex items-center gap-2 mb-1">
-					<span class="inline-block size-2 rounded-full bg-red-500"></span>
-					<span class="text-xs font-bold uppercase tracking-wider text-red-300">
-						Baru Masuk Showroom
-					</span>
+			<div class="flex items-end justify-between gap-4 mb-4">
+				<div>
+					<div class="flex items-center gap-2 mb-1">
+						<span class="inline-block size-2 rounded-full bg-red-500"></span>
+						<span class="text-xs font-bold uppercase tracking-wider text-red-300">
+							Baru Masuk Showroom
+						</span>
+					</div>
+					<h2 class="text-xl sm:text-2xl font-bold text-white font-header">Unit Terbaru Harka</h2>
 				</div>
-				<h2 class="text-xl sm:text-2xl font-bold text-white font-header">Unit Terbaru Harka</h2>
+				{#if viewMoreHref}
+					<a
+						href={viewMoreHref}
+						class="text-xs sm:text-sm font-bold text-red-300 hover:text-white transition shrink-0"
+					>
+						Lihat Semua Stok →
+					</a>
+				{/if}
 			</div>
 
 			<!-- Trust Highlights -->
@@ -305,6 +316,38 @@
 										</p>
 									</div>
 								</button>
+							</div>
+						{:else if viewMoreHref}
+							<div class="min-w-0 flex-[0_0_265px] sm:flex-[0_0_285px] flex">
+								<a
+									href={viewMoreHref}
+									class="w-full rounded-2xl border border-dashed border-white/25 bg-white/10 hover:bg-white/15 hover:border-red-400 transition-all duration-300 p-6 flex flex-col items-center justify-center text-center gap-3 group shadow-xs hover:shadow-lg backdrop-blur-xs"
+								>
+									<span
+										class="size-12 rounded-full bg-white/15 border border-white/20 group-hover:border-red-400 group-hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-xs"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="size-5"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</span>
+									<div>
+										<p
+											class="text-base font-bold text-white group-hover:text-red-300 transition-colors"
+										>
+											Lihat Semua Stok
+										</p>
+										<p class="text-xs text-gray-300 mt-1">Jelajahi katalog lengkap dengan filter</p>
+									</div>
+								</a>
 							</div>
 						{/if}
 					</div>
